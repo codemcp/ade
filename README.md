@@ -3,8 +3,6 @@
 > A technology-agnostic information architecture for coding agents that enables
 > consistent, professional-grade agentic engineering at team scale.
 
----
-
 ## The alignment problem
 
 The biggest challenge in agentic development is not agent capability — it is alignment.
@@ -16,9 +14,7 @@ misses the point entirely.
 
 This is not a capability problem. It is an **information problem**.
 
----
-
-## How professional engineers work
+## How professional engineers (should) work
 
 Think about what distinguishes a senior engineer from a developer who jumps
 straight to writing code. It is not just technical skill — it is a structured
@@ -35,7 +31,7 @@ This process knowledge is partially taught, partially acquired through experienc
 do the same.
 
 Beyond process, every project carries **conventions**: the technology choices,
-architectural patterns, design principles, and team agreements about *how* to
+architectural patterns, design principles, and team agreements about _how_ to
 solve problems in this specific context. You acquire this knowledge when you join
 a new project, through code review, discussions with colleagues, and time.
 
@@ -45,8 +41,6 @@ memorize it. You look it up at the moment you need it.
 
 Three distinct types of information. Three different acquisition modes. Three
 different roles in the act of engineering.
-
----
 
 ## What ADE is
 
@@ -64,23 +58,31 @@ flowchart TD
     Engineer --> Process
     Agent --> Process
 
-    subgraph Process ["① Process · CLAUDE.md"]
-        P["Universal engineering workflows\nloaded at every session\nexplore → plan → code → commit\nreproduce → analyze → fix → verify"]
+    subgraph Process ["Process · System Prompt"]
+        P["Universal engineering workflows<br><br>loaded at every session. e. g. via AGENTS.md"]
     end
 
-    subgraph Conventions ["② Conventions · Skills"]
-        S["Project-specific standards\nselected per team or project\ntechnology · architecture · design decisions"]
+    subgraph Conventions ["Conventions · Skills"]
+        S["Project-specific standards<br>selected per team or project<br><br>Provided on demand"]
     end
 
-    subgraph Documentation ["③ Documentation · .docs/"]
-        D["Reference knowledge\nread on demand\nAPIs · libraries · system context"]
+    subgraph Documentation ["Documentation · Text files"]
+        D["Reference knowledge<br><br>read on demand<br>APIs · libraries · system context"]
     end
 
-    Process -->|"invokes — 'use your design skill'"| Conventions
-    Conventions -->|"points to — 'check .docs/tanstack'"| Documentation
+    Process -->|"invokes — e. g. &quot;use your design skill&quot;"| Conventions
+    Conventions -->|"points to — e. g. &quot;check .docs/tanstack&quot;"| Documentation
 ```
 
-Most `CLAUDE.md` files are snowflakes: ad-hoc, project-specific, unstructured.
+### Why this is needed
+
+There is no secret ingredient to interacting with coding agents. We just have to
+instruct them properly. But this "properly" can be achieve in many ways.
+Where do we put write down this steering? In the `AGENTS.md`? In Skills? Move it to a prompt,
+potentially exposed by an MCP server? And how do we share it across team mates?
+It has become good practice to check this into the repo, but honestly:
+
+Most `AGENTS.md` files are snowflakes: ad-hoc, project-specific, unstructured.
 They mix process instructions with coding conventions and documentation fragments
 in a single flat file. Rule files and skills improve reusability but still lack a
 coherent taxonomy.
@@ -93,8 +95,6 @@ context at the right moment.
 The result is agents that behave predictably and professionally across your entire
 team, regardless of who is running them.
 
----
-
 ## How the layers compose
 
 The three layers are not independent — they reference each other in a deliberate
@@ -102,17 +102,17 @@ direction. Process invokes conventions. Conventions point to documentation.
 
 **Process enforces workflows and delegates to skills:**
 
-> *"When in the plan phase, use your `design` skill."*
+> _"When in the plan phase, use your `design` skill."_
 
 The agent system prompt defines and enforces the workflow. At the right step, it
-delegates to a skill that encodes the team's specific approach — keeping process
+delegates to a skill that encodes the team&quot;s specific approach — keeping process
 universal and conventions local.
 
 **Skills reference documentation on demand:**
 
-> *"We are using React with TanStack Query for backend interactions. Check*
-> *`.docs/tanstack` when implementing data fetching. Check `.docs/components` for*
-> *details on available reusable components."*
+> _"We are using React with TanStack Query for backend interactions. Check_
+> _`.docs/tanstack` when implementing data fetching. Check `.docs/components` for_
+> _details on available reusable components."_
 
 The skill encodes the convention — which libraries, which patterns. It surfaces
 the exact documentation needed at the moment it is relevant, rather than loading
@@ -124,15 +124,16 @@ provides a mechanism to select and compose skill sets, so the right conventions
 are available for the right context. Documentation lives where it belongs — in
 the codebase — and is surfaced precisely when needed.
 
----
+**Sounds intuitive?** Hopefully, it does. Because **this framework only works, if
+you as human join the team**.
 
 ## What ADE includes
 
 ### Agent configurations that enforce workflows
 
-A `CLAUDE.md` (or equivalent) structured around universal engineering workflows.
-It does not describe how the agent *could* work — it enforces how the agent
-*does* work. Every task type has a defined process. The agent follows it.
+An `AGENTS.md` (or equivalent) structured around universal engineering workflows.
+It does not describe how the agent _could_ work — it enforces how the agent
+_does_ work. Every task type has a defined process. The agent follows it.
 
 This is the layer that transfers across every project without modification. It
 encodes the professional engineering mindset as an explicit, shareable artifact.
@@ -144,7 +145,7 @@ capture technology choices, architectural patterns, and design decisions in a fo
 the agent applies on demand.
 
 ADE provides a mechanism to select and share **skill sets** — curated collections
-of skills that match a team's context. A frontend team, a backend team, and a
+of skills that match a team&quot;s context. A frontend team, a backend team, and a
 platform team each activate the skill set appropriate to their work. Skills can
 be shared across projects, versioned, and evolved independently of the process
 layer.
@@ -159,13 +160,16 @@ ADE defines conventions for organizing and pointing to documentation so that
 skills across different projects follow consistent patterns for surfacing
 reference knowledge.
 
-### MCP server configurations
+### Coding agent agnostic setup tooling
 
-Ready-to-use MCP (Model Context Protocol) server setups for standard development
-tooling. Standardized tool access ensures agents have consistent capabilities
-across the team.
+ADE will :soon: include a simple cli to setup your coding agent. All configuration
+can be placed into your repo, so that you can check it in.
 
----
+We're using STDIO based MCP-servers to expose process guidance, conventions and docs
+to coding agents. There are other proprietary ways to do this, but by using the
+well-established Model Context Protocol which is optimized for discoverability, we
+make sure that you get a similar experience, no matter whether you are using Claude
+Code, Copilot or Kiro.
 
 ## Core principles
 
@@ -187,13 +191,11 @@ not suggested.
 The information architecture is universal. The content adapts to each project and
 stack. What transfers across projects is the structure itself.
 
----
+## Customization
 
-## Contributing
+All artifacts, that are produced by the CLI, are by default adaptable: You can provide
+own workflows, your own skills, your own docs. It should work out of the box.
+If this is still too opinionated for you, you can swap out each layer.
 
-ADE is a living configuration. As your team's practices evolve, the configuration
-should evolve with them.
-
-Proposed changes to the shared configuration follow the same engineering workflow
-as any other code change: branch, document the intent, review, merge. Agent
-configuration is a first-class engineering artifact.
+After all: there is no secret ingredient, it only about getting relevant information
+into the conversation context.
