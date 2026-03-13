@@ -53,48 +53,55 @@ different roles in the act of engineering.
 **ADE is an information architecture for agentic development.**
 
 It provides a rigid, technology-agnostic structure that organizes the information
-a coding agent needs into three explicit layers:
+a coding agent needs into three explicit layers — and maps each layer to a
+concrete, agent-native artifact type.
 
-| Layer | What it contains | Scope |
+| Layer | What it contains | Artifact |
 |---|---|---|
-| **Process** | Universal workflows and mental models for engineering tasks | Technology-agnostic, transferable across all projects |
-| **Conventions** | Project-specific standards: tech stack, architecture, design decisions, team agreements | Project-specific |
-| **Documentation** | Reference knowledge consulted during implementation | Domain and context-specific |
+| **Process** | Universal workflows and mental models for engineering tasks | Agent system prompt (`CLAUDE.md` or equivalent) |
+| **Conventions** | Project-specific standards: tech choices, architecture, design decisions, team agreements | Skills |
+| **Documentation** | Reference knowledge consulted during implementation | Docs committed to the repository |
 
 Most `CLAUDE.md` files are snowflakes: ad-hoc, project-specific, unstructured.
 They mix process instructions with coding conventions and documentation fragments
 in a single flat file. Rule files and skills improve reusability but still lack a
 coherent taxonomy.
 
-ADE brings structure to this space. By separating the three layers explicitly, it
-makes information easier to find, easier to maintain, and — critically — easier
-for agents to apply in the right context at the right moment.
+ADE brings structure to this space. By separating the three layers explicitly and
+binding each to a specific artifact type, it makes information easier to find,
+easier to maintain, and — critically — easier for agents to apply in the right
+context at the right moment.
 
 The result is agents that behave predictably and professionally across your entire
 team, regardless of who is running them.
 
 ---
 
-## What ADE includes
+## How the layers compose
 
-### Agent configuration files
+The three layers are not independent — they reference each other in a deliberate
+direction. Process invokes conventions. Conventions point to documentation.
 
-Structured `CLAUDE.md` templates and supporting configuration files organized
-around the three-layer taxonomy. These files are committed to the repository so
-every developer and every agent shares the same context.
+**Process references skills:**
 
-### MCP server configurations
+> *"When in the plan phase, use your `design` skill."*
 
-Ready-to-use MCP (Model Context Protocol) server setups for standard development
-tooling. Standardized tool access ensures agents have consistent capabilities
-across the team.
+The agent system prompt defines the workflow. At the right step in that workflow,
+it delegates to a skill that encodes the team's specific approach to design.
 
-### Workflow and process documentation
+**Skills reference documentation:**
 
-Explicit process definitions for common engineering tasks — written for both
-human engineers and coding agents. Covers human-agent collaboration conventions,
-PR and review workflows, branching strategies, and escalation protocols (when the
-agent should ask vs. proceed autonomously).
+> *"We are using React with TanStack Query for backend interactions. Check*
+> *`.docs/tanstack` when implementing data fetching. Check `.docs/components` for*
+> *details on available reusable components."*
+
+The skill encodes the convention — which libraries, which patterns. It points the
+agent to the exact documentation needed at the moment it is relevant.
+
+This composability is what makes ADE scale. Process is written once and shared
+across every project. Skills are written per team or per project and reused across
+tasks. Documentation lives where it belongs — in the codebase — and is surfaced
+precisely when needed.
 
 ---
 
@@ -120,14 +127,47 @@ stack. What transfers across projects is the structure itself.
 
 ---
 
+## What ADE includes
+
+### Process — the agent system prompt
+
+A `CLAUDE.md` (or equivalent) structured around universal engineering workflows.
+It defines how an agent approaches different task types — features, bugs,
+refactors, reviews — using process knowledge that applies regardless of tech
+stack. This is the layer that transfers across every project unchanged.
+
+### Conventions — skills
+
+Skills encode project-specific knowledge as reusable, invocable artifacts. They
+capture the team's technology choices, architectural patterns, and design
+decisions in a form the agent can apply on demand. The process layer references
+skills by name, composing universal workflows with project-specific behavior.
+
+### Documentation — docs in the repository
+
+Reference material committed to the codebase under a structured `.docs/` (or
+equivalent) directory. Agents do not load all documentation upfront — they are
+directed to specific docs at the moment they are relevant, via references in
+skills. Documentation stays current because it lives alongside the code it
+describes.
+
+### MCP server configurations
+
+Ready-to-use MCP (Model Context Protocol) server setups for standard development
+tooling. Standardized tool access ensures agents have consistent capabilities
+across the team.
+
+---
+
 ## Repository structure
 
 ```
 ade/
-├── process/          # Universal engineering workflows (feature, bug, refactor, …)
-├── conventions/      # Project-specific standards (populated per project)
-├── docs/             # Reference documentation (populated per project)
-└── mcp/              # MCP server configuration templates
+├── CLAUDE.md             # Agent system prompt — process layer
+├── .claude/
+│   └── commands/         # Skills — conventions layer
+├── .docs/                # Reference documentation — documentation layer
+└── mcp/                  # MCP server configuration templates
 ```
 
 ---
