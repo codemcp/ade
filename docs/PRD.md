@@ -37,6 +37,13 @@ A user-facing configuration question representing a single concern (e.g.
 a set of options, exactly one of which is selected. Facets can be skippable
 (no selection = no provisions from that facet).
 
+Facets may **depend on other facets**. When a facet declares dependencies,
+its provision writers receive the resolved options from those facets as
+context. This allows provisions to adapt their output based on sibling
+selections. For example, the testing facet may depend on the workflow facet
+so that its skills writer knows which workflow-specific test conventions to
+install. The resolver processes facets in dependency order.
+
 ### Option
 
 One possible answer to a facet. Each option carries a recipe.
