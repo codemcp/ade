@@ -98,6 +98,9 @@ importers:
       "@ade/core":
         specifier: workspace:*
         version: link:../core
+      "@clack/prompts":
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       "@typescript-eslint/eslint-plugin":
         specifier: ^8.21.0
@@ -375,6 +378,18 @@ packages:
     resolution:
       {
         integrity: sha512-YslZMgtJUyuMbZ+aKvfF3x1f5liK4mWNxghFRv7jqRR9C3R3fAOGTTKvxXDa2Y1s9zSbcpuO0cAxDYsc9SrXoQ==
+      }
+
+  "@clack/core@1.1.0":
+    resolution:
+      {
+        integrity: sha512-SVcm4Dqm2ukn64/8Gub2wnlA5nS2iWJyCkdNHcvNHPIeBTGojpdJ+9cZKwLfmqy7irD4N5qLteSilJlE0WLAtA==
+      }
+
+  "@clack/prompts@1.1.0":
+    resolution:
+      {
+        integrity: sha512-pkqbPGtohJAvm4Dphs2M8xE29ggupihHdy1x84HNojZuMtFsHiUlRvqD24tM2+XmI+61LlfNceM3Wr7U5QES5g==
       }
 
   "@docsearch/css@3.9.0":
@@ -4077,6 +4092,12 @@ packages:
       }
     engines: { node: ">=10" }
 
+  sisteransi@1.0.5:
+    resolution:
+      {
+        integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==
+      }
+
   slice-ansi@5.0.0:
     resolution:
       {
@@ -4882,6 +4903,15 @@ snapshots:
   "@chevrotain/types@11.0.3": {}
 
   "@chevrotain/utils@11.0.3": {}
+
+  "@clack/core@1.1.0":
+    dependencies:
+      sisteransi: 1.0.5
+
+  "@clack/prompts@1.1.0":
+    dependencies:
+      "@clack/core": 1.1.0
+      sisteransi: 1.0.5
 
   "@docsearch/css@3.9.0": {}
 
@@ -7074,6 +7104,8 @@ snapshots:
   simple-update-notifier@2.0.0:
     dependencies:
       semver: 7.7.4
+
+  sisteransi@1.0.5: {}
 
   slice-ansi@5.0.0:
     dependencies:

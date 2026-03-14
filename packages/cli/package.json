@@ -22,7 +22,8 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@ade/core": "workspace:*"
+    "@ade/core": "workspace:*",
+    "@clack/prompts": "^1.1.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.21.0",
