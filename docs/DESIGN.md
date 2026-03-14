@@ -1,47 +1,90 @@
 # ADE CLI — Design Document
 
-> **Scope.** This document covers the **ADE CLI** (`packages/ade`) — the
-> setup and configuration tool. It does not cover the runtime MCP servers
+> **Scope.** This document covers the **ADE CLI** — the setup and
+> configuration tool. It does not cover the runtime MCP servers
 > (`@codemcp/workflows-server`, `@codemcp/knowledge-server`) or the broader
 > ADE information architecture. For the overall ADE vision, see the project
 > README.
 
+## Package Structure
+
+Two packages with clear responsibilities:
+
+### `@ade/core` (`packages/core`)
+
+All types, logic, and built-in writers. No CLI framework, no TUI, no user
+interaction. Independently importable for programmatic use (CI scripts,
+other tools).
+
+```
+core/src/
+  types.ts              # all interfaces and type definitions
+  config.ts             # read/write config.yaml and config.lock.yaml
+  resolver.ts           # config + catalog → LogicalConfig
+  registry.ts           # writer registry (provision + agent)
+  catalog/
+    index.ts            # catalog registry, exports all facets
+    facets/
+      process.ts
+      conventions.ts
+      documentation.ts
+      frameworks.ts
+  writers/              # built-in provision writers
+    workflows.ts
+    skills.ts
+    knowledge.ts
+    mcp-server.ts
+    instruction.ts
+    installable.ts
+  agents/               # built-in agent writers
+    opencode.ts
+```
+
+### `@ade/cli` (`packages/cli`)
+
+Thin shell: CLI framework wiring and interactive TUI. All business logic
+lives in core; CLI commands are thin handlers that parse args and delegate.
+
+```
+cli/src/
+  index.ts              # entry point, arg parser, command routing
+  commands/
+    setup.ts            # interactive TUI setup
+    install.ts          # resolve + generate (idempotent)
+    add.ts              # modify single facet
+    remove.ts           # remove facet selection
+    status.ts           # show current state
+  tui/
+    prompts.ts          # interactive facet selection UI
+```
+
+`@ade/cli` depends on `@ade/core`. Nothing depends on `@ade/cli`.
+
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                     CLI Layer                        │
-│  ade setup · ade install · ade add · ade remove       │
-└──────────────────────┬──────────────────────────────┘
-                       │
-              ┌────────▼────────┐
-              │     Catalog     │  facets, options, recipes (TypeScript)
-              └────────┬────────┘
-                       │
-              ┌────────▼────────┐
-              │    Resolver     │  config.yaml + catalog → provisions
-              └────────┬────────┘
-                       │
-          ┌────────────▼────────────┐
-          │   Provision Writers     │  each writer produces LogicalConfig
-          │                         │  fragments; some call package APIs
-          │  workflows · skills     │
-          │  knowledge · mcp-server │
-          │  instruction · install. │
-          └────────────┬────────────┘
-                       │ merge
-              ┌────────▼────────┐
-              │  LogicalConfig  │  agent-agnostic intermediate repr
-              └────────┬────────┘
-                       │
-          ┌────────────▼────────────┐
-          │     Agent Writers       │  ADE owns format knowledge
-          │                         │
-          │  claude-code · copilot  │
-          │  kiro                   │
-          └─────────────────────────┘
-                       │
-              agent-specific files
+┌─────────────────────────────────────────────────────────────┐
+│  @ade/cli                                                    │
+│  ade setup · ade install · ade add · ade remove · ade status │
+│  TUI prompts                                                 │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ delegates to
+┌──────────────────────────▼──────────────────────────────────┐
+│  @ade/core                                                   │
+│                                                              │
+│  ┌──────────┐   ┌──────────┐   ┌────────────────────────┐   │
+│  │ Catalog  │──▶│ Resolver │──▶│   Writer Registry      │   │
+│  │ (facets) │   │          │   │                        │   │
+│  └──────────┘   └────┬─────┘   │  provision: Map<id,W>  │   │
+│                      │         │  agents:    Map<id,W>  │   │
+│                      ▼         └───────────┬────────────┘   │
+│               ┌──────────────┐             │                │
+│               │ LogicalConfig│◀────────────┘                │
+│               └──────┬───────┘   merge fragments            │
+│                      │                                      │
+│                      ▼                                      │
+│               agent-specific files                          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Data Flow
@@ -144,8 +187,8 @@ interface Option {
 // This is how one logical concept materializes across different output channels.
 
 interface Provision {
-  writer: ProvisionWriter;
-  config: Record<string, unknown>; // writer-specific
+  writer: string; // references a registered ProvisionWriterDef.id
+  config: Record<string, unknown>; // writer-specific, validated at boundary
 }
 
 // Passed to provision writers so they can adapt based on sibling selections.
@@ -158,14 +201,6 @@ interface ResolvedFacet {
   optionId: string;
   option: Option;
 }
-
-type ProvisionWriter =
-  | "workflows"
-  | "skills"
-  | "knowledge"
-  | "mcp-server"
-  | "instruction"
-  | "installable";
 ```
 
 ### LogicalConfig (intermediate representation)
@@ -220,20 +255,164 @@ interface LockFile {
 }
 ```
 
-## Agent Writers
+## Extensibility and Type Safety
 
-Each agent writer implements a single interface:
+### Design Tension
+
+Provision and agent writers need two properties that pull in opposite
+directions:
+
+1. **Type safety** — built-in writers should have typed configs, not
+   `Record<string, unknown>` everywhere.
+2. **Runtime extensibility** — future packages must be able to register
+   new writers without modifying core's source.
+
+### Solution: Interfaces for Contracts, Registries for Dispatch
+
+Writers are defined as **interfaces** (open contracts, implementable by
+anyone) and collected in **runtime registries** (`Map`-based, open for
+insertion). Built-in writers get typed configs internally while conforming
+to the open interface at the boundary.
 
 ```typescript
-interface AgentWriter {
+// --- Writer contracts (open, any package can implement) ---
+
+interface ProvisionWriterDef {
+  id: string;
+  write(
+    config: Record<string, unknown>,
+    context: ResolutionContext
+  ): Promise<Partial<LogicalConfig>>;
+}
+
+interface AgentWriterDef {
   id: string;
   install(config: LogicalConfig, projectRoot: string): Promise<void>;
 }
+
+// --- Writer registry (open at runtime) ---
+
+interface WriterRegistry {
+  provisions: Map<string, ProvisionWriterDef>;
+  agents: Map<string, AgentWriterDef>;
+}
 ```
 
-The writer has full ownership of how to translate LogicalConfig into
-agent-specific files. It reads existing files when needed to perform
-incremental updates rather than full overwrites.
+### How Built-In Writers Get Type Safety
+
+Each built-in writer defines a typed config interface and validates/narrows
+at the boundary. The registry doesn't care — it passes
+`Record<string, unknown>` through. The writer narrows internally:
+
+```typescript
+// writers/workflows.ts
+interface WorkflowsConfig {
+  package: string;
+  env?: Record<string, string>;
+}
+
+export const workflowsWriter: ProvisionWriterDef = {
+  id: "workflows",
+  async write(config, _context) {
+    const c = config as WorkflowsConfig; // validated at boundary
+    return {
+      mcp_servers: [
+        {
+          ref: c.package,
+          command: "npx",
+          args: ["-y", c.package],
+          env: c.env ?? {}
+        }
+      ]
+    };
+  }
+};
+```
+
+The catalog definitions reference writers by string ID, not by import.
+This is what makes the system open — a provision `{ writer: "my-custom", config: {...} }`
+works as long as `"my-custom"` is registered before resolution runs.
+
+### Registry Lifecycle
+
+Core ships a `createDefaultRegistry()` that pre-registers all built-in
+writers. The CLI calls this at startup. A future plugin would call
+`registry.provisions.set("my-writer", myWriter)` before resolution.
+
+```typescript
+function createDefaultRegistry(): WriterRegistry {
+  const provisions = new Map<string, ProvisionWriterDef>();
+  provisions.set("workflows", workflowsWriter);
+  provisions.set("skills", skillsWriter);
+  provisions.set("knowledge", knowledgeWriter);
+  provisions.set("mcp-server", mcpServerWriter);
+  provisions.set("instruction", instructionWriter);
+  provisions.set("installable", installableWriter);
+
+  const agents = new Map<string, AgentWriterDef>();
+  agents.set("opencode", opencodeWriter);
+
+  return { provisions, agents };
+}
+```
+
+### Why Not Pure Functions + Discriminated Unions?
+
+A discriminated union (`type Provision = { writer: "workflows", config: WorkflowsConfig } | ...`)
+gives excellent compile-time safety but is a **closed set**. Adding a writer
+from another package means modifying the union in core, which defeats
+extensibility.
+
+The interface-based registry trades compile-time exhaustiveness for runtime
+openness. The `Provision.writer` field is `string`, not a union — the
+registry validates at resolution time that the writer exists. Built-in
+writers still get internal type safety via their own config interfaces.
+
+### Built-In Provision Config Types
+
+For reference, the typed configs used internally by built-in writers:
+
+```typescript
+interface WorkflowsConfig {
+  package: string;
+  env?: Record<string, string>;
+}
+
+interface SkillsConfig {
+  name: string;
+  version?: string;
+}
+
+interface KnowledgeConfig {
+  name: string;
+  origin: string;
+}
+
+interface McpServerConfig {
+  ref: string;
+  command: string;
+  args: string[];
+  env?: Record<string, string>;
+}
+
+interface InstructionConfig {
+  text: string;
+}
+
+interface InstallableConfig {
+  command: string;
+  check?: string;
+}
+```
+
+These are not exported as part of the public contract. They are
+implementation details of the built-in writers.
+
+## Agent Writers
+
+Each agent writer implements `AgentWriterDef`. The writer has full ownership
+of how to translate LogicalConfig into agent-specific files. It reads
+existing files when needed to perform incremental updates.
 
 ### OpenCode Writer (v1)
 
@@ -262,17 +441,9 @@ key or object scope and merges with existing content.
 
 ## Provision Writers
 
-Each provision writer transforms its config into LogicalConfig fragments
-and/or CLI actions. Writers receive an optional `ResolutionContext` containing
-the resolved options from dependent facets, allowing them to adapt their
-output based on sibling selections.
-
-```typescript
-type ProvisionWriterFn = (
-  config: Record<string, unknown>,
-  context: ResolutionContext
-) => Promise<Partial<LogicalConfig>>;
-```
+Each provision writer implements `ProvisionWriterDef`. Writers receive a
+`ResolutionContext` containing the resolved options from dependent facets,
+allowing them to adapt output based on sibling selections.
 
 ### `workflows` writer
 
@@ -330,44 +501,6 @@ Produces: one `instructions` entry.
 
 Produces: one `CliAction` for validation/installation of a CLI tool or
 dependency.
-
-## Package Structure
-
-```
-packages/
-  shared/src/
-    types.ts              # LogicalConfig, Provision, Facet, etc.
-    config.ts             # read/write config.yaml and config.lock.yaml
-  ade/src/
-    commands/
-      setup.ts            # interactive TUI setup
-      install.ts          # resolve + generate (idempotent)
-      add.ts              # modify single facet
-      remove.ts           # remove facet selection
-      status.ts           # show current state
-    core/
-      resolver.ts         # config.yaml + catalog → provisions → LogicalConfig
-    catalog/
-      index.ts            # catalog registry, exports all facets
-      facets/
-        process.ts        # process guidance facet
-        conventions.ts    # conventions/skills facet
-        documentation.ts  # documentation facet
-        frameworks.ts     # development frameworks facet (multi-select)
-    adapters/
-      writers/            # provision writers
-        workflows.ts
-        skills.ts
-        knowledge.ts
-        mcp-server.ts
-        instruction.ts
-        installable.ts
-      agents/             # agent writers
-        opencode.ts       # v1 agent writer
-    tui/
-      prompts.ts          # interactive facet selection UI
-    utils/
-```
 
 ## V1 Catalog (TypeScript)
 
@@ -440,20 +573,35 @@ export const frameworksFacet: Facet = {
 };
 ```
 
-## Decisions (formerly open questions)
+## Design Decisions
 
-1. **Catalog is TypeScript code.** No YAML catalog files. Facets, options,
-   and recipes are defined as typed objects in `src/catalog/`. This gives
-   type safety, IDE support, and natural versioning with the package.
-   Each facet lives in its own file under `catalog/facets/`.
+1. **Two packages: `@ade/core` + `@ade/cli`.** Core owns all types, logic,
+   catalog, and writers. CLI is a thin shell for arg parsing and TUI. Core
+   is independently importable for programmatic use. No MCP server package —
+   runtime MCP servers are separate projects.
 
-2. **Direct package imports over CLI subprocesses.** Provision writers for
+2. **Interfaces for contracts, registries for dispatch.** Writer contracts
+   are open interfaces (`ProvisionWriterDef`, `AgentWriterDef`). Dispatch
+   uses `Map`-based registries, open at runtime. This enables future
+   extensibility from other packages without modifying core.
+
+3. **Built-in writers get internal type safety.** Each built-in writer
+   defines its own typed config interface and narrows from
+   `Record<string, unknown>` at the boundary. The registry contract stays
+   generic; the implementation is specific.
+
+4. **Catalog is TypeScript code.** No YAML catalog files. Facets, options,
+   and recipes are defined as typed objects in `core/src/catalog/`. This
+   gives type safety, IDE support, and natural versioning with the package.
+   Kept inside core for now; extractable to a separate package later along
+   the `Catalog` interface seam.
+
+5. **Direct package imports over CLI subprocesses.** Provision writers for
    `skills` and `knowledge` import `@codemcp/skills` and `@codemcp/knowledge`
-   as TypeScript dependencies and call their APIs. This provides type safety
-   and avoids brittle CLI flag contracts. CLI subprocess invocation is the
-   fallback for non-TypeScript or cross-runtime cases.
+   as TypeScript dependencies and call their APIs. CLI subprocess invocation
+   is the fallback for non-TypeScript or cross-runtime cases.
 
-3. **`custom` section isolates user edits.** Only the `custom` block in
+6. **`custom` section isolates user edits.** Only the `custom` block in
    `config.yaml` is user-managed. The rest is CLI-managed. This eliminates
    merge conflicts: the CLI never touches `custom`, and users never touch
    the rest. Agent writers merge both sections when generating output.
