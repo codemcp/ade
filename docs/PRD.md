@@ -46,6 +46,13 @@ One possible answer to a facet. Each option carries a recipe.
 A list of provisions that an option brings into the project. A recipe is
 never referenced directly by the user — it is the payload behind an option.
 
+A single option often produces **multiple provisions targeting different
+writers**. For example, the "codemcp" workflow option's recipe contains both
+a `workflows` provision (registers the MCP server) and an `instruction`
+provision (adds workflow guidance to the agent's instructions). This is how
+one logical concept (e.g. "use codemcp workflows") materializes as both
+runtime config and agent instructions.
+
 ### Provision
 
 An atomic unit of configuration. Each provision names a **writer** and
@@ -58,7 +65,7 @@ carries writer-specific config. Provision types:
 | `knowledge`   | Invokes `@codemcp/knowledge` CLI to set up knowledge sources |
 | `mcp-server`  | Generic MCP server entry (command + args + env)           |
 | `instruction` | Raw instruction text for the agent                        |
-| `tool`        | CLI tool dependency to be available                       |
+| `installable` | CLI tool or dependency to be installed                     |
 
 ### KnowledgeSource
 
@@ -102,7 +109,6 @@ Records facet selections. The CLI manages most of this file via commands;
 users may add manual entries in the `custom` section.
 
 ```yaml
-agent: claude-code            # which agent writer to use
 choices:
   workflow: codemcp            # facet_id: option_id
   testing: vitest
@@ -115,6 +121,11 @@ custom:                        # user-managed section (not touched by CLI)
   instructions:
     - "Always use pnpm, never npm."
 ```
+
+The target agent (claude-code, copilot, kiro) is **not** stored in
+`config.yaml`. It is specified at generation time (e.g. `ade setup` or
+`ade install --agent claude-code`). This keeps the config agent-agnostic —
+the same `config.yaml` can generate output for any supported agent.
 
 The `custom` section is the only part users edit by hand. All other sections
 are maintained exclusively through CLI commands, which simplifies merge
@@ -131,9 +142,11 @@ when a facet selection or catalog version is updated.
 ```
 ade setup          Interactive TUI: select agent, walk through facets,
                    write config.yaml + config.lock.yaml + agent files.
+                   Agent selection is a setup-time choice, not stored in config.
 
 ade install        Re-resolve config.yaml → config.lock.yaml → agent files.
-                   Non-interactive. Idempotent.
+                   Non-interactive. Idempotent. Requires --agent flag or
+                   detects agent from existing project files.
 
 ade add <facet>    Add or change a single facet selection interactively.
 

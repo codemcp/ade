@@ -27,7 +27,7 @@
           │                         │  fragments; some call package APIs
           │  workflows · skills     │
           │  knowledge · mcp-server │
-          │  instruction · tool     │
+          │  instruction · install. │
           └────────────┬────────────┘
                        │ merge
               ┌────────▼────────┐
@@ -63,11 +63,15 @@ read config.yaml
 
 ```
 read config.lock.yaml (or use in-memory LogicalConfig)
-  → select agent writer based on config.yaml `agent` field
+  → select agent writer (from --agent flag or auto-detect from project files)
   → writer reads current agent files (if any) for merge/update
   → writer produces updated agent-specific files
   → write files to disk
 ```
+
+The target agent is a **generation-time parameter**, not stored in
+`config.yaml`. This keeps the config agent-agnostic — the same choices
+can produce output for any supported agent.
 
 ### 3. Package API calls from provision writers
 
@@ -116,8 +120,14 @@ interface Option {
   id: string;               // e.g. "codemcp"
   label: string;            // e.g. "CodeMCP Workflows"
   description: string;
-  recipe: Provision[];
+  recipe: Provision[];      // multiple provisions per option is common
 }
+
+// A recipe typically contains multiple provisions for different writers.
+// Example: the "codemcp" workflow option produces:
+//   1. workflows provision  → registers @codemcp/workflows-server as MCP server
+//   2. instruction provision → adds workflow usage guidance to agent instructions
+// This is how one logical concept materializes across different output channels.
 
 interface Provision {
   writer: ProvisionWriter;
@@ -130,7 +140,7 @@ type ProvisionWriter =
   | "knowledge"
   | "mcp-server"
   | "instruction"
-  | "tool";
+  | "installable";
 ```
 
 ### LogicalConfig (intermediate representation)
@@ -166,9 +176,8 @@ interface KnowledgeSource {
 ### Config Files
 
 ```typescript
-// config.yaml — mostly CLI-managed
+// config.yaml — mostly CLI-managed, agent-agnostic
 interface UserConfig {
-  agent: string;                           // agent writer id
   choices: Record<string, string>;         // facet_id → option_id
   custom?: {                               // user-managed section
     mcp_servers?: McpServerEntry[];
@@ -180,7 +189,6 @@ interface UserConfig {
 interface LockFile {
   version: 1;
   generated_at: string;                   // ISO timestamp
-  agent: string;
   choices: Record<string, string>;        // snapshot of selections
   logical_config: LogicalConfig;
 }
@@ -275,13 +283,14 @@ Pass-through: produces one `McpServerEntry` directly.
 
 Produces: one `instructions` entry.
 
-### `tool` writer
+### `installable` writer
 
 ```typescript
 { command: "pnpm", check: "pnpm --version" }
 ```
 
-Produces: one `CliAction` for validation/installation.
+Produces: one `CliAction` for validation/installation of a CLI tool or
+dependency.
 
 ## Package Structure
 
@@ -313,7 +322,7 @@ packages/
         knowledge.ts
         mcp-server.ts
         instruction.ts
-        tool.ts
+        installable.ts
       agents/             # agent writers
         claude-code.ts
         copilot.ts
