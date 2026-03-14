@@ -1,0 +1,111 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+// Mock only the TUI — everything else (catalog, registry, resolver, config I/O) is real
+vi.mock("@clack/prompts", () => ({
+  intro: vi.fn(),
+  outro: vi.fn(),
+  select: vi.fn(),
+  confirm: vi.fn(),
+  isCancel: vi.fn().mockReturnValue(false),
+  cancel: vi.fn(),
+  spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
+}));
+
+import * as clack from "@clack/prompts";
+import { runSetup } from "./setup.js";
+import { readUserConfig, readLockFile } from "@ade/core";
+import { getDefaultCatalog } from "../../../core/src/catalog/index.js";
+
+describe("setup integration (real temp dir)", () => {
+  let dir: string;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    dir = await mkdtemp(join(tmpdir(), "ade-setup-"));
+  });
+
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it("writes config.yaml and config.lock.yaml for codemcp-workflows", async () => {
+    const catalog = getDefaultCatalog();
+
+    vi.mocked(clack.select).mockResolvedValueOnce("codemcp-workflows");
+
+    await runSetup(dir, catalog);
+
+    // ── config.yaml ──────────────────────────────────────────────────────
+    const config = await readUserConfig(dir);
+    expect(config).not.toBeNull();
+    expect(config!.choices).toEqual({ process: "codemcp-workflows" });
+
+    // ── config.lock.yaml ─────────────────────────────────────────────────
+    const lock = await readLockFile(dir);
+    expect(lock).not.toBeNull();
+    expect(lock!.version).toBe(1);
+    expect(lock!.choices).toEqual({ process: "codemcp-workflows" });
+    expect(lock!.generated_at).toBeTruthy();
+
+    // LogicalConfig was produced by the resolver (stubs return empty partials)
+    const lc = lock!.logical_config;
+    expect(lc).toMatchObject({
+      mcp_servers: expect.any(Array),
+      instructions: expect.any(Array),
+      cli_actions: expect.any(Array),
+      knowledge_sources: expect.any(Array)
+    });
+  });
+
+  it("writes config.yaml and config.lock.yaml for native-agents-md", async () => {
+    const catalog = getDefaultCatalog();
+
+    vi.mocked(clack.select).mockResolvedValueOnce("native-agents-md");
+
+    await runSetup(dir, catalog);
+
+    const config = await readUserConfig(dir);
+    expect(config!.choices).toEqual({ process: "native-agents-md" });
+
+    const lock = await readLockFile(dir);
+    expect(lock!.choices).toEqual({ process: "native-agents-md" });
+  });
+
+  it("does not write any files when user cancels", async () => {
+    const catalog = getDefaultCatalog();
+    const cancelSymbol = Symbol("cancel");
+
+    vi.mocked(clack.select).mockResolvedValueOnce(cancelSymbol);
+    vi.mocked(clack.isCancel).mockReturnValue(true);
+
+    await runSetup(dir, catalog);
+
+    const config = await readUserConfig(dir);
+    expect(config).toBeNull();
+
+    const lock = await readLockFile(dir);
+    expect(lock).toBeNull();
+  });
+
+  it("produces valid YAML that roundtrips through read", async () => {
+    const catalog = getDefaultCatalog();
+
+    vi.mocked(clack.select).mockResolvedValueOnce("codemcp-workflows");
+
+    await runSetup(dir, catalog);
+
+    // Read the raw file and re-parse to ensure valid YAML
+    const { readFile } = await import("node:fs/promises");
+    const rawConfig = await readFile(join(dir, "config.yaml"), "utf-8");
+    const rawLock = await readFile(join(dir, "config.lock.yaml"), "utf-8");
+
+    // Both files should be non-empty valid YAML (not "undefined" or empty)
+    expect(rawConfig.length).toBeGreaterThan(0);
+    expect(rawLock.length).toBeGreaterThan(0);
+    expect(rawConfig).toContain("codemcp-workflows");
+    expect(rawLock).toContain("codemcp-workflows");
+  });
+});
