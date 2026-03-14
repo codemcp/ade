@@ -1,5 +1,10 @@
 # ADE CLI — Product Requirements Document
 
+> **Scope.** This document covers the **ADE CLI** (`packages/ade`) — the
+> setup and configuration tool. It does not cover the broader ADE information
+> architecture (process, conventions, documentation layers) or the runtime
+> MCP servers. For the overall ADE vision, see the project README.
+
 ## Problem
 
 Coding agents (Claude Code, Copilot, Kiro, etc.) each require their own
@@ -46,14 +51,22 @@ never referenced directly by the user — it is the payload behind an option.
 An atomic unit of configuration. Each provision names a **writer** and
 carries writer-specific config. Provision types:
 
-| Writer        | What it produces                                  |
-|---------------|---------------------------------------------------|
-| `workflows`   | MCP server entry for `@anthropic/workflows`       |
-| `skills`      | Invokes `@codemcp/skills` CLI to install skills   |
-| `knowledge`   | Invokes knowledge CLI to set up a docset          |
-| `mcp-server`  | Generic MCP server entry (command + args + env)    |
-| `instruction` | Raw instruction text for the agent                |
-| `tool`        | CLI tool dependency to be available               |
+| Writer        | What it produces                                          |
+|---------------|-----------------------------------------------------------|
+| `workflows`   | MCP server entry for `@codemcp/workflows-server`          |
+| `skills`      | Invokes `@codemcp/skills` to install skills               |
+| `knowledge`   | Invokes `@codemcp/knowledge` CLI to set up knowledge sources |
+| `mcp-server`  | Generic MCP server entry (command + args + env)           |
+| `instruction` | Raw instruction text for the agent                        |
+| `tool`        | CLI tool dependency to be available                       |
+
+### KnowledgeSource
+
+Describes the origin of documentation content (e.g. a URL, a local path, or
+a package reference). Multiple knowledge sources may be combined into a single
+docset when the `@codemcp/knowledge-server` MCP is the selected option for the
+documentation facet. The knowledge CLI (`@codemcp/knowledge`) manages the
+physical docset artifacts; ADE only tracks the sources.
 
 ### LogicalConfig (intermediate representation)
 
@@ -61,10 +74,10 @@ Agent-agnostic resolved configuration. This is the contract between the
 resolution step and the agent writers:
 
 ```
-mcp_servers:   [{ref, command, args, env}]
-instructions:  [string]
-cli_actions:   [{command, args}]
-docsets:       [{path, description}]
+mcp_servers:        [{ref, command, args, env}]
+instructions:       [string]
+cli_actions:        [{command, args}]
+knowledge_sources:  [{name, origin, description}]
 ```
 
 ### Agent Writer
@@ -85,16 +98,16 @@ Supported agents (initial):
 
 ### `config.yaml` (checked into repo)
 
-The human-authored source of truth. Records facet selections and any manual
-overrides. Minimal, readable, diffable.
+Records facet selections. The CLI manages most of this file via commands;
+users may add manual entries in the `custom` section.
 
 ```yaml
-agent: claude-code          # which agent writer to use
+agent: claude-code            # which agent writer to use
 choices:
-  workflow: codemcp          # facet_id: option_id
+  workflow: codemcp            # facet_id: option_id
   testing: vitest
   knowledge: tanstack
-extras:                      # manual additions outside facets
+custom:                        # user-managed section (not touched by CLI)
   mcp_servers:
     - ref: custom-server
       command: npx
@@ -102,6 +115,10 @@ extras:                      # manual additions outside facets
   instructions:
     - "Always use pnpm, never npm."
 ```
+
+The `custom` section is the only part users edit by hand. All other sections
+are maintained exclusively through CLI commands, which simplifies merge
+conflicts and keeps the file structure predictable.
 
 ### `config.lock.yaml` (checked into repo)
 
@@ -112,24 +129,26 @@ when a facet selection or catalog version is updated.
 ## CLI Commands
 
 ```
-ade init           Interactive TUI: select agent, walk through facets,
+ade setup          Interactive TUI: select agent, walk through facets,
                    write config.yaml + config.lock.yaml + agent files.
 
-ade apply          Re-resolve config.yaml → config.lock.yaml → agent files.
+ade install        Re-resolve config.yaml → config.lock.yaml → agent files.
                    Non-interactive. Idempotent.
 
 ade add <facet>    Add or change a single facet selection interactively.
 
 ade remove <facet> Remove a facet selection.
 
-ade status         Show current selections and what would change on apply.
+ade status         Show current selections and what would change on install.
 ```
 
 ## Catalog
 
-Facets, options, and recipes live in a **catalog** — a structured data source
-shipped with ADE (initially embedded, later fetchable/versioned). The catalog
-is the single place that knows which provisions each option requires.
+Facets, options, and recipes live in a **catalog** — TypeScript code shipped
+with ADE. Using code (not data files) gives us type safety, registry
+patterns, and explicit references between options. The catalog is the single
+place that knows which provisions each option requires, and it versions
+naturally with the ADE package.
 
 ## Non-Goals (initial release)
 
@@ -140,16 +159,19 @@ is the single place that knows which provisions each option requires.
 
 ## Key Design Decisions
 
-1. **ADE owns agent config format knowledge.** MCP servers are pure runtime;
-   they do not know or care which agent invoked them.
+1. **ADE CLI owns agent config format knowledge.** MCP servers are pure
+   runtime; they do not know or care which agent invoked them.
 
-2. **Provision writers may invoke external CLIs.** The `skills` and
-   `knowledge` writers delegate to existing `@codemcp/skills` and knowledge
-   CLIs rather than reimplementing their logic. ADE orchestrates; it does not
-   absorb.
+2. **Provision writers may call package APIs directly.** The `skills` and
+   `knowledge` writers import `@codemcp/skills` and `@codemcp/knowledge` as
+   TypeScript dependencies. This gives type safety over subprocess invocation.
+   CLI fallback remains an option where direct import is impractical.
 
 3. **LogicalConfig is the stable contract.** Provision writers produce it,
    agent writers consume it. Neither side knows about the other.
 
 4. **Lock file is mandatory.** It makes the resolved state explicit,
    reviewable, and reproducible.
+
+5. **User edits are confined to `custom`.** The rest of `config.yaml` is
+   CLI-managed, eliminating merge conflicts in the structured sections.
