@@ -50,11 +50,15 @@
 
 ```
 read config.yaml
-  → for each choice, look up (facet, option) in catalog
-  → collect all provisions from the selected option's recipe
+  → topologically sort facets by dependsOn
+  → for each facet (in dependency order):
+      → look up (facet, selected option) in catalog
+      → build ResolutionContext from already-resolved dependent facets
+      → collect all provisions from the selected option's recipe
+      → for each provision, invoke the writer with (config, context)
+      → each writer returns a LogicalConfig fragment
+      → record facet as resolved
   → merge custom section from config.yaml
-  → for each provision, invoke the corresponding provision writer
-  → each writer returns a LogicalConfig fragment
   → merge all fragments into one LogicalConfig
   → write config.lock.yaml (serialized LogicalConfig)
 ```
@@ -113,6 +117,7 @@ interface Facet {
   label: string;            // e.g. "Workflow Framework"
   description: string;
   required: boolean;        // false = skippable
+  dependsOn?: string[];     // facet IDs this facet depends on
   options: Option[];
 }
 
@@ -132,6 +137,17 @@ interface Option {
 interface Provision {
   writer: ProvisionWriter;
   config: Record<string, unknown>;  // writer-specific
+}
+
+// Passed to provision writers so they can adapt based on sibling selections.
+// Only contains resolved options from facets declared in dependsOn.
+interface ResolutionContext {
+  resolved: Record<string, ResolvedFacet>;  // facet_id → resolved info
+}
+
+interface ResolvedFacet {
+  optionId: string;
+  option: Option;
 }
 
 type ProvisionWriter =
@@ -235,7 +251,16 @@ Produces:
 ## Provision Writers
 
 Each provision writer transforms its config into LogicalConfig fragments
-and/or CLI actions.
+and/or CLI actions. Writers receive an optional `ResolutionContext` containing
+the resolved options from dependent facets, allowing them to adapt their
+output based on sibling selections.
+
+```typescript
+type ProvisionWriterFn = (
+  config: Record<string, unknown>,
+  context: ResolutionContext
+) => Promise<Partial<LogicalConfig>>;
+```
 
 ### `workflows` writer
 
