@@ -32,3 +32,4 @@ export {
   getAgentWriter,
   createDefaultRegistry
 } from "./registry.js";
+export { resolve } from "./resolver.js";
