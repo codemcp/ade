@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@ade/shared": ["../shared/src/index.ts"]
+      "@ade/core": ["../core/src/index.ts"]
     }
   },
   "include": ["src/**/*"]
