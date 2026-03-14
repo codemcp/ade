@@ -1,8 +1,11 @@
 {
-  "name": "@ade/mcp-server",
+  "name": "@ade/cli",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "bin": {
+    "ade": "dist/index.js"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -19,7 +22,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@ade/shared": "workspace:*"
+    "@ade/core": "workspace:*"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.21.0",
