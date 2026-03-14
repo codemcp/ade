@@ -18,7 +18,7 @@ agent-agnostic, but the last mile — getting it into an agent's config — is n
 
 ## Goal
 
-Provide a single CLI that lets engineers declare *what* their project needs
+Provide a single CLI that lets engineers declare _what_ their project needs
 (workflows, skills, knowledge, tools) in one place, and generates the correct
 agent-specific configuration for whichever coding agent they use.
 
@@ -34,8 +34,9 @@ agent-specific configuration for whichever coding agent they use.
 
 A user-facing configuration question representing a single concern (e.g.
 "Which workflow framework?" or "Which testing convention?"). Each facet offers
-a set of options, exactly one of which is selected. Facets can be skippable
-(no selection = no provisions from that facet).
+a set of options, exactly one of which is selected (or multiple, if the facet
+allows multi-select). Facets can be skippable (no selection = no provisions
+from that facet).
 
 Facets may **depend on other facets**. When a facet declares dependencies,
 its provision writers receive the resolved options from those facets as
@@ -43,6 +44,9 @@ context. This allows provisions to adapt their output based on sibling
 selections. For example, the testing facet may depend on the workflow facet
 so that its skills writer knows which workflow-specific test conventions to
 install. The resolver processes facets in dependency order.
+
+When a user selects a facet whose dependencies are not yet satisfied (e.g.
+via `ade add`), the CLI prompts for the missing dependent facets first.
 
 ### Option
 
@@ -65,14 +69,14 @@ runtime config and agent instructions.
 An atomic unit of configuration. Each provision names a **writer** and
 carries writer-specific config. Provision types:
 
-| Writer        | What it produces                                          |
-|---------------|-----------------------------------------------------------|
-| `workflows`   | MCP server entry for `@codemcp/workflows-server`          |
-| `skills`      | Invokes `@codemcp/skills` to install skills               |
+| Writer        | What it produces                                             |
+| ------------- | ------------------------------------------------------------ |
+| `workflows`   | MCP server entry for `@codemcp/workflows-server`             |
+| `skills`      | Invokes `@codemcp/skills` to install skills                  |
 | `knowledge`   | Invokes `@codemcp/knowledge` CLI to set up knowledge sources |
-| `mcp-server`  | Generic MCP server entry (command + args + env)           |
-| `instruction` | Raw instruction text for the agent                        |
-| `installable` | CLI tool or dependency to be installed                     |
+| `mcp-server`  | Generic MCP server entry (command + args + env)              |
+| `instruction` | Raw instruction text for the agent                           |
+| `installable` | CLI tool or dependency to be installed                       |
 
 ### KnowledgeSource
 
@@ -100,13 +104,13 @@ Translates LogicalConfig into agent-specific files. ADE owns the knowledge of
 every supported agent's config format. When an agent changes its format, only
 its writer needs updating.
 
-Supported agents (initial):
+Supported agents (v1):
 
-| Agent       | Output files                                |
-|-------------|---------------------------------------------|
-| Claude Code | `.claude/settings.json`, `CLAUDE.md`        |
-| Copilot     | `.vscode/settings.json`, instructions MD    |
-| Kiro        | `.kiro/` steering files                     |
+| Agent    | Output files                 |
+| -------- | ---------------------------- |
+| OpenCode | TBD — opencode config format |
+
+Future agents: Claude Code, Copilot, Kiro.
 
 ## User-Facing Files
 
@@ -117,10 +121,13 @@ users may add manual entries in the `custom` section.
 
 ```yaml
 choices:
-  workflow: codemcp            # facet_id: option_id
-  testing: vitest
-  knowledge: tanstack
-custom:                        # user-managed section (not touched by CLI)
+  process: codemcp-workflows # facet_id: option_id (single-select)
+  conventions: codemcp-skills
+  documentation: knowledge-mcp
+  frameworks: # multi-select facet: list of option_ids
+    - react
+    - node-express
+custom: # user-managed section (not touched by CLI)
   mcp_servers:
     - ref: custom-server
       command: npx
@@ -129,10 +136,10 @@ custom:                        # user-managed section (not touched by CLI)
     - "Always use pnpm, never npm."
 ```
 
-The target agent (claude-code, copilot, kiro) is **not** stored in
-`config.yaml`. It is specified at generation time (e.g. `ade setup` or
-`ade install --agent claude-code`). This keeps the config agent-agnostic —
-the same `config.yaml` can generate output for any supported agent.
+The target agent is **not** stored in `config.yaml`. It is specified at
+generation time via `--agent` flag (e.g. `ade install --agent opencode`).
+There is no auto-detection. This keeps the config agent-agnostic — the same
+`config.yaml` can generate output for any supported agent.
 
 The `custom` section is the only part users edit by hand. All other sections
 are maintained exclusively through CLI commands, which simplifies merge
@@ -152,8 +159,7 @@ ade setup          Interactive TUI: select agent, walk through facets,
                    Agent selection is a setup-time choice, not stored in config.
 
 ade install        Re-resolve config.yaml → config.lock.yaml → agent files.
-                   Non-interactive. Idempotent. Requires --agent flag or
-                   detects agent from existing project files.
+                   Non-interactive. Idempotent. Requires --agent flag.
 
 ade add <facet>    Add or change a single facet selection interactively.
 
@@ -169,6 +175,50 @@ with ADE. Using code (not data files) gives us type safety, registry
 patterns, and explicit references between options. The catalog is the single
 place that knows which provisions each option requires, and it versions
 naturally with the ADE package.
+
+## V1 Catalog
+
+Four facets ship in v1:
+
+### 1. Process Guidance (`process`)
+
+How the agent receives workflow and process instructions.
+
+| Option              | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| `codemcp-workflows` | Uses `@codemcp/workflows-server` MCP for structured EPCC workflows |
+| `native-agents-md`  | Uses `AGENTS.md` with inline EPCC instructions (no MCP dependency) |
+
+### 2. Conventions (`conventions`)
+
+How project-specific skills and standards are delivered.
+
+| Option           | Description                                           |
+| ---------------- | ----------------------------------------------------- |
+| `codemcp-skills` | Uses `@codemcp/skills` MCP for dynamic skill delivery |
+| `native-skills`  | Installs skills as static files in the project        |
+
+### 3. Documentation (`documentation`)
+
+How reference documentation is made available to the agent.
+
+| Option          | Description                                               |
+| --------------- | --------------------------------------------------------- |
+| `knowledge-mcp` | Uses `@codemcp/knowledge-server` MCP with managed docsets |
+| `web-search`    | Relies on agent's built-in web search capability          |
+
+### 4. Development Frameworks (`frameworks`) — multi-select
+
+Which tech stacks the project uses. Multiple selections allowed.
+Provisions install framework-specific knowledge sources, skills, and
+instructions.
+
+| Option         | Description               |
+| -------------- | ------------------------- |
+| `react`        | React frontend framework  |
+| `vue`          | Vue.js frontend framework |
+| `java-spring`  | Java Spring Boot backend  |
+| `node-express` | Node.js Express backend   |
 
 ## Non-Goals (initial release)
 

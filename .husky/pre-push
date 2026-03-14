@@ -1,0 +1,8 @@
+# Ensure Typescript files have no errors before pushing
+# Ensure there is no linting or formatting errors before pushing
+pnpm run lint:all
+pnpm run format:check:all
+pnpm run typecheck:all
+
+# Run unit tests
+pnpm test
