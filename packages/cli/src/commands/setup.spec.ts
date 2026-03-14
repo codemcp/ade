@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Catalog, UserConfig, LogicalConfig, LockFile } from "@ade/core";
+import type { Catalog, LogicalConfig } from "@ade/core";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
