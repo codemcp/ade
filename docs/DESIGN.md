@@ -1,15 +1,21 @@
 # ADE CLI — Design Document
 
+> **Scope.** This document covers the **ADE CLI** (`packages/ade`) — the
+> setup and configuration tool. It does not cover the runtime MCP servers
+> (`@codemcp/workflows-server`, `@codemcp/knowledge-server`) or the broader
+> ADE information architecture. For the overall ADE vision, see the project
+> README.
+
 ## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │                     CLI Layer                        │
-│  ade init · ade apply · ade add · ade remove         │
+│  ade setup · ade install · ade add · ade remove       │
 └──────────────────────┬──────────────────────────────┘
                        │
               ┌────────▼────────┐
-              │     Catalog     │  facets, options, recipes
+              │     Catalog     │  facets, options, recipes (TypeScript)
               └────────┬────────┘
                        │
               ┌────────▼────────┐
@@ -18,7 +24,7 @@
                        │
           ┌────────────▼────────────┐
           │   Provision Writers     │  each writer produces LogicalConfig
-          │                         │  fragments; some invoke external CLIs
+          │                         │  fragments; some call package APIs
           │  workflows · skills     │
           │  knowledge · mcp-server │
           │  instruction · tool     │
@@ -46,7 +52,7 @@
 read config.yaml
   → for each choice, look up (facet, option) in catalog
   → collect all provisions from the selected option's recipe
-  → merge extras from config.yaml
+  → merge custom section from config.yaml
   → for each provision, invoke the corresponding provision writer
   → each writer returns a LogicalConfig fragment
   → merge all fragments into one LogicalConfig
@@ -63,27 +69,35 @@ read config.lock.yaml (or use in-memory LogicalConfig)
   → write files to disk
 ```
 
-### 3. CLI actions: provision writers that invoke CLIs
+### 3. Package API calls from provision writers
 
-Some provisions (notably `skills` and `knowledge`) don't produce
-LogicalConfig entries directly. Instead, they invoke external CLIs that
-manage their own state. ADE orchestrates these invocations during `apply`.
+Some provisions (notably `skills` and `knowledge`) delegate to sibling
+packages. ADE imports them as TypeScript dependencies rather than shelling
+out, giving type safety and avoiding CLI flag contracts.
 
 ```
 provision {writer: "skills", config: {name: "design", version: "1.0"}}
-  → ade invokes: npx @codemcp/skills install design@1.0
-  → skills CLI manages its own files
-  → no LogicalConfig entry produced (or a marker entry for tracking)
+  → import { install } from "@codemcp/skills"
+  → install({name: "design", version: "1.0"})
+  → skills package manages its own files
+  → may return a LogicalConfig fragment (e.g. MCP server entry)
 
-provision {writer: "knowledge", config: {name: "tanstack", source: "..."}}
-  → ade invokes: knowledge CLI to install/update the docset
-  → knowledge CLI manages .knowledge/ or equivalent
-  → LogicalConfig gets a docsets entry for agent writer reference
+provision {writer: "knowledge", config: {name: "tanstack", origin: "https://..."}}
+  → import { addSource } from "@codemcp/knowledge"
+  → addSource({name: "tanstack", origin: "https://..."})
+  → knowledge package manages docset artifacts
+  → LogicalConfig gets a knowledge_sources entry
 ```
+
+Where direct import is impractical (e.g. the dependency isn't TypeScript or
+has incompatible runtimes), CLI subprocess invocation is the fallback.
 
 ## Entity Model
 
 ### Catalog Structure
+
+The catalog is TypeScript code, not YAML. This gives us type safety, registry
+patterns, and explicit references between options.
 
 ```typescript
 interface Catalog {
@@ -126,24 +140,25 @@ interface LogicalConfig {
   mcp_servers: McpServerEntry[];
   instructions: string[];
   cli_actions: CliAction[];
-  docsets: Docset[];
+  knowledge_sources: KnowledgeSource[];
 }
 
 interface McpServerEntry {
   ref: string;            // unique key for dedup/update
   command: string;        // e.g. "npx"
-  args: string[];         // e.g. ["-y", "@anthropic/workflows"]
+  args: string[];         // e.g. ["-y", "@codemcp/workflows-server"]
   env: Record<string, string>;
 }
 
 interface CliAction {
   command: string;
   args: string[];
-  phase: "setup" | "apply";  // when to run
+  phase: "setup" | "install";  // when to run
 }
 
-interface Docset {
-  path: string;
+interface KnowledgeSource {
+  name: string;           // e.g. "tanstack"
+  origin: string;         // URL, path, or package ref
   description: string;
 }
 ```
@@ -151,17 +166,17 @@ interface Docset {
 ### Config Files
 
 ```typescript
-// config.yaml — human-authored
+// config.yaml — mostly CLI-managed
 interface UserConfig {
   agent: string;                           // agent writer id
   choices: Record<string, string>;         // facet_id → option_id
-  extras?: {
+  custom?: {                               // user-managed section
     mcp_servers?: McpServerEntry[];
     instructions?: string[];
   };
 }
 
-// config.lock.yaml — generated
+// config.lock.yaml — generated, never hand-edited
 interface LockFile {
   version: 1;
   generated_at: string;                   // ISO timestamp
@@ -178,7 +193,7 @@ Each agent writer implements a single interface:
 ```typescript
 interface AgentWriter {
   id: string;
-  apply(config: LogicalConfig, projectRoot: string): Promise<void>;
+  install(config: LogicalConfig, projectRoot: string): Promise<void>;
 }
 ```
 
@@ -212,71 +227,58 @@ Produces:
 ## Provision Writers
 
 Each provision writer transforms its config into LogicalConfig fragments
-and/or CLI actions:
+and/or CLI actions.
 
 ### `workflows` writer
 
-```yaml
-# provision config
-config:
-  package: "@anthropic/workflows"
-  env:
-    WORKFLOW_DIR: "./workflows"
+```typescript
+// provision config
+{ package: "@codemcp/workflows-server", env: { WORKFLOW_DIR: "./workflows" } }
 ```
 
 Produces: one `McpServerEntry` with `command: "npx"`,
-`args: ["-y", "@anthropic/workflows"]`, and the given env vars.
+`args: ["-y", "@codemcp/workflows-server"]`, and the given env vars.
 
 ### `skills` writer
 
-```yaml
-config:
-  name: "design"
-  version: "1.0"
+```typescript
+{ name: "design", version: "1.0" }
 ```
 
-Produces: one `CliAction` to invoke the skills CLI. May also produce an
-`McpServerEntry` if the skills MCP server needs to be registered.
+Calls `@codemcp/skills` API to install. May also produce an `McpServerEntry`
+if the skills MCP server needs to be registered.
 
 ### `knowledge` writer
 
-```yaml
-config:
-  name: "tanstack"
-  source: "https://tanstack.com/query/latest/docs"
+```typescript
+{ name: "tanstack", origin: "https://tanstack.com/query/latest/docs" }
 ```
 
-Produces: one `CliAction` to invoke the knowledge CLI, plus a `Docset`
-entry so agent writers can reference it in instructions.
+Calls `@codemcp/knowledge` API to add the source. Produces a
+`KnowledgeSource` entry so agent writers can reference it. The knowledge
+package manages the physical docset artifacts; multiple sources may be
+combined into one docset by `@codemcp/knowledge-server` at runtime.
 
 ### `mcp-server` writer
 
-```yaml
-config:
-  ref: "my-server"
-  command: "npx"
-  args: ["-y", "@acme/mcp-server"]
-  env:
-    API_KEY: "${API_KEY}"
+```typescript
+{ ref: "my-server", command: "npx", args: ["-y", "@acme/mcp-server"], env: { API_KEY: "${API_KEY}" } }
 ```
 
 Pass-through: produces one `McpServerEntry` directly.
 
 ### `instruction` writer
 
-```yaml
-config:
-  text: "Always use pnpm, never npm."
+```typescript
+{ text: "Always use pnpm, never npm." }
 ```
 
 Produces: one `instructions` entry.
 
 ### `tool` writer
 
-```yaml
-config:
-  command: "pnpm"
-  check: "pnpm --version"
+```typescript
+{ command: "pnpm", check: "pnpm --version" }
 ```
 
 Produces: one `CliAction` for validation/installation.
@@ -286,47 +288,55 @@ Produces: one `CliAction` for validation/installation.
 ```
 packages/
   shared/src/
-    types.ts          # LogicalConfig, Provision, Facet, etc.
-    config.ts         # read/write config.yaml and config.lock.yaml
+    types.ts              # LogicalConfig, Provision, Facet, etc.
+    config.ts             # read/write config.yaml and config.lock.yaml
   ade/src/
     commands/
-      init.ts         # interactive setup
-      apply.ts        # resolve + generate
-      add.ts          # modify single facet
-      remove.ts       # remove facet selection
-      status.ts       # show current state
+      setup.ts            # interactive TUI setup
+      install.ts          # resolve + generate (idempotent)
+      add.ts              # modify single facet
+      remove.ts           # remove facet selection
+      status.ts           # show current state
     core/
-      resolver.ts     # config.yaml + catalog → provisions → LogicalConfig
-      catalog.ts      # load and query the catalog
+      resolver.ts         # config.yaml + catalog → provisions → LogicalConfig
+    catalog/
+      index.ts            # catalog registry, exports all facets
+      facets/
+        workflow.ts       # workflow facet definition
+        testing.ts        # testing facet definition
+        knowledge.ts      # knowledge/documentation facet definition
+        ...
     adapters/
-      writers/        # provision writers
+      writers/            # provision writers
         workflows.ts
         skills.ts
         knowledge.ts
         mcp-server.ts
         instruction.ts
         tool.ts
-      agents/         # agent writers
+      agents/             # agent writers
         claude-code.ts
         copilot.ts
         kiro.ts
     tui/
-      prompts.ts      # interactive facet selection UI
+      prompts.ts          # interactive facet selection UI
     utils/
-  ade/catalog/
-    facets.yaml       # the embedded catalog
 ```
 
-## Open Questions
+## Decisions (formerly open questions)
 
-1. **Catalog versioning.** When the catalog updates (new facets, changed
-   recipes), how does `ade apply` behave for existing config.yaml files?
-   Initial approach: warn on unknown facets/options, apply what resolves.
+1. **Catalog is TypeScript code.** No YAML catalog files. Facets, options,
+   and recipes are defined as typed objects in `src/catalog/`. This gives
+   type safety, IDE support, and natural versioning with the package.
+   Each facet lives in its own file under `catalog/facets/`.
 
-2. **CLI delegation details.** The exact CLI interfaces for `@codemcp/skills`
-   and the knowledge tool are not finalized. ADE will invoke them as
-   subprocesses; the contract is their CLI flags, not internal APIs.
+2. **Direct package imports over CLI subprocesses.** Provision writers for
+   `skills` and `knowledge` import `@codemcp/skills` and `@codemcp/knowledge`
+   as TypeScript dependencies and call their APIs. This provides type safety
+   and avoids brittle CLI flag contracts. CLI subprocess invocation is the
+   fallback for non-TypeScript or cross-runtime cases.
 
-3. **Merge strategy for agent files.** When agent files contain user-authored
-   content outside ADE-managed sections, writers must preserve it. Delimiter
-   conventions (e.g. `<!-- ade:start -->`) need to be defined per agent.
+3. **`custom` section isolates user edits.** Only the `custom` block in
+   `config.yaml` is user-managed. The rest is CLI-managed. This eliminates
+   merge conflicts: the CLI never touches `custom`, and users never touch
+   the rest. Agent writers merge both sections when generating output.
