@@ -1,0 +1,61 @@
+import { describe, it, expect } from "vitest";
+import { workflowsWriter } from "./workflows.js";
+import type { ResolutionContext } from "../types.js";
+
+describe("workflowsWriter", () => {
+  const context: ResolutionContext = { resolved: {} };
+
+  it("has id 'workflows'", () => {
+    expect(workflowsWriter.id).toBe("workflows");
+  });
+
+  it("returns mcp_servers with correct ref, command, and args for a given package", async () => {
+    const result = await workflowsWriter.write(
+      { package: "@codemcp/workflows-server" },
+      context
+    );
+    expect(result).toEqual({
+      mcp_servers: [
+        {
+          ref: "@codemcp/workflows-server",
+          command: "npx",
+          args: ["-y", "@codemcp/workflows-server"],
+          env: {}
+        }
+      ]
+    });
+  });
+
+  it("includes env in the entry when env is specified", async () => {
+    const result = await workflowsWriter.write(
+      {
+        package: "@codemcp/workflows-server",
+        env: { API_KEY: "secret", NODE_ENV: "production" }
+      },
+      context
+    );
+    expect(result.mcp_servers![0].env).toEqual({
+      API_KEY: "secret",
+      NODE_ENV: "production"
+    });
+  });
+
+  it("defaults env to an empty object when not specified", async () => {
+    const result = await workflowsWriter.write(
+      { package: "@codemcp/workflows-server" },
+      context
+    );
+    expect(result.mcp_servers![0].env).toEqual({});
+  });
+
+  it("only returns mcp_servers, not other LogicalConfig keys", async () => {
+    const result = await workflowsWriter.write(
+      { package: "@codemcp/workflows-server" },
+      context
+    );
+    expect(Object.keys(result)).toEqual(["mcp_servers"]);
+    expect(result).not.toHaveProperty("instructions");
+    expect(result).not.toHaveProperty("cli_actions");
+    expect(result).not.toHaveProperty("knowledge_sources");
+  });
+});
