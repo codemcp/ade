@@ -89,3 +89,23 @@ export interface LockFile {
   choices: Record<string, string | string[]>;
   logical_config: LogicalConfig;
 }
+
+// --- Writer contracts (open, any package can implement) ---
+
+export interface ProvisionWriterDef {
+  id: string;
+  write(
+    config: Record<string, unknown>,
+    context: ResolutionContext
+  ): Promise<Partial<LogicalConfig>>;
+}
+
+export interface AgentWriterDef {
+  id: string;
+  install(config: LogicalConfig, projectRoot: string): Promise<void>;
+}
+
+export interface WriterRegistry {
+  provisions: Map<string, ProvisionWriterDef>;
+  agents: Map<string, AgentWriterDef>;
+}
