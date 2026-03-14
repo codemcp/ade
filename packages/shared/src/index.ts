@@ -1,0 +1,15 @@
+export {
+  type Catalog,
+  type Facet,
+  type Option,
+  type Provision
+} from "./types.js";
+export {
+  type LogicalConfig,
+  type McpServerEntry,
+  type CliAction,
+  type KnowledgeSource
+} from "./types.js";
+export { type ResolutionContext, type ResolvedFacet } from "./types.js";
+export { type UserConfig, type LockFile } from "./types.js";
+export { type ProvisionWriter } from "./types.js";

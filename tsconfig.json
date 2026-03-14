@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": ["**/*", ".*.js"],
+  "compilerOptions": {
+    "types": ["vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@ade/shared/*": ["packages/shared/src/*"],
+      "@ade/cli/*": ["packages/ade/src/*"],
+      "@ade/mcp-server/*": ["packages/ade-mcp-server/src/*"]
+    }
+  }
+}
