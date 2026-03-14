@@ -6,6 +6,10 @@ settings:
 
 importers:
   .:
+    dependencies:
+      yaml:
+        specifier: ^2.8.2
+        version: 2.8.2
     devDependencies:
       "@braintree/sanitize-url":
         specifier: 7.1.1
@@ -118,6 +122,10 @@ importers:
         version: 5.9.3
 
   packages/core:
+    dependencies:
+      yaml:
+        specifier: ^2.8.2
+        version: 2.8.2
     devDependencies:
       "@typescript-eslint/eslint-plugin":
         specifier: ^8.21.0

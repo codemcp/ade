@@ -14,6 +14,12 @@ export { type ResolutionContext, type ResolvedFacet } from "./types.js";
 export { type UserConfig, type LockFile } from "./types.js";
 export { type ProvisionWriter } from "./types.js";
 export {
+  readUserConfig,
+  writeUserConfig,
+  readLockFile,
+  writeLockFile
+} from "./config.js";
+export {
   type ProvisionWriterDef,
   type AgentWriterDef,
   type WriterRegistry
