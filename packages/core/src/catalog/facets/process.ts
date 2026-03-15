@@ -13,7 +13,13 @@ export const processFacet: Facet = {
       recipe: [
         {
           writer: "workflows",
-          config: {}
+          config: { package: "@anthropic/codemcp" }
+        },
+        {
+          writer: "instruction",
+          config: {
+            text: "Use codemcp workflow files (.workflow.md) to structure and execute tasks."
+          }
         }
       ]
     },
@@ -24,7 +30,9 @@ export const processFacet: Facet = {
       recipe: [
         {
           writer: "instruction",
-          config: {}
+          config: {
+            text: "Read AGENTS.md for project conventions and task instructions."
+          }
         }
       ]
     }

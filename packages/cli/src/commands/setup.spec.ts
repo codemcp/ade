@@ -24,7 +24,11 @@ vi.mock("@ade/core", async (importOriginal) => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: []
-    } satisfies LogicalConfig)
+    } satisfies LogicalConfig),
+    getAgentWriter: vi.fn().mockReturnValue({
+      id: "claude-code",
+      install: vi.fn().mockResolvedValue(undefined)
+    })
   };
 });
 

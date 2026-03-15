@@ -6,7 +6,8 @@ import {
   writeUserConfig,
   writeLockFile,
   resolve,
-  createDefaultRegistry
+  createDefaultRegistry,
+  getAgentWriter
 } from "@ade/core";
 
 export async function runSetup(
@@ -56,6 +57,11 @@ export async function runSetup(
     logical_config: logicalConfig
   };
   await writeLockFile(projectRoot, lockFile);
+
+  const agentWriter = getAgentWriter(registry, "claude-code");
+  if (agentWriter) {
+    await agentWriter.install(logicalConfig, projectRoot);
+  }
 
   clack.outro("Setup complete!");
 }

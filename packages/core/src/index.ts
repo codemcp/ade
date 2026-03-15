@@ -34,3 +34,4 @@ export {
 } from "./registry.js";
 export { resolve } from "./resolver.js";
 export { getDefaultCatalog, getFacet, getOption } from "./catalog/index.js";
+export { claudeCodeWriter } from "./agents/claude-code.js";
