@@ -44,6 +44,73 @@ describe("catalog", () => {
     });
   });
 
+  describe("conventions facet", () => {
+    it("exists in the default catalog", () => {
+      const catalog = getDefaultCatalog();
+      const conventions = getFacet(catalog, "conventions");
+      expect(conventions).toBeDefined();
+      expect(conventions!.required).toBe(false);
+    });
+
+    it("has tanstack option with skills for architecture, design, code, testing", () => {
+      const catalog = getDefaultCatalog();
+      const conventions = getFacet(catalog, "conventions")!;
+      const tanstack = getOption(conventions, "tanstack");
+
+      expect(tanstack).toBeDefined();
+      const skillsProvisions = tanstack!.recipe.filter(
+        (p) => p.writer === "skills"
+      );
+      expect(skillsProvisions).toHaveLength(1);
+
+      const skills = (
+        skillsProvisions[0].config as { skills: { name: string }[] }
+      ).skills;
+      const names = skills.map((s) => s.name);
+      expect(names).toContain("tanstack-architecture");
+      expect(names).toContain("tanstack-design");
+      expect(names).toContain("tanstack-code");
+      expect(names).toContain("tanstack-testing");
+    });
+
+    it("has conventional-commits option with a single skill", () => {
+      const catalog = getDefaultCatalog();
+      const conventions = getFacet(catalog, "conventions")!;
+      const option = getOption(conventions, "conventional-commits");
+
+      expect(option).toBeDefined();
+      const skills = (
+        option!.recipe.find((p) => p.writer === "skills")!.config as {
+          skills: { name: string }[];
+        }
+      ).skills;
+      expect(skills).toHaveLength(1);
+      expect(skills[0].name).toBe("conventional-commits");
+    });
+
+    it("has tdd-london option with a single skill", () => {
+      const catalog = getDefaultCatalog();
+      const conventions = getFacet(catalog, "conventions")!;
+      const option = getOption(conventions, "tdd-london");
+
+      expect(option).toBeDefined();
+    });
+
+    it("has adr-nygard option with a single skill", () => {
+      const catalog = getDefaultCatalog();
+      const conventions = getFacet(catalog, "conventions")!;
+      const option = getOption(conventions, "adr-nygard");
+
+      expect(option).toBeDefined();
+    });
+
+    it("is multi-select", () => {
+      const catalog = getDefaultCatalog();
+      const conventions = getFacet(catalog, "conventions")!;
+      expect(conventions.multiSelect).toBe(true);
+    });
+  });
+
   describe("catalog + registry integration", () => {
     it("every recipe provision references a writer that exists in the default registry", () => {
       const catalog = getDefaultCatalog();
