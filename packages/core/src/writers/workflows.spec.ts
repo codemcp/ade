@@ -19,11 +19,22 @@ describe("workflowsWriter", () => {
         {
           ref: "@codemcp/workflows-server",
           command: "npx",
-          args: ["-y", "@codemcp/workflows-server"],
+          args: ["@codemcp/workflows-server"],
           env: {}
         }
       ]
     });
+  });
+
+  it("uses ref override when provided", async () => {
+    const result = await workflowsWriter.write(
+      { package: "@codemcp/workflows-server@latest", ref: "workflows" },
+      context
+    );
+    expect(result.mcp_servers![0].ref).toBe("workflows");
+    expect(result.mcp_servers![0].args).toEqual([
+      "@codemcp/workflows-server@latest"
+    ]);
   });
 
   it("includes env in the entry when env is specified", async () => {

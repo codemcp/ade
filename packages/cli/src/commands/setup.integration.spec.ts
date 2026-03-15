@@ -53,7 +53,7 @@ describe("setup integration (real temp dir)", () => {
     // LogicalConfig was produced by the real resolver with real writers
     const lc = lock!.logical_config;
     expect(lc.mcp_servers).toHaveLength(1);
-    expect(lc.mcp_servers[0].ref).toBe("@codemcp/workflows");
+    expect(lc.mcp_servers[0].ref).toBe("workflows");
     expect(lc.instructions.length).toBeGreaterThan(0);
 
     // ── Agent output: .claude/settings.json ──────────────────────────────
@@ -61,9 +61,9 @@ describe("setup integration (real temp dir)", () => {
     const settings = JSON.parse(
       await readFile(join(dir, ".claude", "settings.json"), "utf-8")
     );
-    expect(settings.mcpServers["@codemcp/workflows"]).toMatchObject({
+    expect(settings.mcpServers["workflows"]).toMatchObject({
       command: "npx",
-      args: ["-y", "@codemcp/workflows"]
+      args: ["@codemcp/workflows-server@latest"]
     });
 
     // ── Agent output: AGENTS.md ─────────────────────────────────────────
