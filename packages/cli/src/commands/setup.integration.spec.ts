@@ -68,7 +68,7 @@ describe("setup integration (real temp dir)", () => {
 
     // ── Agent output: AGENTS.md ─────────────────────────────────────────
     const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
-    expect(agentsMd).toContain("@codemcp/workflows");
+    expect(agentsMd).toContain("Call whats_next()");
   });
 
   it("writes config.yaml, lock, and AGENTS.md for native-agents-md", async () => {

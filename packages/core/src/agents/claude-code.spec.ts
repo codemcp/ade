@@ -28,8 +28,8 @@ describe("claudeCodeWriter", () => {
 
     const content = await readFile(join(dir, "AGENTS.md"), "utf-8");
     expect(content).toContain("# AGENTS");
-    expect(content).toContain("- Use workflow files.");
-    expect(content).toContain("- Follow conventions.");
+    expect(content).toContain("Use workflow files.");
+    expect(content).toContain("Follow conventions.");
   });
 
   it("writes .claude/settings.json with MCP servers", async () => {

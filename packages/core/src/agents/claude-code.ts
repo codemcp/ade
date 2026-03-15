@@ -18,9 +18,8 @@ async function writeAgentsMd(
 
   const lines = ["# AGENTS", ""];
   for (const instruction of config.instructions) {
-    lines.push(`- ${instruction}`);
+    lines.push(instruction, "");
   }
-  lines.push("");
 
   await writeFile(join(projectRoot, "AGENTS.md"), lines.join("\n"), "utf-8");
 }
