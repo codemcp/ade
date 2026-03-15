@@ -1,9 +1,10 @@
 import type { Catalog, Facet, Option } from "../types.js";
 import { processFacet } from "./facets/process.js";
+import { conventionsFacet } from "./facets/conventions.js";
 
 export function getDefaultCatalog(): Catalog {
   return {
-    facets: [processFacet]
+    facets: [processFacet, conventionsFacet]
   };
 }
 

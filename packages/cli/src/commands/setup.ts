@@ -16,31 +16,27 @@ export async function runSetup(
 ): Promise<void> {
   clack.intro("ade setup");
 
-  const choices: Record<string, string> = {};
+  const choices: Record<string, string | string[]> = {};
 
   for (const facet of catalog.facets) {
-    const options = facet.options.map((o) => ({
-      value: o.id,
-      label: o.label,
-      hint: o.description
-    }));
-
-    if (!facet.required) {
-      options.push({ value: "__skip__", label: "Skip", hint: "" });
-    }
-
-    const selected = await clack.select({
-      message: facet.label,
-      options
-    });
-
-    if (typeof selected === "symbol") {
-      clack.cancel("Setup cancelled.");
-      return;
-    }
-
-    if (selected !== "__skip__") {
-      choices[facet.id] = selected as string;
+    if (facet.multiSelect) {
+      const selected = await promptMultiSelect(facet);
+      if (typeof selected === "symbol") {
+        clack.cancel("Setup cancelled.");
+        return;
+      }
+      if (selected.length > 0) {
+        choices[facet.id] = selected;
+      }
+    } else {
+      const selected = await promptSelect(facet);
+      if (typeof selected === "symbol") {
+        clack.cancel("Setup cancelled.");
+        return;
+      }
+      if (selected !== "__skip__") {
+        choices[facet.id] = selected as string;
+      }
     }
   }
 
@@ -64,4 +60,42 @@ export async function runSetup(
   }
 
   clack.outro("Setup complete!");
+}
+
+function promptSelect(facet: {
+  label: string;
+  required: boolean;
+  options: { id: string; label: string; description: string }[];
+}) {
+  const options = facet.options.map((o) => ({
+    value: o.id,
+    label: o.label,
+    hint: o.description
+  }));
+
+  if (!facet.required) {
+    options.push({ value: "__skip__", label: "Skip", hint: "" });
+  }
+
+  return clack.select({
+    message: facet.label,
+    options
+  });
+}
+
+function promptMultiSelect(facet: {
+  label: string;
+  options: { id: string; label: string; description: string }[];
+}) {
+  const options = facet.options.map((o) => ({
+    value: o.id,
+    label: o.label,
+    hint: o.description
+  }));
+
+  return clack.multiselect({
+    message: facet.label,
+    options,
+    required: false
+  });
 }
