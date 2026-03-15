@@ -36,9 +36,9 @@ describe("claudeCodeWriter", () => {
     const config: LogicalConfig = {
       mcp_servers: [
         {
-          ref: "@anthropic/codemcp",
+          ref: "@codemcp/workflows",
           command: "npx",
-          args: ["-y", "@anthropic/codemcp"],
+          args: ["-y", "@codemcp/workflows"],
           env: {}
         }
       ],
@@ -51,9 +51,9 @@ describe("claudeCodeWriter", () => {
 
     const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
     const settings = JSON.parse(raw);
-    expect(settings.mcpServers["@anthropic/codemcp"]).toEqual({
+    expect(settings.mcpServers["@codemcp/workflows"]).toEqual({
       command: "npx",
-      args: ["-y", "@anthropic/codemcp"]
+      args: ["-y", "@codemcp/workflows"]
     });
   });
 

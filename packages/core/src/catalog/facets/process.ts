@@ -9,16 +9,17 @@ export const processFacet: Facet = {
     {
       id: "codemcp-workflows",
       label: "CodeMCP Workflows",
-      description: "Use codemcp workflow files to drive agent tasks",
+      description:
+        "Use @codemcp/workflows to drive agent tasks with structured engineering workflows",
       recipe: [
         {
           writer: "workflows",
-          config: { package: "@anthropic/codemcp" }
+          config: { package: "@codemcp/workflows" }
         },
         {
           writer: "instruction",
           config: {
-            text: "Use codemcp workflow files (.workflow.md) to structure and execute tasks."
+            text: "Use @codemcp/workflows to follow structured engineering workflows for all tasks."
           }
         }
       ]
