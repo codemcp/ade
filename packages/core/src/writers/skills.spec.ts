@@ -62,6 +62,48 @@ describe("skillsWriter", () => {
       emptyContext
     );
 
-    expect(result.skills![0].body).toBe(body);
+    expect(result.skills![0]).toMatchObject({ body });
+  });
+
+  it("returns external skills with source reference", async () => {
+    const result = await skillsWriter.write(
+      {
+        skills: [
+          {
+            name: "playwright-cli",
+            source: "microsoft/playwright-cli/skills/playwright-cli"
+          }
+        ]
+      },
+      emptyContext
+    );
+
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills![0]).toEqual({
+      name: "playwright-cli",
+      source: "microsoft/playwright-cli/skills/playwright-cli"
+    });
+  });
+
+  it("handles mixed inline and external skills", async () => {
+    const result = await skillsWriter.write(
+      {
+        skills: [
+          { name: "my-skill", description: "Inline", body: "Do stuff." },
+          { name: "ext-skill", source: "org/repo/skills/ext" }
+        ]
+      },
+      emptyContext
+    );
+
+    expect(result.skills).toHaveLength(2);
+    expect(result.skills![0]).toMatchObject({
+      name: "my-skill",
+      body: "Do stuff."
+    });
+    expect(result.skills![1]).toMatchObject({
+      name: "ext-skill",
+      source: "org/repo/skills/ext"
+    });
   });
 });

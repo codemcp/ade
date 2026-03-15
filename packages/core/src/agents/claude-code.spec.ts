@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtemp, rm, readFile } from "node:fs/promises";
+import { mkdtemp, rm, readFile, access } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { LogicalConfig } from "../types.js";
@@ -109,7 +109,7 @@ describe("claudeCodeWriter", () => {
     await expect(readFile(join(dir, "AGENTS.md"), "utf-8")).rejects.toThrow();
   });
 
-  it("skips settings.json when no MCP servers", async () => {
+  it("skips settings.json when no MCP servers and no skills", async () => {
     const config: LogicalConfig = {
       mcp_servers: [],
       instructions: ["hello"],
@@ -125,7 +125,9 @@ describe("claudeCodeWriter", () => {
     ).rejects.toThrow();
   });
 
-  it("writes SKILL.md files to .agentskills/skills/<name>/", async () => {
+  // ── Skills: inline ────────────────────────────────────────────────────
+
+  it("writes inline SKILL.md files to .ade/catalog/skills/<name>/", async () => {
     const config: LogicalConfig = {
       mcp_servers: [],
       instructions: [],
@@ -143,7 +145,14 @@ describe("claudeCodeWriter", () => {
     await claudeCodeWriter.install(config, dir);
 
     const skillMd = await readFile(
-      join(dir, ".agentskills", "skills", "tanstack-architecture", "SKILL.md"),
+      join(
+        dir,
+        ".ade",
+        "catalog",
+        "skills",
+        "tanstack-architecture",
+        "SKILL.md"
+      ),
       "utf-8"
     );
     expect(skillMd).toContain("name: tanstack-architecture");
@@ -152,33 +161,108 @@ describe("claudeCodeWriter", () => {
     expect(skillMd).toContain("Use file-based routing.");
   });
 
-  it("writes multiple SKILL.md files", async () => {
+  it("registers inline skills in package.json as file: refs", async () => {
     const config: LogicalConfig = {
       mcp_servers: [],
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
       skills: [
-        { name: "skill-a", description: "First skill", body: "Body A" },
-        { name: "skill-b", description: "Second skill", body: "Body B" }
+        {
+          name: "tanstack-code",
+          description: "Code conventions",
+          body: "# Code\nStuff."
+        }
       ]
     };
 
     await claudeCodeWriter.install(config, dir);
 
-    const a = await readFile(
-      join(dir, ".agentskills", "skills", "skill-a", "SKILL.md"),
-      "utf-8"
+    const pkg = JSON.parse(await readFile(join(dir, "package.json"), "utf-8"));
+    expect(pkg.agentskills["tanstack-code"]).toBe(
+      "file:./.ade/catalog/skills/tanstack-code"
     );
-    const b = await readFile(
-      join(dir, ".agentskills", "skills", "skill-b", "SKILL.md"),
-      "utf-8"
-    );
-    expect(a).toContain("name: skill-a");
-    expect(b).toContain("name: skill-b");
   });
 
-  it("adds agentskills MCP server when skills are present", async () => {
+  // ── Skills: external ──────────────────────────────────────────────────
+
+  it("registers external skills in package.json by source", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [
+        {
+          name: "playwright-cli",
+          source: "microsoft/playwright-cli/skills/playwright-cli"
+        }
+      ]
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const pkg = JSON.parse(await readFile(join(dir, "package.json"), "utf-8"));
+    expect(pkg.agentskills["playwright-cli"]).toBe(
+      "microsoft/playwright-cli/skills/playwright-cli"
+    );
+  });
+
+  it("does not write SKILL.md for external skills", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [
+        {
+          name: "playwright-cli",
+          source: "microsoft/playwright-cli/skills/playwright-cli"
+        }
+      ]
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    await expect(
+      access(join(dir, ".ade", "catalog", "skills", "playwright-cli"))
+    ).rejects.toThrow();
+  });
+
+  // ── Skills: mixed ─────────────────────────────────────────────────────
+
+  it("handles mixed inline and external skills", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [
+        { name: "my-conv", description: "Inline", body: "Do stuff." },
+        { name: "ext-skill", source: "org/repo/skills/ext" }
+      ]
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    // Inline skill has SKILL.md
+    const skillMd = await readFile(
+      join(dir, ".ade", "catalog", "skills", "my-conv", "SKILL.md"),
+      "utf-8"
+    );
+    expect(skillMd).toContain("name: my-conv");
+
+    // Both registered in package.json
+    const pkg = JSON.parse(await readFile(join(dir, "package.json"), "utf-8"));
+    expect(pkg.agentskills["my-conv"]).toBe(
+      "file:./.ade/catalog/skills/my-conv"
+    );
+    expect(pkg.agentskills["ext-skill"]).toBe("org/repo/skills/ext");
+  });
+
+  // ── Skills: MCP server ────────────────────────────────────────────────
+
+  it("adds skills-server MCP server when skills are present", async () => {
     const config: LogicalConfig = {
       mcp_servers: [],
       instructions: [],
@@ -193,11 +277,11 @@ describe("claudeCodeWriter", () => {
     const settings = JSON.parse(raw);
     expect(settings.mcpServers["agentskills"]).toEqual({
       command: "npx",
-      args: ["-y", "@anthropic-ai/agentskills-mcp-server"]
+      args: ["-y", "@codemcp/skills-server"]
     });
   });
 
-  it("skips skills directory when no skills", async () => {
+  it("skips skills when none present", async () => {
     const config: LogicalConfig = {
       mcp_servers: [],
       instructions: ["hello"],
@@ -208,7 +292,32 @@ describe("claudeCodeWriter", () => {
 
     await claudeCodeWriter.install(config, dir);
 
-    const { access } = await import("node:fs/promises");
-    await expect(access(join(dir, ".agentskills"))).rejects.toThrow();
+    await expect(access(join(dir, ".ade"))).rejects.toThrow();
+  });
+
+  it("preserves existing package.json fields when adding skills", async () => {
+    const { writeFile } = await import("node:fs/promises");
+    await writeFile(
+      join(dir, "package.json"),
+      JSON.stringify({ name: "my-project", version: "1.0.0" }),
+      "utf-8"
+    );
+
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [{ name: "my-skill", description: "A skill", body: "Body." }]
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const pkg = JSON.parse(await readFile(join(dir, "package.json"), "utf-8"));
+    expect(pkg.name).toBe("my-project");
+    expect(pkg.version).toBe("1.0.0");
+    expect(pkg.agentskills["my-skill"]).toBe(
+      "file:./.ade/catalog/skills/my-skill"
+    );
   });
 });

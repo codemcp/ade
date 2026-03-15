@@ -3,8 +3,15 @@ import { join } from "node:path";
 import type {
   AgentWriterDef,
   LogicalConfig,
-  McpServerEntry
+  McpServerEntry,
+  InlineSkill
 } from "../types.js";
+
+function isInlineSkill(
+  skill: LogicalConfig["skills"][number]
+): skill is InlineSkill {
+  return "body" in skill;
+}
 
 export const claudeCodeWriter: AgentWriterDef = {
   id: "claude-code",
@@ -35,34 +42,74 @@ async function writeSkills(
 ): Promise<void> {
   if (config.skills.length === 0) return;
 
+  const agentskills: Record<string, string> = {};
+
   for (const skill of config.skills) {
-    const skillDir = join(projectRoot, ".agentskills", "skills", skill.name);
-    await mkdir(skillDir, { recursive: true });
+    if (isInlineSkill(skill)) {
+      // Write inline skill to catalog staging area
+      const skillDir = join(
+        projectRoot,
+        ".ade",
+        "catalog",
+        "skills",
+        skill.name
+      );
+      await mkdir(skillDir, { recursive: true });
 
-    const frontmatter = [
-      "---",
-      `name: ${skill.name}`,
-      `description: ${skill.description}`,
-      "---"
-    ].join("\n");
+      const frontmatter = [
+        "---",
+        `name: ${skill.name}`,
+        `description: ${skill.description}`,
+        "---"
+      ].join("\n");
 
-    const content = `${frontmatter}\n\n${skill.body}\n`;
-    await writeFile(join(skillDir, "SKILL.md"), content, "utf-8");
+      const content = `${frontmatter}\n\n${skill.body}\n`;
+      await writeFile(join(skillDir, "SKILL.md"), content, "utf-8");
+
+      agentskills[skill.name] = `file:./.ade/catalog/skills/${skill.name}`;
+    } else {
+      // External skill — just register the source reference
+      agentskills[skill.name] = skill.source;
+    }
   }
+
+  // Register skills in package.json
+  await updatePackageJson(projectRoot, agentskills);
+}
+
+async function updatePackageJson(
+  projectRoot: string,
+  agentskills: Record<string, string>
+): Promise<void> {
+  const pkgPath = join(projectRoot, "package.json");
+
+  let existing: Record<string, unknown> = {};
+  try {
+    const raw = await readFile(pkgPath, "utf-8");
+    existing = JSON.parse(raw);
+  } catch {
+    // No existing package.json — start fresh
+  }
+
+  const currentSkills = (existing.agentskills as Record<string, string>) ?? {};
+  const merged = { ...currentSkills, ...agentskills };
+
+  const pkg = { ...existing, agentskills: merged };
+  await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
 }
 
 async function writeClaudeSettings(
   config: LogicalConfig,
   projectRoot: string
 ): Promise<void> {
-  // Collect all MCP servers: explicit ones + agentskills if skills exist
+  // Collect all MCP servers: explicit ones + skills-server if skills exist
   const allServers: McpServerEntry[] = [...config.mcp_servers];
 
   if (config.skills.length > 0) {
     allServers.push({
       ref: "agentskills",
       command: "npx",
-      args: ["-y", "@anthropic-ai/agentskills-mcp-server"],
+      args: ["-y", "@codemcp/skills-server"],
       env: {}
     });
   }
