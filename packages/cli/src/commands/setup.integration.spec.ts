@@ -50,17 +50,28 @@ describe("setup integration (real temp dir)", () => {
     expect(lock!.choices).toEqual({ process: "codemcp-workflows" });
     expect(lock!.generated_at).toBeTruthy();
 
-    // LogicalConfig was produced by the resolver (stubs return empty partials)
+    // LogicalConfig was produced by the real resolver with real writers
     const lc = lock!.logical_config;
-    expect(lc).toMatchObject({
-      mcp_servers: expect.any(Array),
-      instructions: expect.any(Array),
-      cli_actions: expect.any(Array),
-      knowledge_sources: expect.any(Array)
+    expect(lc.mcp_servers).toHaveLength(1);
+    expect(lc.mcp_servers[0].ref).toBe("@anthropic/codemcp");
+    expect(lc.instructions.length).toBeGreaterThan(0);
+
+    // ── Agent output: .claude/settings.json ──────────────────────────────
+    const { readFile } = await import("node:fs/promises");
+    const settings = JSON.parse(
+      await readFile(join(dir, ".claude", "settings.json"), "utf-8")
+    );
+    expect(settings.mcpServers["@anthropic/codemcp"]).toMatchObject({
+      command: "npx",
+      args: ["-y", "@anthropic/codemcp"]
     });
+
+    // ── Agent output: AGENTS.md ─────────────────────────────────────────
+    const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
+    expect(agentsMd).toContain("codemcp workflow files");
   });
 
-  it("writes config.yaml and config.lock.yaml for native-agents-md", async () => {
+  it("writes config.yaml, lock, and AGENTS.md for native-agents-md", async () => {
     const catalog = getDefaultCatalog();
 
     vi.mocked(clack.select).mockResolvedValueOnce("native-agents-md");
@@ -72,6 +83,12 @@ describe("setup integration (real temp dir)", () => {
 
     const lock = await readLockFile(dir);
     expect(lock!.choices).toEqual({ process: "native-agents-md" });
+    expect(lock!.logical_config.instructions.length).toBeGreaterThan(0);
+
+    // Agent output: AGENTS.md is written with instruction text
+    const { readFile } = await import("node:fs/promises");
+    const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
+    expect(agentsMd).toContain("AGENTS.md");
   });
 
   it("does not write any files when user cancels", async () => {

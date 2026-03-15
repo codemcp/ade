@@ -131,11 +131,11 @@ describe("registry", () => {
       expect(registry.provisions.size).toBe(6);
     });
 
-    it("has the 'opencode' agent writer registered", () => {
+    it("has the 'claude-code' agent writer registered", () => {
       const registry = createDefaultRegistry();
-      const agent = getAgentWriter(registry, "opencode");
+      const agent = getAgentWriter(registry, "claude-code");
       expect(agent).toBeDefined();
-      expect(agent!.id).toBe("opencode");
+      expect(agent!.id).toBe("claude-code");
     });
   });
 });

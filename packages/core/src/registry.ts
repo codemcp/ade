@@ -3,6 +3,9 @@ import type {
   ProvisionWriterDef,
   AgentWriterDef
 } from "./types.js";
+import { instructionWriter } from "./writers/instruction.js";
+import { workflowsWriter } from "./writers/workflows.js";
+import { claudeCodeWriter } from "./agents/claude-code.js";
 
 export function createRegistry(): WriterRegistry {
   return {
@@ -42,26 +45,18 @@ export function getAgentWriter(
 export function createDefaultRegistry(): WriterRegistry {
   const registry = createRegistry();
 
-  const provisionIds = [
-    "workflows",
-    "skills",
-    "knowledge",
-    "mcp-server",
-    "instruction",
-    "installable"
-  ] as const;
+  registerProvisionWriter(registry, instructionWriter);
+  registerProvisionWriter(registry, workflowsWriter);
 
-  for (const id of provisionIds) {
+  // Stub writers for types not yet implemented
+  for (const id of ["skills", "knowledge", "mcp-server", "installable"]) {
     registerProvisionWriter(registry, {
       id,
       write: async () => ({})
     });
   }
 
-  registerAgentWriter(registry, {
-    id: "opencode",
-    install: async () => {}
-  });
+  registerAgentWriter(registry, claudeCodeWriter);
 
   return registry;
 }
