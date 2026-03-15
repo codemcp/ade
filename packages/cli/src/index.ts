@@ -2,6 +2,7 @@
 
 import { version } from "./version.js";
 import { runSetup } from "./commands/setup.js";
+import { runInstall } from "./commands/install.js";
 import { getDefaultCatalog } from "@ade/core";
 
 const args = process.argv.slice(2);
@@ -11,6 +12,12 @@ if (command === "setup") {
   const projectRoot = args[1] ?? process.cwd();
   const catalog = getDefaultCatalog();
   await runSetup(projectRoot, catalog);
+} else if (command === "install") {
+  const projectRoot = args[1] ?? process.cwd();
+  const agent = args.includes("--agent")
+    ? args[args.indexOf("--agent") + 1]
+    : "claude-code";
+  await runInstall(projectRoot, agent);
 } else if (command === "--version" || command === "-v") {
   console.log(version);
 } else {
@@ -20,10 +27,14 @@ if (command === "setup") {
   console.log();
   console.log("Commands:");
   console.log(
-    "  setup [dir]    Configure your AI agent (default: current dir)"
+    "  setup [dir]      Configure your AI agent (default: current dir)"
+  );
+  console.log(
+    "  install [dir]    Re-resolve config and regenerate agent files"
   );
   console.log();
   console.log("Options:");
-  console.log("  -v, --version  Show version");
+  console.log("  --agent <name>   Agent writer to use (default: claude-code)");
+  console.log("  -v, --version    Show version");
   process.exitCode = command ? 1 : 0;
 }
