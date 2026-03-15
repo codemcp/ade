@@ -117,7 +117,8 @@ describe("runSetup", () => {
       mcp_servers: [],
       instructions: ["do stuff"],
       cli_actions: [],
-      knowledge_sources: []
+      knowledge_sources: [],
+      skills: []
     };
     vi.mocked(resolve).mockResolvedValueOnce(mockLogical);
     vi.mocked(clack.select)
