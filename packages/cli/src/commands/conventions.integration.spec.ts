@@ -31,16 +31,15 @@ describe("conventions facet integration", () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it("writes SKILL.md files for tanstack conventions", async () => {
+  it("writes inline SKILL.md files and registers all skills in package.json for tanstack", async () => {
     const catalog = getDefaultCatalog();
 
-    // Select codemcp-workflows for process, tanstack for conventions
     vi.mocked(clack.select).mockResolvedValueOnce("codemcp-workflows");
     vi.mocked(clack.multiselect).mockResolvedValueOnce(["tanstack"]);
 
     await runSetup(dir, catalog);
 
-    // Should have 4 skill files
+    // Inline skills should have SKILL.md in .ade/catalog/skills/
     for (const skill of [
       "tanstack-architecture",
       "tanstack-design",
@@ -48,20 +47,34 @@ describe("conventions facet integration", () => {
       "tanstack-testing"
     ]) {
       const skillMd = await readFile(
-        join(dir, ".agentskills", "skills", skill, "SKILL.md"),
+        join(dir, ".ade", "catalog", "skills", skill, "SKILL.md"),
         "utf-8"
       );
       expect(skillMd).toContain(`name: ${skill}`);
       expect(skillMd).toContain("---");
     }
 
-    // agentskills MCP server should be in settings.json
+    // External skill (playwright) should NOT have a local SKILL.md
+    await expect(
+      access(join(dir, ".ade", "catalog", "skills", "playwright-cli"))
+    ).rejects.toThrow();
+
+    // All skills should be registered in package.json
+    const pkg = JSON.parse(await readFile(join(dir, "package.json"), "utf-8"));
+    expect(pkg.agentskills["tanstack-architecture"]).toBe(
+      "file:./.ade/catalog/skills/tanstack-architecture"
+    );
+    expect(pkg.agentskills["playwright-cli"]).toBe(
+      "microsoft/playwright-cli/skills/playwright-cli"
+    );
+
+    // skills-server MCP server should be in settings.json
     const settings = JSON.parse(
       await readFile(join(dir, ".claude", "settings.json"), "utf-8")
     );
     expect(settings.mcpServers["agentskills"]).toMatchObject({
       command: "npx",
-      args: ["-y", "@anthropic-ai/agentskills-mcp-server"]
+      args: ["-y", "@codemcp/skills-server"]
     });
   });
 
@@ -76,20 +89,32 @@ describe("conventions facet integration", () => {
 
     await runSetup(dir, catalog);
 
-    // Both skills should exist
+    // Both inline skills should exist in .ade/catalog/skills/
     const commits = await readFile(
-      join(dir, ".agentskills", "skills", "conventional-commits", "SKILL.md"),
+      join(
+        dir,
+        ".ade",
+        "catalog",
+        "skills",
+        "conventional-commits",
+        "SKILL.md"
+      ),
       "utf-8"
     );
     expect(commits).toContain("name: conventional-commits");
     expect(commits).toContain("Conventional Commits");
 
     const tdd = await readFile(
-      join(dir, ".agentskills", "skills", "tdd-london", "SKILL.md"),
+      join(dir, ".ade", "catalog", "skills", "tdd-london", "SKILL.md"),
       "utf-8"
     );
     expect(tdd).toContain("name: tdd-london");
     expect(tdd).toContain("London");
+
+    // Both registered in package.json
+    const pkg = JSON.parse(await readFile(join(dir, "package.json"), "utf-8"));
+    expect(pkg.agentskills["conventional-commits"]).toContain("file:");
+    expect(pkg.agentskills["tdd-london"]).toContain("file:");
 
     // config.yaml should have array of choices
     const config = await readUserConfig(dir);
@@ -112,7 +137,7 @@ describe("conventions facet integration", () => {
     await runSetup(dir, catalog);
 
     const adr = await readFile(
-      join(dir, ".agentskills", "skills", "adr-nygard", "SKILL.md"),
+      join(dir, ".ade", "catalog", "skills", "adr-nygard", "SKILL.md"),
       "utf-8"
     );
     expect(adr).toContain("name: adr-nygard");
@@ -129,8 +154,8 @@ describe("conventions facet integration", () => {
 
     await runSetup(dir, catalog);
 
-    // No .agentskills directory should exist
-    await expect(access(join(dir, ".agentskills"))).rejects.toThrow();
+    // No .ade directory should exist
+    await expect(access(join(dir, ".ade"))).rejects.toThrow();
 
     // config.yaml should not have conventions key
     const config = await readUserConfig(dir);

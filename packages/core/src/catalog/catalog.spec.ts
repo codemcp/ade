@@ -52,7 +52,7 @@ describe("catalog", () => {
       expect(conventions!.required).toBe(false);
     });
 
-    it("has tanstack option with skills for architecture, design, code, testing", () => {
+    it("has tanstack option with skills for architecture, design, code, testing, and playwright", () => {
       const catalog = getDefaultCatalog();
       const conventions = getFacet(catalog, "conventions")!;
       const tanstack = getOption(conventions, "tanstack");
@@ -71,6 +71,16 @@ describe("catalog", () => {
       expect(names).toContain("tanstack-design");
       expect(names).toContain("tanstack-code");
       expect(names).toContain("tanstack-testing");
+      expect(names).toContain("playwright-cli");
+
+      // playwright-cli should be an external skill (has source, no body)
+      const playwright = skills.find(
+        (s: Record<string, unknown>) => s.name === "playwright-cli"
+      ) as Record<string, unknown>;
+      expect(playwright.source).toBe(
+        "microsoft/playwright-cli/skills/playwright-cli"
+      );
+      expect(playwright).not.toHaveProperty("body");
     });
 
     it("has conventional-commits option with a single skill", () => {

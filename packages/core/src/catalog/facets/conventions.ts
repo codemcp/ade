@@ -107,6 +107,10 @@ export const conventionsFacet: Facet = {
                   "- Assert on visible UI state, not internal query cache state",
                   "- Use `waitFor` for async query resolution in component tests"
                 ].join("\n")
+              },
+              {
+                name: "playwright-cli",
+                source: "microsoft/playwright-cli/skills/playwright-cli"
               }
             ]
           }
@@ -114,7 +118,7 @@ export const conventionsFacet: Facet = {
         {
           writer: "instruction",
           config: {
-            text: "This project follows TanStack conventions. Use use_skill() to access the tanstack-architecture, tanstack-design, tanstack-code, and tanstack-testing skills before making changes."
+            text: "This project follows TanStack conventions. Use use_skill() to access the tanstack-architecture, tanstack-design, tanstack-code, tanstack-testing, and playwright-cli skills before making changes."
           }
         }
       ]

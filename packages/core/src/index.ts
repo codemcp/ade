@@ -9,7 +9,9 @@ export {
   type McpServerEntry,
   type CliAction,
   type KnowledgeSource,
-  type SkillDefinition
+  type SkillDefinition,
+  type InlineSkill,
+  type ExternalSkill
 } from "./types.js";
 export { type ResolutionContext, type ResolvedFacet } from "./types.js";
 export { type UserConfig, type LockFile } from "./types.js";
