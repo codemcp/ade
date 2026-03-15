@@ -14,7 +14,10 @@ export const processFacet: Facet = {
       recipe: [
         {
           writer: "workflows",
-          config: { package: "@codemcp/workflows" }
+          config: {
+            package: "@codemcp/workflows-server@latest",
+            ref: "workflows"
+          }
         },
         {
           writer: "instruction",
