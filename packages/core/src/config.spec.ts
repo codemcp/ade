@@ -123,7 +123,8 @@ describe("config", () => {
               origin: "https://typescriptlang.org",
               description: "TypeScript documentation"
             }
-          ]
+          ],
+          skills: []
         }
       };
 

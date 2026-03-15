@@ -98,7 +98,8 @@ describe("registry", () => {
         mcp_servers: [],
         instructions: ["be helpful"],
         cli_actions: [],
-        knowledge_sources: []
+        knowledge_sources: [],
+        skills: []
       };
       await found!.install(config, "/tmp/my-project");
       expect(mockInstall).toHaveBeenCalledWith(config, "/tmp/my-project");

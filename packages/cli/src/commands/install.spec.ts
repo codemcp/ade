@@ -19,7 +19,8 @@ vi.mock("@ade/core", async (importOriginal) => {
       mcp_servers: [],
       instructions: ["test instruction"],
       cli_actions: [],
-      knowledge_sources: []
+      knowledge_sources: [],
+      skills: []
     } satisfies LogicalConfig),
     getAgentWriter: vi.fn().mockReturnValue({
       id: "claude-code",
@@ -71,6 +72,7 @@ describe("runInstall", () => {
       ],
       instructions: ["do stuff"],
       cli_actions: [],
+      skills: [],
       knowledge_sources: []
     };
     vi.mocked(readUserConfig).mockResolvedValueOnce({
