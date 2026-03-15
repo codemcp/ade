@@ -7,6 +7,7 @@ vi.mock("@clack/prompts", () => ({
   intro: vi.fn(),
   outro: vi.fn(),
   select: vi.fn(),
+  multiselect: vi.fn(),
   confirm: vi.fn(),
   isCancel: vi.fn().mockReturnValue(false),
   cancel: vi.fn(),
@@ -23,7 +24,8 @@ vi.mock("@ade/core", async (importOriginal) => {
       mcp_servers: [],
       instructions: [],
       cli_actions: [],
-      knowledge_sources: []
+      knowledge_sources: [],
+      skills: []
     } satisfies LogicalConfig),
     getAgentWriter: vi.fn().mockReturnValue({
       id: "claude-code",
