@@ -36,11 +36,18 @@ export type ProvisionWriter =
 
 // --- LogicalConfig types ---
 
+export interface SkillDefinition {
+  name: string;
+  description: string;
+  body: string;
+}
+
 export interface LogicalConfig {
   mcp_servers: McpServerEntry[];
   instructions: string[];
   cli_actions: CliAction[];
   knowledge_sources: KnowledgeSource[];
+  skills: SkillDefinition[];
 }
 
 export interface McpServerEntry {

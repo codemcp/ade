@@ -5,6 +5,7 @@ import type {
 } from "./types.js";
 import { instructionWriter } from "./writers/instruction.js";
 import { workflowsWriter } from "./writers/workflows.js";
+import { skillsWriter } from "./writers/skills.js";
 import { claudeCodeWriter } from "./agents/claude-code.js";
 
 export function createRegistry(): WriterRegistry {
@@ -47,9 +48,10 @@ export function createDefaultRegistry(): WriterRegistry {
 
   registerProvisionWriter(registry, instructionWriter);
   registerProvisionWriter(registry, workflowsWriter);
+  registerProvisionWriter(registry, skillsWriter);
 
   // Stub writers for types not yet implemented
-  for (const id of ["skills", "knowledge", "mcp-server", "installable"]) {
+  for (const id of ["knowledge", "mcp-server", "installable"]) {
     registerProvisionWriter(registry, {
       id,
       write: async () => ({})

@@ -4,12 +4,14 @@ import { getDefaultCatalog } from "./catalog/index.js";
 import { createRegistry, registerProvisionWriter } from "./registry.js";
 import { instructionWriter } from "./writers/instruction.js";
 import { workflowsWriter } from "./writers/workflows.js";
+import { skillsWriter } from "./writers/skills.js";
 import type { UserConfig, WriterRegistry, Catalog } from "./types.js";
 
 function buildRegistry(): WriterRegistry {
   const registry = createRegistry();
   registerProvisionWriter(registry, instructionWriter);
   registerProvisionWriter(registry, workflowsWriter);
+  registerProvisionWriter(registry, skillsWriter);
   return registry;
 }
 
@@ -67,7 +69,8 @@ describe("resolve", () => {
         mcp_servers: [],
         instructions: [],
         cli_actions: [],
-        knowledge_sources: []
+        knowledge_sources: [],
+        skills: []
       });
     });
   });
@@ -128,7 +131,8 @@ describe("resolve", () => {
         mcp_servers: [],
         instructions: [],
         cli_actions: [],
-        knowledge_sources: []
+        knowledge_sources: [],
+        skills: []
       });
     });
   });
@@ -140,6 +144,52 @@ describe("resolve", () => {
       };
 
       await expect(resolve(userConfig, catalog, registry)).rejects.toThrow();
+    });
+  });
+
+  describe("skills merging", () => {
+    it("merges skills from provision writers into the output", async () => {
+      // Use a custom catalog with a facet that produces skills
+      const skillsCatalog: Catalog = {
+        facets: [
+          {
+            id: "conventions",
+            label: "Conventions",
+            description: "Team conventions",
+            required: false,
+            options: [
+              {
+                id: "test-conv",
+                label: "Test Convention",
+                description: "A test convention with skills",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        {
+                          name: "test-skill",
+                          description: "A test skill",
+                          body: "Do the thing."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = {
+        choices: { conventions: "test-conv" }
+      };
+
+      const result = await resolve(userConfig, skillsCatalog, registry);
+
+      expect(result.skills).toHaveLength(1);
+      expect(result.skills[0].name).toBe("test-skill");
     });
   });
 
