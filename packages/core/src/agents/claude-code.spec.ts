@@ -21,7 +21,8 @@ describe("claudeCodeWriter", () => {
       mcp_servers: [],
       instructions: ["Use workflow files.", "Follow conventions."],
       cli_actions: [],
-      knowledge_sources: []
+      knowledge_sources: [],
+      skills: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -44,7 +45,8 @@ describe("claudeCodeWriter", () => {
       ],
       instructions: [],
       cli_actions: [],
-      knowledge_sources: []
+      knowledge_sources: [],
+      skills: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -77,7 +79,8 @@ describe("claudeCodeWriter", () => {
       ],
       instructions: [],
       cli_actions: [],
-      knowledge_sources: []
+      knowledge_sources: [],
+      skills: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -97,7 +100,8 @@ describe("claudeCodeWriter", () => {
       mcp_servers: [],
       instructions: [],
       cli_actions: [],
-      knowledge_sources: []
+      knowledge_sources: [],
+      skills: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -110,7 +114,8 @@ describe("claudeCodeWriter", () => {
       mcp_servers: [],
       instructions: ["hello"],
       cli_actions: [],
-      knowledge_sources: []
+      knowledge_sources: [],
+      skills: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -118,5 +123,92 @@ describe("claudeCodeWriter", () => {
     await expect(
       readFile(join(dir, ".claude", "settings.json"), "utf-8")
     ).rejects.toThrow();
+  });
+
+  it("writes SKILL.md files to .agentskills/skills/<name>/", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [
+        {
+          name: "tanstack-architecture",
+          description: "TanStack architecture conventions",
+          body: "# Architecture\n\nUse file-based routing."
+        }
+      ]
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const skillMd = await readFile(
+      join(dir, ".agentskills", "skills", "tanstack-architecture", "SKILL.md"),
+      "utf-8"
+    );
+    expect(skillMd).toContain("name: tanstack-architecture");
+    expect(skillMd).toContain("description: TanStack architecture conventions");
+    expect(skillMd).toContain("# Architecture");
+    expect(skillMd).toContain("Use file-based routing.");
+  });
+
+  it("writes multiple SKILL.md files", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [
+        { name: "skill-a", description: "First skill", body: "Body A" },
+        { name: "skill-b", description: "Second skill", body: "Body B" }
+      ]
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const a = await readFile(
+      join(dir, ".agentskills", "skills", "skill-a", "SKILL.md"),
+      "utf-8"
+    );
+    const b = await readFile(
+      join(dir, ".agentskills", "skills", "skill-b", "SKILL.md"),
+      "utf-8"
+    );
+    expect(a).toContain("name: skill-a");
+    expect(b).toContain("name: skill-b");
+  });
+
+  it("adds agentskills MCP server when skills are present", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [{ name: "my-skill", description: "A skill", body: "Do stuff." }]
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
+    const settings = JSON.parse(raw);
+    expect(settings.mcpServers["agentskills"]).toEqual({
+      command: "npx",
+      args: ["-y", "@anthropic-ai/agentskills-mcp-server"]
+    });
+  });
+
+  it("skips skills directory when no skills", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: ["hello"],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: []
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const { access } = await import("node:fs/promises");
+    await expect(access(join(dir, ".agentskills"))).rejects.toThrow();
   });
 });

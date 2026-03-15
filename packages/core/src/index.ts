@@ -8,7 +8,8 @@ export {
   type LogicalConfig,
   type McpServerEntry,
   type CliAction,
-  type KnowledgeSource
+  type KnowledgeSource,
+  type SkillDefinition
 } from "./types.js";
 export { type ResolutionContext, type ResolvedFacet } from "./types.js";
 export { type UserConfig, type LockFile } from "./types.js";
@@ -35,3 +36,4 @@ export {
 export { resolve } from "./resolver.js";
 export { getDefaultCatalog, getFacet, getOption } from "./catalog/index.js";
 export { claudeCodeWriter } from "./agents/claude-code.js";
+export { skillsWriter } from "./writers/skills.js";

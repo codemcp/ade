@@ -18,7 +18,8 @@ export async function resolve(
     mcp_servers: [],
     instructions: [],
     cli_actions: [],
-    knowledge_sources: []
+    knowledge_sources: [],
+    skills: []
   };
 
   const context: ResolutionContext = { resolved: {} };
@@ -54,6 +55,9 @@ export async function resolve(
       }
       if (partial.knowledge_sources) {
         result.knowledge_sources.push(...partial.knowledge_sources);
+      }
+      if (partial.skills) {
+        result.skills.push(...partial.skills);
       }
     }
   }
