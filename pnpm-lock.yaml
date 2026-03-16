@@ -102,8 +102,8 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0
       "@codemcp/skills":
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.0
+        version: 2.3.0
     devDependencies:
       "@typescript-eslint/eslint-plugin":
         specifier: ^8.21.0
@@ -395,10 +395,10 @@ packages:
         integrity: sha512-pkqbPGtohJAvm4Dphs2M8xE29ggupihHdy1x84HNojZuMtFsHiUlRvqD24tM2+XmI+61LlfNceM3Wr7U5QES5g==
       }
 
-  "@codemcp/skills@2.1.1":
+  "@codemcp/skills@2.3.0":
     resolution:
       {
-        integrity: sha512-aWFLefeFsI8dZVWzWXjAAVTsmVi3GJHRl/pqw5Sk5VxO3gfOB9Qh9AgwIPi/hyq5YwTc1vao6b2+rF7u5RhKPw==
+        integrity: sha512-5tc5i0FtWeOFfCGvhBmqX83mTQehTFKW5/EynH0VxByXjGZ4lmPFsM4WXutqe2vj7DxqAbw/XjlPIffSh859cQ==
       }
     engines: { node: ">=18" }
     hasBin: true
@@ -5586,7 +5586,7 @@ snapshots:
       "@clack/core": 1.1.0
       sisteransi: 1.0.5
 
-  "@codemcp/skills@2.1.1":
+  "@codemcp/skills@2.3.0":
     dependencies:
       ajv: 8.18.0
       gray-matter: 4.0.3
