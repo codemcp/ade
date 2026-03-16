@@ -1,10 +1,11 @@
 import type { Catalog, Facet, Option } from "../types.js";
 import { processFacet } from "./facets/process.js";
-import { conventionsFacet } from "./facets/conventions.js";
+import { architectureFacet } from "./facets/architecture.js";
+import { practicesFacet } from "./facets/practices.js";
 
 export function getDefaultCatalog(): Catalog {
   return {
-    facets: [processFacet, conventionsFacet]
+    facets: [processFacet, architectureFacet, practicesFacet]
   };
 }
 

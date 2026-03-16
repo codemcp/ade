@@ -44,18 +44,24 @@ describe("catalog", () => {
     });
   });
 
-  describe("conventions facet", () => {
+  describe("architecture facet", () => {
     it("exists in the default catalog", () => {
       const catalog = getDefaultCatalog();
-      const conventions = getFacet(catalog, "conventions");
-      expect(conventions).toBeDefined();
-      expect(conventions!.required).toBe(false);
+      const architecture = getFacet(catalog, "architecture");
+      expect(architecture).toBeDefined();
+      expect(architecture!.required).toBe(false);
+    });
+
+    it("is single-select", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      expect(architecture.multiSelect).toBe(false);
     });
 
     it("has tanstack option with skills for architecture, design, code, testing, and playwright", () => {
       const catalog = getDefaultCatalog();
-      const conventions = getFacet(catalog, "conventions")!;
-      const tanstack = getOption(conventions, "tanstack");
+      const architecture = getFacet(catalog, "architecture")!;
+      const tanstack = getOption(architecture, "tanstack");
 
       expect(tanstack).toBeDefined();
       const skillsProvisions = tanstack!.recipe.filter(
@@ -82,11 +88,26 @@ describe("catalog", () => {
       );
       expect(playwright).not.toHaveProperty("body");
     });
+  });
+
+  describe("practices facet", () => {
+    it("exists in the default catalog", () => {
+      const catalog = getDefaultCatalog();
+      const practices = getFacet(catalog, "practices");
+      expect(practices).toBeDefined();
+      expect(practices!.required).toBe(false);
+    });
+
+    it("is multi-select", () => {
+      const catalog = getDefaultCatalog();
+      const practices = getFacet(catalog, "practices")!;
+      expect(practices.multiSelect).toBe(true);
+    });
 
     it("has conventional-commits option with a single skill", () => {
       const catalog = getDefaultCatalog();
-      const conventions = getFacet(catalog, "conventions")!;
-      const option = getOption(conventions, "conventional-commits");
+      const practices = getFacet(catalog, "practices")!;
+      const option = getOption(practices, "conventional-commits");
 
       expect(option).toBeDefined();
       const skills = (
@@ -100,24 +121,18 @@ describe("catalog", () => {
 
     it("has tdd-london option with a single skill", () => {
       const catalog = getDefaultCatalog();
-      const conventions = getFacet(catalog, "conventions")!;
-      const option = getOption(conventions, "tdd-london");
+      const practices = getFacet(catalog, "practices")!;
+      const option = getOption(practices, "tdd-london");
 
       expect(option).toBeDefined();
     });
 
     it("has adr-nygard option with a single skill", () => {
       const catalog = getDefaultCatalog();
-      const conventions = getFacet(catalog, "conventions")!;
-      const option = getOption(conventions, "adr-nygard");
+      const practices = getFacet(catalog, "practices")!;
+      const option = getOption(practices, "adr-nygard");
 
       expect(option).toBeDefined();
-    });
-
-    it("is multi-select", () => {
-      const catalog = getDefaultCatalog();
-      const conventions = getFacet(catalog, "conventions")!;
-      expect(conventions.multiSelect).toBe(true);
     });
   });
 

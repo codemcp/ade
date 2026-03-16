@@ -39,15 +39,15 @@ And then there is **documentation**: the reference material you consult while
 implementing — API details, library behavior, system specifications. You do not
 memorize it. You look it up at the moment you need it.
 
-Three distinct types of information. Three different acquisition modes. Three
-different roles in the act of engineering.
+Four distinct types of information. Different acquisition modes. Different roles
+in the act of engineering.
 
 ## What ADE is
 
 **ADE is an information architecture for agentic development.**
 
 It provides a rigid, technology-agnostic structure that organizes the information
-a coding agent needs into three explicit layers — each mapped to a concrete,
+a coding agent needs into explicit layers — each mapped to a concrete,
 agent-native artifact type — and a mechanism to compose them.
 
 ```mermaid
@@ -62,16 +62,22 @@ flowchart TD
         P["Universal engineering workflows<br><br>loaded at every session. e. g. via AGENTS.md"]
     end
 
-    subgraph Conventions ["Conventions · Skills"]
-        S["Project-specific standards<br>selected per team or project<br><br>Provided on demand"]
+    subgraph Architecture ["Architecture · Skills (single-select)"]
+        A["Stack & framework conventions<br>shapes project structure, patterns, libraries<br><br>e. g. TanStack, Next.js, FastAPI"]
+    end
+
+    subgraph Practices ["Practices · Skills (multi-select)"]
+        PR["Composable development disciplines<br>mix and match regardless of stack<br><br>e. g. TDD, ADR, Conventional Commits"]
     end
 
     subgraph Documentation ["Documentation · Text files"]
         D["Reference knowledge<br><br>read on demand<br>APIs · libraries · system context"]
     end
 
-    Process -->|"invokes — e. g. &quot;use your design skill&quot;"| Conventions
-    Conventions -->|"points to — e. g. &quot;check .docs/tanstack&quot;"| Documentation
+    Process -->|"invokes — e. g. &quot;use your design skill&quot;"| Architecture
+    Process -->|"invokes — e. g. &quot;use your TDD skill&quot;"| Practices
+    Architecture -->|"points to — e. g. &quot;check .docs/tanstack&quot;"| Documentation
+    Practices -->|"points to — e. g. &quot;check docs/adr/&quot;"| Documentation
 ```
 
 ### Why this is needed
@@ -87,7 +93,7 @@ They mix process instructions with coding conventions and documentation fragment
 in a single flat file. Rule files and skills improve reusability but still lack a
 coherent taxonomy.
 
-ADE brings structure to this space. By separating the three layers explicitly and
+ADE brings structure to this space. By separating the layers explicitly and
 binding each to a specific artifact type, it makes information easier to find,
 easier to maintain, and — critically — easier for agents to apply in the right
 context at the right moment.
@@ -97,32 +103,42 @@ team, regardless of who is running them.
 
 ## How the layers compose
 
-The three layers are not independent — they reference each other in a deliberate
-direction. Process invokes conventions. Conventions point to documentation.
+The layers are not independent — they reference each other in a deliberate
+direction. Process invokes architecture and practice skills. Skills point to
+documentation.
 
 **Process enforces workflows and delegates to skills:**
 
 > _"When in the plan phase, use your `design` skill."_
 
 The agent system prompt defines and enforces the workflow. At the right step, it
-delegates to a skill that encodes the team&quot;s specific approach — keeping process
+delegates to a skill that encodes the team's specific approach — keeping process
 universal and conventions local.
 
-**Skills reference documentation on demand:**
+**Architecture skills define the stack:**
 
 > _"We are using React with TanStack Query for backend interactions. Check_
 > _`.docs/tanstack` when implementing data fetching. Check `.docs/components` for_
 > _details on available reusable components."_
 
-The skill encodes the convention — which libraries, which patterns. It surfaces
-the exact documentation needed at the moment it is relevant, rather than loading
-everything upfront.
+Architecture is a constraining choice — you pick one stack, and it shapes your
+project structure, patterns, and libraries. This is a single-select decision:
+TanStack or Next.js, not both.
+
+**Practice skills are composable disciplines:**
+
+> _"Use London-style TDD. Follow the Red-Green-Refactor cycle. Write ADRs for_
+> _significant decisions. Use Conventional Commits for all commit messages."_
+
+Practices are orthogonal to architecture. You can combine TDD, ADR, and
+Conventional Commits freely — they apply regardless of what stack you build with.
+This is a multi-select decision.
 
 This composability is what makes ADE scale. Process is written once and shared
-across every project. Skills are curated per team or per project context — ADE
-provides a mechanism to select and compose skill sets, so the right conventions
-are available for the right context. Documentation lives where it belongs — in
-the codebase — and is surfaced precisely when needed.
+across every project. Architecture and practice skills are curated per team or
+per project context — ADE provides a mechanism to select and compose them, so
+the right conventions are available for the right context. Documentation lives
+where it belongs — in the codebase — and is surfaced precisely when needed.
 
 **Sounds intuitive?** Hopefully, it does. Because **this framework only works, if
 you as human join the team**.
@@ -138,17 +154,24 @@ _does_ work. Every task type has a defined process. The agent follows it.
 This is the layer that transfers across every project without modification. It
 encodes the professional engineering mindset as an explicit, shareable artifact.
 
-### Skill sets — selectable and composable
+### Architecture — stack conventions (single-select)
 
-Skills encode project-specific knowledge as reusable, invocable artifacts. They
-capture technology choices, architectural patterns, and design decisions in a form
-the agent applies on demand.
+Architecture skills encode stack-specific knowledge: project structure, framework
+patterns, and library conventions. You pick one architecture that shapes your
+entire codebase — TanStack, Next.js, FastAPI, etc. This is a constraining choice
+that determines how your project is organized.
 
-ADE provides a mechanism to select and share **skill sets** — curated collections
-of skills that match a team&quot;s context. A frontend team, a backend team, and a
-platform team each activate the skill set appropriate to their work. Skills can
-be shared across projects, versioned, and evolved independently of the process
-layer.
+### Practices — development disciplines (multi-select)
+
+Practice skills encode composable development disciplines that apply regardless
+of your stack: TDD, Architecture Decision Records, Conventional Commits, and
+more. You can mix and match freely — they are orthogonal to each other and to
+your architecture choice.
+
+ADE provides a mechanism to select and share both architecture and practice
+skills. A frontend team, a backend team, and a platform team each activate the
+combination appropriate to their work. Skills can be shared across projects,
+versioned, and evolved independently of the process layer.
 
 ### Documentation sharing
 
