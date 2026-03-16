@@ -11,6 +11,7 @@ vi.mock("@clack/prompts", () => ({
   confirm: vi.fn(),
   isCancel: vi.fn().mockReturnValue(false),
   cancel: vi.fn(),
+  log: { warn: vi.fn(), info: vi.fn() },
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
 }));
 
@@ -22,6 +23,7 @@ vi.mock("@ade/core", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import("@ade/core");
   return {
     ...actual,
+    readUserConfig: vi.fn().mockResolvedValue(null),
     writeUserConfig: vi.fn().mockResolvedValue(undefined),
     writeLockFile: vi.fn().mockResolvedValue(undefined),
     resolve: vi.fn().mockResolvedValue({
@@ -40,7 +42,12 @@ vi.mock("@ade/core", async (importOriginal) => {
 });
 
 import * as clack from "@clack/prompts";
-import { writeUserConfig, writeLockFile, resolve } from "@ade/core";
+import {
+  readUserConfig,
+  writeUserConfig,
+  writeLockFile,
+  resolve
+} from "@ade/core";
 import { runSetup } from "./setup.js";
 
 // ── Test catalog fixture ─────────────────────────────────────────────────────
@@ -279,5 +286,100 @@ describe("runSetup", () => {
 
     expect(clack.intro).toHaveBeenCalled();
     expect(clack.outro).toHaveBeenCalled();
+  });
+
+  describe("re-run with existing config", () => {
+    it("passes existing single-select choice as initialValue", async () => {
+      vi.mocked(readUserConfig).mockResolvedValueOnce({
+        choices: { process: "workflow-b", testing: "jest" }
+      });
+
+      vi.mocked(clack.select)
+        .mockResolvedValueOnce("workflow-b")
+        .mockResolvedValueOnce("jest");
+
+      await runSetup("/tmp/test-project", testCatalog);
+
+      // First select (process) should receive initialValue "workflow-b"
+      expect(clack.select).toHaveBeenCalledWith(
+        expect.objectContaining({ initialValue: "workflow-b" })
+      );
+      // Second select (testing) should receive initialValue "jest"
+      expect(clack.select).toHaveBeenCalledWith(
+        expect.objectContaining({ initialValue: "jest" })
+      );
+    });
+
+    it("passes existing multi-select choices as initialValues", async () => {
+      const multiCatalog: Catalog = {
+        facets: [
+          {
+            id: "practices",
+            label: "Practices",
+            description: "Dev practices",
+            required: false,
+            multiSelect: true,
+            options: [
+              {
+                id: "tdd",
+                label: "TDD",
+                description: "Test-driven dev",
+                recipe: []
+              },
+              {
+                id: "adr",
+                label: "ADR",
+                description: "Architecture decisions",
+                recipe: []
+              }
+            ]
+          }
+        ]
+      };
+
+      vi.mocked(readUserConfig).mockResolvedValueOnce({
+        choices: { practices: ["tdd", "adr"] }
+      });
+
+      vi.mocked(clack.multiselect).mockResolvedValueOnce(["tdd", "adr"]);
+
+      await runSetup("/tmp/test-project", multiCatalog);
+
+      expect(clack.multiselect).toHaveBeenCalledWith(
+        expect.objectContaining({ initialValues: ["tdd", "adr"] })
+      );
+    });
+
+    it("warns when existing choice references a stale option", async () => {
+      vi.mocked(readUserConfig).mockResolvedValueOnce({
+        choices: { process: "workflow-a", testing: "mocha" } // "mocha" doesn't exist
+      });
+
+      vi.mocked(clack.select)
+        .mockResolvedValueOnce("workflow-a")
+        .mockResolvedValueOnce("vitest");
+
+      await runSetup("/tmp/test-project", testCatalog);
+
+      expect(clack.log.warn).toHaveBeenCalledWith(
+        expect.stringContaining("mocha")
+      );
+    });
+
+    it("does not set initialValue for stale option", async () => {
+      vi.mocked(readUserConfig).mockResolvedValueOnce({
+        choices: { process: "deleted-option" }
+      });
+
+      vi.mocked(clack.select)
+        .mockResolvedValueOnce("workflow-a")
+        .mockResolvedValueOnce("vitest");
+
+      await runSetup("/tmp/test-project", testCatalog);
+
+      // First select (process) should NOT have initialValue set
+      const firstCall = vi.mocked(clack.select).mock.calls[0][0];
+      expect(firstCall).not.toHaveProperty("initialValue");
+    });
   });
 });

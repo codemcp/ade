@@ -77,9 +77,7 @@ carries writer-specific config. Provision types:
 | `workflows`   | MCP server entry for `@codemcp/workflows-server`             |
 | `skills`      | Skill definitions (inline or external) for `@codemcp/skills` |
 | `knowledge`   | Knowledge source entry for `@codemcp/knowledge`              |
-| `mcp-server`  | Generic MCP server entry (command + args + env)              |
 | `instruction` | Raw instruction text for the agent                           |
-| `installable` | CLI tool or dependency to be installed                       |
 
 ### KnowledgeSource
 
@@ -153,15 +151,13 @@ when a facet selection or catalog version is updated.
 ade setup          Interactive TUI: walk through facets, confirm docsets,
                    write config.yaml + config.lock.yaml + agent files,
                    install skills and knowledge sources.
+                   Re-running setup on an existing project pre-selects
+                   previous choices as defaults. Warns if a previous
+                   selection references an option no longer in the catalog.
 
-ade install        Re-resolve config.yaml → config.lock.yaml → agent files.
-                   Non-interactive. Idempotent.
-
-ade add <facet>    Add or change a single facet selection interactively.
-
-ade remove <facet> Remove a facet selection.
-
-ade status         Show current selections and what would change on install.
+ade install        Apply config.lock.yaml → agent files + skills + knowledge.
+                   Non-interactive. Idempotent. Does not re-resolve — uses
+                   the lock file as-is.
 ```
 
 ## Catalog
