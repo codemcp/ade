@@ -212,7 +212,7 @@ describe("resolve", () => {
                   {
                     id: "react-docs",
                     label: "React Reference",
-                    origin: "https://react.dev/reference",
+                    origin: "https://github.com/facebook/react.git",
                     description: "Official React documentation"
                   }
                 ]
@@ -228,7 +228,7 @@ describe("resolve", () => {
       expect(result.knowledge_sources).toHaveLength(1);
       expect(result.knowledge_sources[0]).toEqual({
         name: "react-docs",
-        origin: "https://react.dev/reference",
+        origin: "https://github.com/facebook/react.git",
         description: "Official React documentation"
       });
     });
@@ -252,7 +252,7 @@ describe("resolve", () => {
                   {
                     id: "react-docs",
                     label: "React Reference",
-                    origin: "https://react.dev/reference",
+                    origin: "https://github.com/facebook/react.git",
                     description: "React docs"
                   }
                 ]
@@ -266,7 +266,7 @@ describe("resolve", () => {
                   {
                     id: "react-docs",
                     label: "React Reference",
-                    origin: "https://react.dev/reference",
+                    origin: "https://github.com/facebook/react.git",
                     description: "React docs"
                   },
                   {
@@ -311,13 +311,13 @@ describe("resolve", () => {
                   {
                     id: "react-docs",
                     label: "React Reference",
-                    origin: "https://react.dev/reference",
+                    origin: "https://github.com/facebook/react.git",
                     description: "React docs"
                   },
                   {
                     id: "react-tutorial",
                     label: "React Tutorial",
-                    origin: "https://react.dev/learn",
+                    origin: "https://github.com/reactjs/react.dev.git",
                     description: "React tutorial"
                   }
                 ]
@@ -355,7 +355,7 @@ describe("resolve", () => {
                   {
                     id: "react-docs",
                     label: "React Reference",
-                    origin: "https://react.dev/reference",
+                    origin: "https://github.com/facebook/react.git",
                     description: "React docs"
                   }
                 ]

@@ -127,25 +127,25 @@ export const architectureFacet: Facet = {
         {
           id: "tanstack-router-docs",
           label: "TanStack Router",
-          origin: "https://tanstack.com/router/latest/docs",
+          origin: "https://github.com/TanStack/router.git",
           description: "File-based routing, loaders, and search params"
         },
         {
           id: "tanstack-query-docs",
           label: "TanStack Query",
-          origin: "https://tanstack.com/query/latest/docs",
+          origin: "https://github.com/TanStack/query.git",
           description: "Server state management, caching, and mutations"
         },
         {
           id: "tanstack-form-docs",
           label: "TanStack Form",
-          origin: "https://tanstack.com/form/latest/docs",
+          origin: "https://github.com/TanStack/form.git",
           description: "Type-safe form state and validation"
         },
         {
           id: "tanstack-table-docs",
           label: "TanStack Table",
-          origin: "https://tanstack.com/table/latest/docs",
+          origin: "https://github.com/TanStack/table.git",
           description: "Headless table and datagrid utilities"
         }
       ]

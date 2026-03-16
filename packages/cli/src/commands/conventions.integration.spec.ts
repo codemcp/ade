@@ -41,7 +41,9 @@ describe("architecture and practices facets integration", () => {
       vi.mocked(clack.select)
         .mockResolvedValueOnce("codemcp-workflows") // process
         .mockResolvedValueOnce("tanstack"); // architecture
-      vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
+      vi.mocked(clack.multiselect)
+        .mockResolvedValueOnce([]) // practices: none
+        .mockResolvedValueOnce([]); // docsets: deselect all
 
       await runSetup(dir, catalog);
 
@@ -206,10 +208,9 @@ describe("architecture and practices facets integration", () => {
       vi.mocked(clack.select)
         .mockResolvedValueOnce("codemcp-workflows") // process
         .mockResolvedValueOnce("tanstack"); // architecture
-      vi.mocked(clack.multiselect).mockResolvedValueOnce([
-        "tdd-london",
-        "conventional-commits"
-      ]);
+      vi.mocked(clack.multiselect)
+        .mockResolvedValueOnce(["tdd-london", "conventional-commits"]) // practices
+        .mockResolvedValueOnce([]); // docsets: deselect all
 
       await runSetup(dir, catalog);
 
