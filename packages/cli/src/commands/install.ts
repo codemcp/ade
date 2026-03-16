@@ -9,6 +9,7 @@ import {
   type LockFile
 } from "@ade/core";
 import { installSkills } from "../skills-installer.js";
+import { installKnowledge } from "../knowledge-installer.js";
 
 export async function runInstall(
   projectRoot: string,
@@ -44,6 +45,7 @@ export async function runInstall(
   await agentWriter.install(logicalConfig, projectRoot);
 
   await installSkills(logicalConfig.skills, projectRoot);
+  await installKnowledge(logicalConfig.knowledge_sources, projectRoot);
 
   clack.outro("Install complete!");
 }

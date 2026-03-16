@@ -11,6 +11,7 @@ import {
   getAgentWriter
 } from "@ade/core";
 import { installSkills } from "../skills-installer.js";
+import { installKnowledge } from "../knowledge-installer.js";
 
 export async function runSetup(
   projectRoot: string,
@@ -95,6 +96,7 @@ export async function runSetup(
   }
 
   await installSkills(logicalConfig.skills, projectRoot);
+  await installKnowledge(logicalConfig.knowledge_sources, projectRoot);
 
   clack.outro("Setup complete!");
 }

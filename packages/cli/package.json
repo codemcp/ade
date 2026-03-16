@@ -27,6 +27,7 @@
     "@codemcp/skills": "^2.3.0"
   },
   "devDependencies": {
+    "@codemcp/knowledge": "2.1.0",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.21.0",
     "eslint": "^9.18.0",
