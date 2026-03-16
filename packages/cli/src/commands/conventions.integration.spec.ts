@@ -19,7 +19,7 @@ import { runSetup } from "./setup.js";
 import { readUserConfig, readLockFile } from "@ade/core";
 import { getDefaultCatalog } from "../../../core/src/catalog/index.js";
 
-describe("conventions facet integration", () => {
+describe("architecture and practices facets integration", () => {
   let dir: string;
 
   beforeEach(async () => {
@@ -32,13 +32,16 @@ describe("conventions facet integration", () => {
   });
 
   it(
-    "writes SKILL.md files and installs inline skills for tanstack",
+    "writes SKILL.md files and installs inline skills for tanstack architecture",
     { timeout: 60_000 },
     async () => {
       const catalog = getDefaultCatalog();
 
-      vi.mocked(clack.select).mockResolvedValueOnce("codemcp-workflows");
-      vi.mocked(clack.multiselect).mockResolvedValueOnce(["tanstack"]);
+      // Facet order: process (select), architecture (select), practices (multiselect)
+      vi.mocked(clack.select)
+        .mockResolvedValueOnce("codemcp-workflows") // process
+        .mockResolvedValueOnce("tanstack"); // architecture
+      vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
 
       await runSetup(dir, catalog);
 
@@ -87,10 +90,13 @@ describe("conventions facet integration", () => {
     }
   );
 
-  it("writes skills for multiple selected conventions", async () => {
+  it("writes skills for multiple selected practices", async () => {
     const catalog = getDefaultCatalog();
 
-    vi.mocked(clack.select).mockResolvedValueOnce("native-agents-md");
+    // Facet order: process (select), architecture (select), practices (multiselect)
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("native-agents-md") // process
+      .mockResolvedValueOnce("__skip__"); // architecture: skip
     vi.mocked(clack.multiselect).mockResolvedValueOnce([
       "conventional-commits",
       "tdd-london"
@@ -121,9 +127,9 @@ describe("conventions facet integration", () => {
       access(join(dir, ".agentskills", "skills", "tdd-london"))
     ).resolves.toBeUndefined();
 
-    // config.yaml should have array of choices
+    // config.yaml should have array of choices under practices
     const config = await readUserConfig(dir);
-    expect(config!.choices.conventions).toEqual([
+    expect(config!.choices.practices).toEqual([
       "conventional-commits",
       "tdd-london"
     ]);
@@ -136,7 +142,10 @@ describe("conventions facet integration", () => {
   it("writes ADR skill with template content", async () => {
     const catalog = getDefaultCatalog();
 
-    vi.mocked(clack.select).mockResolvedValueOnce("native-agents-md");
+    // Facet order: process (select), architecture (select), practices (multiselect)
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("native-agents-md") // process
+      .mockResolvedValueOnce("__skip__"); // architecture: skip
     vi.mocked(clack.multiselect).mockResolvedValueOnce(["adr-nygard"]);
 
     await runSetup(dir, catalog);
@@ -151,26 +160,33 @@ describe("conventions facet integration", () => {
     expect(adr).toContain("## Consequences");
   });
 
-  it("skips conventions when none selected", async () => {
+  it("skips both architecture and practices when none selected", async () => {
     const catalog = getDefaultCatalog();
 
-    vi.mocked(clack.select).mockResolvedValueOnce("native-agents-md");
-    vi.mocked(clack.multiselect).mockResolvedValueOnce([]);
+    // Facet order: process (select), architecture (select), practices (multiselect)
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("native-agents-md") // process
+      .mockResolvedValueOnce("__skip__"); // architecture: skip
+    vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
 
     await runSetup(dir, catalog);
 
     // No .ade directory should exist
     await expect(access(join(dir, ".ade"))).rejects.toThrow();
 
-    // config.yaml should not have conventions key
+    // config.yaml should not have architecture or practices keys
     const config = await readUserConfig(dir);
-    expect(config!.choices).not.toHaveProperty("conventions");
+    expect(config!.choices).not.toHaveProperty("architecture");
+    expect(config!.choices).not.toHaveProperty("practices");
   });
 
-  it("includes convention instructions in AGENTS.md", async () => {
+  it("includes practice instructions in AGENTS.md", async () => {
     const catalog = getDefaultCatalog();
 
-    vi.mocked(clack.select).mockResolvedValueOnce("native-agents-md");
+    // Facet order: process (select), architecture (select), practices (multiselect)
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("native-agents-md") // process
+      .mockResolvedValueOnce("__skip__"); // architecture: skip
     vi.mocked(clack.multiselect).mockResolvedValueOnce(["tdd-london"]);
 
     await runSetup(dir, catalog);
@@ -179,4 +195,51 @@ describe("conventions facet integration", () => {
     expect(agentsMd).toContain("tdd-london");
     expect(agentsMd).toContain("use_skill()");
   });
+
+  it(
+    "combines architecture and practices selections",
+    { timeout: 60_000 },
+    async () => {
+      const catalog = getDefaultCatalog();
+
+      // Facet order: process (select), architecture (select), practices (multiselect)
+      vi.mocked(clack.select)
+        .mockResolvedValueOnce("codemcp-workflows") // process
+        .mockResolvedValueOnce("tanstack"); // architecture
+      vi.mocked(clack.multiselect).mockResolvedValueOnce([
+        "tdd-london",
+        "conventional-commits"
+      ]);
+
+      await runSetup(dir, catalog);
+
+      // Architecture skills should exist
+      const archSkill = await readFile(
+        join(dir, ".ade", "skills", "tanstack-architecture", "SKILL.md"),
+        "utf-8"
+      );
+      expect(archSkill).toContain("name: tanstack-architecture");
+
+      // Practice skills should exist
+      const tddSkill = await readFile(
+        join(dir, ".ade", "skills", "tdd-london", "SKILL.md"),
+        "utf-8"
+      );
+      expect(tddSkill).toContain("name: tdd-london");
+
+      const commitsSkill = await readFile(
+        join(dir, ".ade", "skills", "conventional-commits", "SKILL.md"),
+        "utf-8"
+      );
+      expect(commitsSkill).toContain("name: conventional-commits");
+
+      // config.yaml should have both architecture and practices
+      const config = await readUserConfig(dir);
+      expect(config!.choices.architecture).toBe("tanstack");
+      expect(config!.choices.practices).toEqual([
+        "tdd-london",
+        "conventional-commits"
+      ]);
+    }
+  );
 });

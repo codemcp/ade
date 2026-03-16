@@ -35,7 +35,9 @@ describe("setup integration (real temp dir)", () => {
   it("writes config.yaml and config.lock.yaml for codemcp-workflows", async () => {
     const catalog = getDefaultCatalog();
 
-    vi.mocked(clack.select).mockResolvedValueOnce("codemcp-workflows");
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("codemcp-workflows") // process
+      .mockResolvedValueOnce("__skip__"); // architecture
 
     await runSetup(dir, catalog);
 
@@ -75,7 +77,9 @@ describe("setup integration (real temp dir)", () => {
   it("writes config.yaml, lock, and AGENTS.md for native-agents-md", async () => {
     const catalog = getDefaultCatalog();
 
-    vi.mocked(clack.select).mockResolvedValueOnce("native-agents-md");
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("native-agents-md") // process
+      .mockResolvedValueOnce("__skip__"); // architecture
 
     await runSetup(dir, catalog);
 
@@ -111,7 +115,9 @@ describe("setup integration (real temp dir)", () => {
   it("produces valid YAML that roundtrips through read", async () => {
     const catalog = getDefaultCatalog();
 
-    vi.mocked(clack.select).mockResolvedValueOnce("codemcp-workflows");
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("codemcp-workflows") // process
+      .mockResolvedValueOnce("__skip__"); // architecture
 
     await runSetup(dir, catalog);
 
