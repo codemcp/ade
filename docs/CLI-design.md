@@ -23,21 +23,18 @@ core/src/
   resolver.ts           # config + catalog → LogicalConfig
   registry.ts           # writer registry (provision + agent)
   catalog/
-    index.ts            # catalog registry, exports all facets
+    index.ts            # catalog assembly, exports all facets
     facets/
-      process.ts
-      conventions.ts
-      documentation.ts
-      frameworks.ts
+      process.ts        # workflow delivery method
+      architecture.ts   # stack-specific conventions (e.g. TanStack)
+      practices.ts      # composable practices (commits, TDD, ADR)
   writers/              # built-in provision writers
     workflows.ts
     skills.ts
     knowledge.ts
-    mcp-server.ts
     instruction.ts
-    installable.ts
   agents/               # built-in agent writers
-    opencode.ts
+    claude-code.ts      # AGENTS.md, .claude/settings.json, skill files
 ```
 
 ### `@ade/cli` (`packages/cli`)
@@ -47,15 +44,12 @@ lives in core; CLI commands are thin handlers that parse args and delegate.
 
 ```
 cli/src/
-  index.ts              # entry point, arg parser, command routing
+  index.ts                  # entry point, arg parser, command routing
+  skills-installer.ts       # calls @codemcp/skills API to install skills
+  knowledge-installer.ts    # calls @codemcp/knowledge API to install docsets
   commands/
-    setup.ts            # interactive TUI setup
-    install.ts          # resolve + generate (idempotent)
-    add.ts              # modify single facet
-    remove.ts           # remove facet selection
-    status.ts           # show current state
-  tui/
-    prompts.ts          # interactive facet selection UI
+    setup.ts                # interactive TUI setup
+    install.ts              # resolve + generate (idempotent)
 ```
 
 `@ade/cli` depends on `@ade/core`. Nothing depends on `@ade/cli`.
@@ -63,28 +57,28 @@ cli/src/
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  @ade/cli                                                    │
-│  ade setup · ade install · ade add · ade remove · ade status │
-│  TUI prompts                                                 │
-└──────────────────────────┬──────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  @ade/cli                                                     │
+│  ade setup · ade install                                      │
+│  TUI prompts · skills-installer · knowledge-installer         │
+└──────────────────────────┬───────────────────────────────────┘
                            │ delegates to
-┌──────────────────────────▼──────────────────────────────────┐
-│  @ade/core                                                   │
-│                                                              │
-│  ┌──────────┐   ┌──────────┐   ┌────────────────────────┐   │
-│  │ Catalog  │──▶│ Resolver │──▶│   Writer Registry      │   │
-│  │ (facets) │   │          │   │                        │   │
-│  └──────────┘   └────┬─────┘   │  provision: Map<id,W>  │   │
-│                      │         │  agents:    Map<id,W>  │   │
-│                      ▼         └───────────┬────────────┘   │
-│               ┌──────────────┐             │                │
-│               │ LogicalConfig│◀────────────┘                │
-│               └──────┬───────┘   merge fragments            │
-│                      │                                      │
-│                      ▼                                      │
-│               agent-specific files                          │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────▼───────────────────────────────────┐
+│  @ade/core                                                    │
+│                                                               │
+│  ┌──────────┐   ┌──────────┐   ┌────────────────────────┐    │
+│  │ Catalog  │──▶│ Resolver │──▶│   Writer Registry      │    │
+│  │ (facets) │   │          │   │                        │    │
+│  └──────────┘   └────┬─────┘   │  provision: Map<id,W>  │    │
+│                      │         │  agents:    Map<id,W>  │    │
+│                      ▼         └───────────┬────────────┘    │
+│               ┌──────────────┐             │                 │
+│               │ LogicalConfig│◀────────────┘                 │
+│               └──────┬───────┘   merge fragments             │
+│                      │                                       │
+│                      ▼                                       │
+│               agent-specific files                           │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ## Data Flow
@@ -132,24 +126,25 @@ not stored in `config.yaml`. There is no auto-detection. This keeps the
 config agent-agnostic — the same choices can produce output for any
 supported agent.
 
-### 3. Package API calls from provision writers
+### 3. Package API calls from CLI installers
 
-Some provisions (notably `skills` and `knowledge`) delegate to sibling
-packages. ADE imports them as TypeScript dependencies rather than shelling
-out, giving type safety and avoiding CLI flag contracts.
+Skills and knowledge installation delegates to sibling packages. ADE imports
+them as TypeScript dependencies rather than shelling out, giving type safety
+and avoiding CLI flag contracts.
 
 ```
-provision {writer: "skills", config: {name: "design", version: "1.0"}}
-  → import { install } from "@codemcp/skills"
-  → install({name: "design", version: "1.0"})
-  → skills package manages its own files
-  → may return a LogicalConfig fragment (e.g. MCP server entry)
+skills-installer:
+  → import { runAdd } from "@codemcp/skills/api"
+  → for each skill: runAdd([source], { yes: true, all: true })
+  → skills package writes SKILL.md files and skills-lock.json
 
-provision {writer: "knowledge", config: {name: "tanstack", origin: "https://..."}}
-  → import { addSource } from "@codemcp/knowledge"
-  → addSource({name: "tanstack", origin: "https://..."})
-  → knowledge package manages docset artifacts
-  → LogicalConfig gets a knowledge_sources entry
+knowledge-installer:
+  → import { createDocset, initDocset }
+      from "@codemcp/knowledge/packages/cli/dist/exports.js"
+  → for each knowledge_source:
+      createDocset({ id, name, preset: "git-repo", url: origin }, { cwd })
+      initDocset({ docsetId: id, cwd })
+  → knowledge package manages .knowledge/ directory and docset artifacts
 ```
 
 Where direct import is impractical (e.g. the dependency isn't TypeScript or
@@ -363,18 +358,16 @@ writers. The CLI calls this at startup. A future plugin would call
 
 ```typescript
 function createDefaultRegistry(): WriterRegistry {
-  const provisions = new Map<string, ProvisionWriterDef>();
-  provisions.set("workflows", workflowsWriter);
-  provisions.set("skills", skillsWriter);
-  provisions.set("knowledge", knowledgeWriter);
-  provisions.set("mcp-server", mcpServerWriter);
-  provisions.set("instruction", instructionWriter);
-  provisions.set("installable", installableWriter);
+  const registry = createRegistry();
 
-  const agents = new Map<string, AgentWriterDef>();
-  agents.set("opencode", opencodeWriter);
+  registerProvisionWriter(registry, instructionWriter);
+  registerProvisionWriter(registry, workflowsWriter);
+  registerProvisionWriter(registry, skillsWriter);
+  registerProvisionWriter(registry, knowledgeWriter);
 
-  return { provisions, agents };
+  registerAgentWriter(registry, claudeCodeWriter);
+
+  return registry;
 }
 ```
 
@@ -397,33 +390,22 @@ For reference, the typed configs used internally by built-in writers:
 ```typescript
 interface WorkflowsConfig {
   package: string;
+  ref?: string;
   env?: Record<string, string>;
 }
 
 interface SkillsConfig {
-  name: string;
-  version?: string;
+  skills: SkillDefinition[];
 }
 
 interface KnowledgeConfig {
   name: string;
-  origin: string;
-}
-
-interface McpServerConfig {
-  ref: string;
-  command: string;
-  args: string[];
-  env?: Record<string, string>;
+  origin: string; // must be a valid .git URL
+  description: string;
 }
 
 interface InstructionConfig {
   text: string;
-}
-
-interface InstallableConfig {
-  command: string;
-  check?: string;
 }
 ```
 
@@ -436,12 +418,16 @@ Each agent writer implements `AgentWriterDef`. The writer has full ownership
 of how to translate LogicalConfig into agent-specific files. It reads
 existing files when needed to perform incremental updates.
 
-### OpenCode Writer (v1)
+### Claude Code Writer (v1)
 
-Produces agent-specific config files for OpenCode. Exact output format TBD
-based on OpenCode's config specification.
+Produces agent-specific config files for Claude Code:
 
-Future agent writers: Claude Code, Copilot, Kiro.
+- **`AGENTS.md`** — ADE-managed section with resolved instructions
+- **`.claude/settings.json`** — MCP server entries (merged with existing)
+- **`.ade/skills/<name>/SKILL.md`** — Inline skill files (staging area for
+  `@codemcp/skills` installation)
+
+Future agent writers: OpenCode, Copilot, Kiro.
 
 ### ADE-Managed Section Delimiters
 
@@ -480,22 +466,32 @@ Produces: one `McpServerEntry` with `command: "npx"`,
 ### `skills` writer
 
 ```typescript
-{ name: "design", version: "1.0" }
+{
+  skills: [
+    { name: "tanstack-architecture", description: "...", body: "..." },
+    {
+      name: "playwright-cli",
+      source: "microsoft/playwright-cli/skills/playwright-cli"
+    }
+  ];
+}
 ```
 
-Calls `@codemcp/skills` API to install. May also produce an `McpServerEntry`
-if the skills MCP server needs to be registered.
+Passes skill definitions (inline or external) through to LogicalConfig.
+Inline skills include a `body` field; external skills reference a `source`.
+The actual installation (writing SKILL.md files and calling `@codemcp/skills`
+API) is handled by the agent writer and CLI's `skills-installer`.
 
 ### `knowledge` writer
 
 ```typescript
-{ name: "tanstack", origin: "https://tanstack.com/query/latest/docs" }
+{ name: "tanstack-query-docs", origin: "https://github.com/TanStack/query.git", description: "Server state management" }
 ```
 
-Calls `@codemcp/knowledge` API to add the source. Produces a
-`KnowledgeSource` entry so agent writers can reference it. The knowledge
-package manages the physical docset artifacts; multiple sources may be
-combined into one docset by `@codemcp/knowledge-server` at runtime.
+Produces a `KnowledgeSource` entry in LogicalConfig. The actual installation
+(calling `@codemcp/knowledge` API) is handled by the CLI's
+`knowledge-installer`. Origins must be valid `.git` URLs for the `git-repo`
+preset.
 
 ### `mcp-server` writer
 
@@ -566,31 +562,57 @@ export const processFacet: Facet = {
   ]
 };
 
-// catalog/facets/frameworks.ts
-export const frameworksFacet: Facet = {
-  id: "frameworks",
-  label: "Development Frameworks",
-  description: "Which tech stacks the project uses",
+// catalog/facets/architecture.ts — options carry skills + docsets
+export const architectureFacet: Facet = {
+  id: "architecture",
+  label: "Architecture",
+  description:
+    "Stack and framework conventions that shape your project structure",
   required: false,
-  multiSelect: true,
-  dependsOn: ["conventions"], // skills may vary by framework
   options: [
     {
-      id: "react",
-      label: "React",
-      description: "React frontend framework",
+      id: "tanstack",
+      label: "TanStack",
+      description:
+        "Full-stack conventions for TanStack (Router, Query, Form, Table)",
       recipe: [
         {
-          writer: "knowledge",
-          config: { name: "react", origin: "https://react.dev/reference" }
+          writer: "skills",
+          config: {
+            skills: [
+              {
+                name: "tanstack-architecture",
+                description: "...",
+                body: "..."
+              },
+              {
+                name: "playwright-cli",
+                source: "microsoft/playwright-cli/skills/playwright-cli"
+              }
+            ]
+          }
         },
         {
           writer: "instruction",
-          config: { text: "This project uses React..." }
+          config: { text: "This project follows TanStack conventions..." }
         }
+      ],
+      docsets: [
+        {
+          id: "tanstack-router-docs",
+          label: "TanStack Router",
+          origin: "https://github.com/TanStack/router.git",
+          description: "File-based routing, loaders, and search params"
+        },
+        {
+          id: "tanstack-query-docs",
+          label: "TanStack Query",
+          origin: "https://github.com/TanStack/query.git",
+          description: "Server state management, caching, and mutations"
+        }
+        // ... form, table
       ]
     }
-    // ... vue, java-spring, node-express
   ]
 };
 ```
@@ -618,10 +640,11 @@ export const frameworksFacet: Facet = {
    Kept inside core for now; extractable to a separate package later along
    the `Catalog` interface seam.
 
-5. **Direct package imports over CLI subprocesses.** Provision writers for
-   `skills` and `knowledge` import `@codemcp/skills` and `@codemcp/knowledge`
-   as TypeScript dependencies and call their APIs. CLI subprocess invocation
-   is the fallback for non-TypeScript or cross-runtime cases.
+5. **Direct package imports over CLI subprocesses.** The CLI's installers
+   import `@codemcp/skills` and `@codemcp/knowledge` as TypeScript
+   dependencies and call their programmatic APIs (`runAdd`, `createDocset`,
+   `initDocset`). CLI subprocess invocation is the fallback for
+   non-TypeScript or cross-runtime cases.
 
 6. **`custom` section isolates user edits.** Only the `custom` block in
    `config.yaml` is user-managed. The rest is CLI-managed. This eliminates
@@ -634,7 +657,7 @@ export const frameworksFacet: Facet = {
    indirection whose options just mirror upstream choices 1:1. Instead, each
    `Option` declares its recommended `docsets[]`. The resolver collects and
    deduplicates them; the TUI presents them as a confirmation step (opt-out,
-   not opt-in). Users who want arbitrary docs not tied to a catalog option
-   use `custom.knowledge_sources` instead. Config stores `excluded_docsets`
-   (what the user opted out of) rather than selected docsets, keeping the
-   common case (accept all recommendations) zero-config.
+   not opt-in). Config stores `excluded_docsets` (what the user opted out of)
+   rather than selected docsets, keeping the common case (accept all
+   recommendations) zero-config. When knowledge sources are present, the
+   resolver automatically adds a `@codemcp/knowledge-server` MCP server entry.
