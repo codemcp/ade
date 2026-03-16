@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolve } from "./resolver.js";
+import { resolve, collectDocsets } from "./resolver.js";
 import { getDefaultCatalog } from "./catalog/index.js";
 import { createRegistry, registerProvisionWriter } from "./registry.js";
 import { instructionWriter } from "./writers/instruction.js";
@@ -190,6 +190,231 @@ describe("resolve", () => {
 
       expect(result.skills).toHaveLength(1);
       expect(result.skills[0].name).toBe("test-skill");
+    });
+  });
+
+  describe("docset collection", () => {
+    it("collects docsets from selected options into knowledge_sources", async () => {
+      const docsetCatalog: Catalog = {
+        facets: [
+          {
+            id: "arch",
+            label: "Architecture",
+            description: "Stack",
+            required: false,
+            options: [
+              {
+                id: "react",
+                label: "React",
+                description: "React framework",
+                recipe: [],
+                docsets: [
+                  {
+                    id: "react-docs",
+                    label: "React Reference",
+                    origin: "https://react.dev/reference",
+                    description: "Official React documentation"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = { choices: { arch: "react" } };
+      const result = await resolve(userConfig, docsetCatalog, registry);
+
+      expect(result.knowledge_sources).toHaveLength(1);
+      expect(result.knowledge_sources[0]).toEqual({
+        name: "react-docs",
+        origin: "https://react.dev/reference",
+        description: "Official React documentation"
+      });
+    });
+
+    it("deduplicates docsets by id across multiple options", async () => {
+      const docsetCatalog: Catalog = {
+        facets: [
+          {
+            id: "stack",
+            label: "Stack",
+            description: "Tech stack",
+            required: false,
+            multiSelect: true,
+            options: [
+              {
+                id: "react",
+                label: "React",
+                description: "React",
+                recipe: [],
+                docsets: [
+                  {
+                    id: "react-docs",
+                    label: "React Reference",
+                    origin: "https://react.dev/reference",
+                    description: "React docs"
+                  }
+                ]
+              },
+              {
+                id: "nextjs",
+                label: "Next.js",
+                description: "Next.js",
+                recipe: [],
+                docsets: [
+                  {
+                    id: "react-docs",
+                    label: "React Reference",
+                    origin: "https://react.dev/reference",
+                    description: "React docs"
+                  },
+                  {
+                    id: "nextjs-docs",
+                    label: "Next.js Docs",
+                    origin: "https://nextjs.org/docs",
+                    description: "Next.js docs"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = {
+        choices: { stack: ["react", "nextjs"] }
+      };
+      const result = await resolve(userConfig, docsetCatalog, registry);
+
+      expect(result.knowledge_sources).toHaveLength(2);
+      const ids = result.knowledge_sources.map((ks) => ks.name);
+      expect(ids).toContain("react-docs");
+      expect(ids).toContain("nextjs-docs");
+    });
+
+    it("filters out excluded_docsets", async () => {
+      const docsetCatalog: Catalog = {
+        facets: [
+          {
+            id: "arch",
+            label: "Architecture",
+            description: "Stack",
+            required: false,
+            options: [
+              {
+                id: "react",
+                label: "React",
+                description: "React",
+                recipe: [],
+                docsets: [
+                  {
+                    id: "react-docs",
+                    label: "React Reference",
+                    origin: "https://react.dev/reference",
+                    description: "React docs"
+                  },
+                  {
+                    id: "react-tutorial",
+                    label: "React Tutorial",
+                    origin: "https://react.dev/learn",
+                    description: "React tutorial"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = {
+        choices: { arch: "react" },
+        excluded_docsets: ["react-tutorial"]
+      };
+      const result = await resolve(userConfig, docsetCatalog, registry);
+
+      expect(result.knowledge_sources).toHaveLength(1);
+      expect(result.knowledge_sources[0].name).toBe("react-docs");
+    });
+
+    it("produces no knowledge_sources when option has no docsets", async () => {
+      const userConfig: UserConfig = {
+        choices: { process: "native-agents-md" }
+      };
+      const result = await resolve(userConfig, catalog, registry);
+
+      expect(result.knowledge_sources).toEqual([]);
+    });
+  });
+
+  describe("collectDocsets", () => {
+    it("returns deduplicated docsets for given choices", () => {
+      const docsetCatalog: Catalog = {
+        facets: [
+          {
+            id: "stack",
+            label: "Stack",
+            description: "Stack",
+            required: false,
+            multiSelect: true,
+            options: [
+              {
+                id: "a",
+                label: "A",
+                description: "A",
+                recipe: [],
+                docsets: [
+                  {
+                    id: "shared",
+                    label: "Shared",
+                    origin: "https://x",
+                    description: "shared"
+                  },
+                  {
+                    id: "a-only",
+                    label: "A Only",
+                    origin: "https://a",
+                    description: "a"
+                  }
+                ]
+              },
+              {
+                id: "b",
+                label: "B",
+                description: "B",
+                recipe: [],
+                docsets: [
+                  {
+                    id: "shared",
+                    label: "Shared",
+                    origin: "https://x",
+                    description: "shared"
+                  },
+                  {
+                    id: "b-only",
+                    label: "B Only",
+                    origin: "https://b",
+                    description: "b"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const result = collectDocsets({ stack: ["a", "b"] }, docsetCatalog);
+
+      expect(result).toHaveLength(3);
+      const ids = result.map((d) => d.id);
+      expect(ids).toContain("shared");
+      expect(ids).toContain("a-only");
+      expect(ids).toContain("b-only");
+    });
+
+    it("returns empty array when no options have docsets", () => {
+      const result = collectDocsets({ process: "native-agents-md" }, catalog);
+      expect(result).toEqual([]);
     });
   });
 

@@ -103,6 +103,10 @@ read config.yaml
       → for each provision, invoke the writer with (config, context)
       → each writer returns a LogicalConfig fragment
       → record facet as resolved
+  → collect docsets from all selected options
+  → deduplicate docsets by id (first wins)
+  → filter out docsets listed in excluded_docsets
+  → map enabled docsets to knowledge_sources entries
   → merge custom section from config.yaml
   → merge all fragments into one LogicalConfig
   → write config.lock.yaml (serialized LogicalConfig)
@@ -178,6 +182,23 @@ interface Option {
   label: string; // e.g. "CodeMCP Workflows"
   description: string;
   recipe: Provision[]; // multiple provisions per option is common
+  docsets?: DocsetDef[]; // recommended documentation for this option
+}
+
+// Documentation as a weak entity on Option. Docsets are derived from
+// upstream selections — picking "TanStack" in architecture implies
+// TanStack docs, picking "GitHub Actions CI/CD" in practices implies
+// GH Actions docs. The TUI presents all implied docsets as pre-selected
+// defaults and allows the user to deselect. This is opt-out, not opt-in.
+//
+// The resolver collects docsets from all selected options, deduplicates
+// by id, filters by excluded_docsets from UserConfig, and maps enabled
+// docsets directly to knowledge_sources in LogicalConfig.
+interface DocsetDef {
+  id: string; // unique key for dedup, e.g. "tanstack-query-docs"
+  label: string; // display name, e.g. "TanStack Query Reference"
+  origin: string; // URL, path, or package ref
+  description: string; // shown in TUI
 }
 
 // A recipe typically contains multiple provisions for different writers.
@@ -239,6 +260,7 @@ interface KnowledgeSource {
 // config.yaml — mostly CLI-managed, agent-agnostic
 interface UserConfig {
   choices: Record<string, string | string[]>; // single-select: string, multi-select: string[]
+  excluded_docsets?: string[]; // docset IDs the user opted out of
   custom?: {
     // user-managed section
     mcp_servers?: McpServerEntry[];
@@ -605,3 +627,14 @@ export const frameworksFacet: Facet = {
    `config.yaml` is user-managed. The rest is CLI-managed. This eliminates
    merge conflicts: the CLI never touches `custom`, and users never touch
    the rest. Agent writers merge both sections when generating output.
+
+7. **Docsets are a weak entity on Option, not a separate facet.** Documentation
+   sources are always implied by an upstream selection (architecture or
+   practices). Making documentation a standalone facet would create a hollow
+   indirection whose options just mirror upstream choices 1:1. Instead, each
+   `Option` declares its recommended `docsets[]`. The resolver collects and
+   deduplicates them; the TUI presents them as a confirmation step (opt-out,
+   not opt-in). Users who want arbitrary docs not tied to a catalog option
+   use `custom.knowledge_sources` instead. Config stores `excluded_docsets`
+   (what the user opted out of) rather than selected docsets, keeping the
+   common case (accept all recommendations) zero-config.

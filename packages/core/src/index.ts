@@ -2,7 +2,8 @@ export {
   type Catalog,
   type Facet,
   type Option,
-  type Provision
+  type Provision,
+  type DocsetDef
 } from "./types.js";
 export {
   type LogicalConfig,
@@ -35,7 +36,7 @@ export {
   getAgentWriter,
   createDefaultRegistry
 } from "./registry.js";
-export { resolve } from "./resolver.js";
+export { resolve, collectDocsets } from "./resolver.js";
 export { getDefaultCatalog, getFacet, getOption } from "./catalog/index.js";
 export { claudeCodeWriter } from "./agents/claude-code.js";
 export { skillsWriter } from "./writers/skills.js";

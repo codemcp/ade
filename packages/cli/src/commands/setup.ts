@@ -6,6 +6,7 @@ import {
   writeUserConfig,
   writeLockFile,
   resolve,
+  collectDocsets,
   createDefaultRegistry,
   getAgentWriter
 } from "@ade/core";
@@ -41,7 +42,40 @@ export async function runSetup(
     }
   }
 
-  const userConfig: UserConfig = { choices };
+  // Docset confirmation step: collect implied docsets, let user deselect
+  const impliedDocsets = collectDocsets(choices, catalog);
+  let excludedDocsets: string[] | undefined;
+
+  if (impliedDocsets.length > 0) {
+    const selected = await clack.multiselect({
+      message: "Documentation — deselect any you don't need",
+      options: impliedDocsets.map((d) => ({
+        value: d.id,
+        label: d.label,
+        hint: d.description
+      })),
+      initialValues: impliedDocsets.map((d) => d.id),
+      required: false
+    });
+
+    if (typeof selected === "symbol") {
+      clack.cancel("Setup cancelled.");
+      return;
+    }
+
+    const selectedSet = new Set(selected as string[]);
+    const excluded = impliedDocsets
+      .filter((d) => !selectedSet.has(d.id))
+      .map((d) => d.id);
+    if (excluded.length > 0) {
+      excludedDocsets = excluded;
+    }
+  }
+
+  const userConfig: UserConfig = {
+    choices,
+    ...(excludedDocsets && { excluded_docsets: excludedDocsets })
+  };
   const registry = createDefaultRegistry();
   const logicalConfig = await resolve(userConfig, catalog, registry);
 
