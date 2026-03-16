@@ -8,6 +8,7 @@ import {
   getDefaultCatalog,
   type LockFile
 } from "@ade/core";
+import { installSkills } from "../skills-installer.js";
 
 export async function runInstall(
   projectRoot: string,
@@ -41,6 +42,8 @@ export async function runInstall(
   await writeLockFile(projectRoot, lockFile);
 
   await agentWriter.install(logicalConfig, projectRoot);
+
+  await installSkills(logicalConfig.skills, projectRoot);
 
   clack.outro("Install complete!");
 }
