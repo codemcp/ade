@@ -31,52 +31,61 @@ describe("conventions facet integration", () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it("writes inline SKILL.md files and registers all skills in package.json for tanstack", async () => {
-    const catalog = getDefaultCatalog();
+  it(
+    "writes SKILL.md files and installs inline skills for tanstack",
+    { timeout: 60_000 },
+    async () => {
+      const catalog = getDefaultCatalog();
 
-    vi.mocked(clack.select).mockResolvedValueOnce("codemcp-workflows");
-    vi.mocked(clack.multiselect).mockResolvedValueOnce(["tanstack"]);
+      vi.mocked(clack.select).mockResolvedValueOnce("codemcp-workflows");
+      vi.mocked(clack.multiselect).mockResolvedValueOnce(["tanstack"]);
 
-    await runSetup(dir, catalog);
+      await runSetup(dir, catalog);
 
-    // Inline skills should have SKILL.md in .ade/catalog/skills/
-    for (const skill of [
-      "tanstack-architecture",
-      "tanstack-design",
-      "tanstack-code",
-      "tanstack-testing"
-    ]) {
-      const skillMd = await readFile(
-        join(dir, ".ade", "catalog", "skills", skill, "SKILL.md"),
-        "utf-8"
+      // Inline skills should have SKILL.md in .ade/skills/ (staging area)
+      for (const skill of [
+        "tanstack-architecture",
+        "tanstack-design",
+        "tanstack-code",
+        "tanstack-testing"
+      ]) {
+        const skillMd = await readFile(
+          join(dir, ".ade", "skills", skill, "SKILL.md"),
+          "utf-8"
+        );
+        expect(skillMd).toContain(`name: ${skill}`);
+        expect(skillMd).toContain("---");
+      }
+
+      // Inline skills should also be installed to .agentskills/skills/ by runAdd
+      for (const skill of [
+        "tanstack-architecture",
+        "tanstack-design",
+        "tanstack-code",
+        "tanstack-testing"
+      ]) {
+        const installed = await readFile(
+          join(dir, ".agentskills", "skills", skill, "SKILL.md"),
+          "utf-8"
+        );
+        expect(installed).toContain(`name: ${skill}`);
+      }
+
+      // skills-lock.json should be created by runAdd
+      const lockRaw = await readFile(join(dir, "skills-lock.json"), "utf-8");
+      const skillsLock = JSON.parse(lockRaw);
+      expect(skillsLock.skills).toBeDefined();
+
+      // skills-server MCP server should be in settings.json
+      const settings = JSON.parse(
+        await readFile(join(dir, ".claude", "settings.json"), "utf-8")
       );
-      expect(skillMd).toContain(`name: ${skill}`);
-      expect(skillMd).toContain("---");
+      expect(settings.mcpServers["agentskills"]).toMatchObject({
+        command: "npx",
+        args: ["-y", "@codemcp/skills-server"]
+      });
     }
-
-    // External skill (playwright) should NOT have a local SKILL.md
-    await expect(
-      access(join(dir, ".ade", "catalog", "skills", "playwright-cli"))
-    ).rejects.toThrow();
-
-    // All skills should be registered in package.json
-    const pkg = JSON.parse(await readFile(join(dir, "package.json"), "utf-8"));
-    expect(pkg.agentskills["tanstack-architecture"]).toBe(
-      "file:./.ade/catalog/skills/tanstack-architecture"
-    );
-    expect(pkg.agentskills["playwright-cli"]).toBe(
-      "microsoft/playwright-cli/skills/playwright-cli"
-    );
-
-    // skills-server MCP server should be in settings.json
-    const settings = JSON.parse(
-      await readFile(join(dir, ".claude", "settings.json"), "utf-8")
-    );
-    expect(settings.mcpServers["agentskills"]).toMatchObject({
-      command: "npx",
-      args: ["-y", "@codemcp/skills-server"]
-    });
-  });
+  );
 
   it("writes skills for multiple selected conventions", async () => {
     const catalog = getDefaultCatalog();
@@ -89,32 +98,28 @@ describe("conventions facet integration", () => {
 
     await runSetup(dir, catalog);
 
-    // Both inline skills should exist in .ade/catalog/skills/
+    // Both inline skills should exist in .ade/skills/ (staging)
     const commits = await readFile(
-      join(
-        dir,
-        ".ade",
-        "catalog",
-        "skills",
-        "conventional-commits",
-        "SKILL.md"
-      ),
+      join(dir, ".ade", "skills", "conventional-commits", "SKILL.md"),
       "utf-8"
     );
     expect(commits).toContain("name: conventional-commits");
     expect(commits).toContain("Conventional Commits");
 
     const tdd = await readFile(
-      join(dir, ".ade", "catalog", "skills", "tdd-london", "SKILL.md"),
+      join(dir, ".ade", "skills", "tdd-london", "SKILL.md"),
       "utf-8"
     );
     expect(tdd).toContain("name: tdd-london");
     expect(tdd).toContain("London");
 
-    // Both registered in package.json
-    const pkg = JSON.parse(await readFile(join(dir, "package.json"), "utf-8"));
-    expect(pkg.agentskills["conventional-commits"]).toContain("file:");
-    expect(pkg.agentskills["tdd-london"]).toContain("file:");
+    // Both should be installed to .agentskills/skills/
+    await expect(
+      access(join(dir, ".agentskills", "skills", "conventional-commits"))
+    ).resolves.toBeUndefined();
+    await expect(
+      access(join(dir, ".agentskills", "skills", "tdd-london"))
+    ).resolves.toBeUndefined();
 
     // config.yaml should have array of choices
     const config = await readUserConfig(dir);
@@ -137,7 +142,7 @@ describe("conventions facet integration", () => {
     await runSetup(dir, catalog);
 
     const adr = await readFile(
-      join(dir, ".ade", "catalog", "skills", "adr-nygard", "SKILL.md"),
+      join(dir, ".ade", "skills", "adr-nygard", "SKILL.md"),
       "utf-8"
     );
     expect(adr).toContain("name: adr-nygard");

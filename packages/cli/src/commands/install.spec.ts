@@ -9,6 +9,10 @@ vi.mock("@clack/prompts", () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 }));
 
+vi.mock("@codemcp/skills/api", () => ({
+  runAdd: vi.fn()
+}));
+
 vi.mock("@ade/core", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import("@ade/core");
   return {

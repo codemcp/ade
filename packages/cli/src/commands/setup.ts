@@ -9,6 +9,7 @@ import {
   createDefaultRegistry,
   getAgentWriter
 } from "@ade/core";
+import { installSkills } from "../skills-installer.js";
 
 export async function runSetup(
   projectRoot: string,
@@ -58,6 +59,8 @@ export async function runSetup(
   if (agentWriter) {
     await agentWriter.install(logicalConfig, projectRoot);
   }
+
+  await installSkills(logicalConfig.skills, projectRoot);
 
   clack.outro("Setup complete!");
 }

@@ -42,60 +42,22 @@ async function writeSkills(
 ): Promise<void> {
   if (config.skills.length === 0) return;
 
-  const agentskills: Record<string, string> = {};
-
   for (const skill of config.skills) {
-    if (isInlineSkill(skill)) {
-      // Write inline skill to catalog staging area
-      const skillDir = join(
-        projectRoot,
-        ".ade",
-        "catalog",
-        "skills",
-        skill.name
-      );
-      await mkdir(skillDir, { recursive: true });
+    if (!isInlineSkill(skill)) continue;
 
-      const frontmatter = [
-        "---",
-        `name: ${skill.name}`,
-        `description: ${skill.description}`,
-        "---"
-      ].join("\n");
+    const skillDir = join(projectRoot, ".ade", "skills", skill.name);
+    await mkdir(skillDir, { recursive: true });
 
-      const content = `${frontmatter}\n\n${skill.body}\n`;
-      await writeFile(join(skillDir, "SKILL.md"), content, "utf-8");
+    const frontmatter = [
+      "---",
+      `name: ${skill.name}`,
+      `description: ${skill.description}`,
+      "---"
+    ].join("\n");
 
-      agentskills[skill.name] = `file:./.ade/catalog/skills/${skill.name}`;
-    } else {
-      // External skill — just register the source reference
-      agentskills[skill.name] = skill.source;
-    }
+    const content = `${frontmatter}\n\n${skill.body}\n`;
+    await writeFile(join(skillDir, "SKILL.md"), content, "utf-8");
   }
-
-  // Register skills in package.json
-  await updatePackageJson(projectRoot, agentskills);
-}
-
-async function updatePackageJson(
-  projectRoot: string,
-  agentskills: Record<string, string>
-): Promise<void> {
-  const pkgPath = join(projectRoot, "package.json");
-
-  let existing: Record<string, unknown> = {};
-  try {
-    const raw = await readFile(pkgPath, "utf-8");
-    existing = JSON.parse(raw);
-  } catch {
-    // No existing package.json — start fresh
-  }
-
-  const currentSkills = (existing.agentskills as Record<string, string>) ?? {};
-  const merged = { ...currentSkills, ...agentskills };
-
-  const pkg = { ...existing, agentskills: merged };
-  await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
 }
 
 async function writeClaudeSettings(
