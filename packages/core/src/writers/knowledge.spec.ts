@@ -10,7 +10,7 @@ describe("knowledgeWriter", () => {
     const result = await knowledgeWriter.write(
       {
         name: "react-docs",
-        origin: "https://react.dev/reference",
+        origin: "https://github.com/facebook/react.git",
         description: "Official React documentation"
       },
       { resolved: {} }
@@ -19,7 +19,7 @@ describe("knowledgeWriter", () => {
     expect(result.knowledge_sources).toHaveLength(1);
     expect(result.knowledge_sources![0]).toEqual({
       name: "react-docs",
-      origin: "https://react.dev/reference",
+      origin: "https://github.com/facebook/react.git",
       description: "Official React documentation"
     });
   });

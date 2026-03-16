@@ -67,7 +67,8 @@ export const practicesFacet: Facet = {
         {
           id: "conventional-commits-spec",
           label: "Conventional Commits Spec",
-          origin: "https://www.conventionalcommits.org/en/v1.0.0/",
+          origin:
+            "https://github.com/conventional-commits/conventionalcommits.org.git",
           description: "The Conventional Commits specification"
         }
       ]

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Catalog, LogicalConfig, DocsetDef } from "@ade/core";
+import type { Catalog, LogicalConfig } from "@ade/core";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -107,13 +107,13 @@ const docsetCatalog: Catalog = {
             {
               id: "react-docs",
               label: "React Reference",
-              origin: "https://react.dev/reference",
+              origin: "https://github.com/facebook/react.git",
               description: "Official React docs"
             },
             {
               id: "react-tutorial",
               label: "React Tutorial",
-              origin: "https://react.dev/learn",
+              origin: "https://github.com/reactjs/react.dev.git",
               description: "React learn guide"
             }
           ]
