@@ -122,6 +122,32 @@ export const architectureFacet: Facet = {
             text: "This project follows TanStack conventions. Use use_skill() to access the tanstack-architecture, tanstack-design, tanstack-code, tanstack-testing, and playwright-cli skills before making changes."
           }
         }
+      ],
+      docsets: [
+        {
+          id: "tanstack-router-docs",
+          label: "TanStack Router",
+          origin: "https://tanstack.com/router/latest/docs",
+          description: "File-based routing, loaders, and search params"
+        },
+        {
+          id: "tanstack-query-docs",
+          label: "TanStack Query",
+          origin: "https://tanstack.com/query/latest/docs",
+          description: "Server state management, caching, and mutations"
+        },
+        {
+          id: "tanstack-form-docs",
+          label: "TanStack Form",
+          origin: "https://tanstack.com/form/latest/docs",
+          description: "Type-safe form state and validation"
+        },
+        {
+          id: "tanstack-table-docs",
+          label: "TanStack Table",
+          origin: "https://tanstack.com/table/latest/docs",
+          description: "Headless table and datagrid utilities"
+        }
       ]
     }
   ]

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Catalog, LogicalConfig } from "@ade/core";
+import type { Catalog, LogicalConfig, DocsetDef } from "@ade/core";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +34,8 @@ vi.mock("@ade/core", async (importOriginal) => {
     getAgentWriter: vi.fn().mockReturnValue({
       id: "claude-code",
       install: vi.fn().mockResolvedValue(undefined)
-    })
+    }),
+    collectDocsets: actual.collectDocsets
   };
 });
 
@@ -83,6 +84,39 @@ const testCatalog: Catalog = {
           label: "Jest",
           description: "Use jest",
           recipe: []
+        }
+      ]
+    }
+  ]
+};
+
+const docsetCatalog: Catalog = {
+  facets: [
+    {
+      id: "arch",
+      label: "Architecture",
+      description: "Stack",
+      required: true,
+      options: [
+        {
+          id: "react",
+          label: "React",
+          description: "React framework",
+          recipe: [],
+          docsets: [
+            {
+              id: "react-docs",
+              label: "React Reference",
+              origin: "https://react.dev/reference",
+              description: "Official React docs"
+            },
+            {
+              id: "react-tutorial",
+              label: "React Tutorial",
+              origin: "https://react.dev/learn",
+              description: "React learn guide"
+            }
+          ]
         }
       ]
     }
@@ -175,6 +209,65 @@ describe("runSetup", () => {
     expect(writeUserConfig).not.toHaveBeenCalled();
     expect(writeLockFile).not.toHaveBeenCalled();
     expect(clack.cancel).toHaveBeenCalled();
+  });
+
+  describe("docset confirmation step", () => {
+    it("presents implied docsets as a multiselect after facet selection", async () => {
+      vi.mocked(clack.select).mockResolvedValueOnce("react");
+      // User accepts all docsets (returns all ids)
+      vi.mocked(clack.multiselect).mockResolvedValueOnce([
+        "react-docs",
+        "react-tutorial"
+      ]);
+
+      await runSetup("/tmp/test-project", docsetCatalog);
+
+      // multiselect should have been called for docsets
+      expect(clack.multiselect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining("Documentation")
+        })
+      );
+    });
+
+    it("stores deselected docsets as excluded_docsets in user config", async () => {
+      vi.mocked(clack.select).mockResolvedValueOnce("react");
+      // User deselects react-tutorial, keeps only react-docs
+      vi.mocked(clack.multiselect).mockResolvedValueOnce(["react-docs"]);
+
+      await runSetup("/tmp/test-project", docsetCatalog);
+
+      expect(writeUserConfig).toHaveBeenCalledWith(
+        "/tmp/test-project",
+        expect.objectContaining({
+          excluded_docsets: ["react-tutorial"]
+        })
+      );
+    });
+
+    it("does not set excluded_docsets when all docsets are accepted", async () => {
+      vi.mocked(clack.select).mockResolvedValueOnce("react");
+      vi.mocked(clack.multiselect).mockResolvedValueOnce([
+        "react-docs",
+        "react-tutorial"
+      ]);
+
+      await runSetup("/tmp/test-project", docsetCatalog);
+
+      const configArg = vi.mocked(writeUserConfig).mock.calls[0][1];
+      expect(configArg.excluded_docsets).toBeUndefined();
+    });
+
+    it("skips docset prompt when no options have docsets", async () => {
+      vi.mocked(clack.select)
+        .mockResolvedValueOnce("workflow-a")
+        .mockResolvedValueOnce("vitest");
+
+      await runSetup("/tmp/test-project", testCatalog);
+
+      // multiselect should NOT have been called (no docsets in testCatalog)
+      expect(clack.multiselect).not.toHaveBeenCalled();
+    });
   });
 
   it("calls intro and outro from @clack/prompts", async () => {

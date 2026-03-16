@@ -90,6 +90,34 @@ describe("catalog", () => {
     });
   });
 
+  describe("architecture facet docsets", () => {
+    it("tanstack option declares docsets for Router, Query, Form, and Table", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const tanstack = getOption(architecture, "tanstack")!;
+
+      expect(tanstack.docsets).toBeDefined();
+      const ids = tanstack.docsets!.map((d) => d.id);
+      expect(ids).toContain("tanstack-router-docs");
+      expect(ids).toContain("tanstack-query-docs");
+      expect(ids).toContain("tanstack-form-docs");
+      expect(ids).toContain("tanstack-table-docs");
+    });
+
+    it("each docset has required fields", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const tanstack = getOption(architecture, "tanstack")!;
+
+      for (const docset of tanstack.docsets!) {
+        expect(docset.id).toBeTruthy();
+        expect(docset.label).toBeTruthy();
+        expect(docset.origin).toMatch(/^https:\/\//);
+        expect(docset.description).toBeTruthy();
+      }
+    });
+  });
+
   describe("practices facet", () => {
     it("exists in the default catalog", () => {
       const catalog = getDefaultCatalog();
@@ -117,6 +145,16 @@ describe("catalog", () => {
       ).skills;
       expect(skills).toHaveLength(1);
       expect(skills[0].name).toBe("conventional-commits");
+    });
+
+    it("conventional-commits option declares the spec docset", () => {
+      const catalog = getDefaultCatalog();
+      const practices = getFacet(catalog, "practices")!;
+      const option = getOption(practices, "conventional-commits")!;
+
+      expect(option.docsets).toBeDefined();
+      expect(option.docsets).toHaveLength(1);
+      expect(option.docsets![0].id).toBe("conventional-commits-spec");
     });
 
     it("has tdd-london option with a single skill", () => {

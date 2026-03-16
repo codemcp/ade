@@ -19,6 +19,14 @@ export interface Option {
   label: string;
   description: string;
   recipe: Provision[];
+  docsets?: DocsetDef[];
+}
+
+export interface DocsetDef {
+  id: string;
+  label: string;
+  origin: string;
+  description: string;
 }
 
 export interface Provision {
@@ -91,6 +99,7 @@ export interface ResolvedFacet {
 
 export interface UserConfig {
   choices: Record<string, string | string[]>;
+  excluded_docsets?: string[];
   custom?: {
     mcp_servers?: McpServerEntry[];
     instructions?: string[];

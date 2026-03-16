@@ -62,6 +62,14 @@ export const practicesFacet: Facet = {
             text: "Use the conventional-commits skill (via use_skill()) when writing commit messages."
           }
         }
+      ],
+      docsets: [
+        {
+          id: "conventional-commits-spec",
+          label: "Conventional Commits Spec",
+          origin: "https://www.conventionalcommits.org/en/v1.0.0/",
+          description: "The Conventional Commits specification"
+        }
       ]
     },
     {
