@@ -83,43 +83,47 @@ cli/src/
 
 ## Data Flow
 
-### 1. Resolution: config.yaml → LogicalConfig
+### 1. Setup: TUI → config.yaml + config.lock.yaml + agent files
 
 ```
-read config.yaml
-  → topologically sort facets by dependsOn
-  → for each facet (in dependency order):
-      → if facet has unmet dependencies (via `ade add`), prompt for them first
-      → look up selected option(s) in catalog
-        (single-select: one option; multi-select: list of options)
-      → build ResolutionContext from already-resolved dependent facets
-      → for each selected option, collect all provisions from its recipe
-      → for each provision, invoke the writer with (config, context)
-      → each writer returns a LogicalConfig fragment
-      → record facet as resolved
+read existing config.yaml (if any) for default selections
+  → walk facets interactively:
+      → pre-select previous choice as default (if still valid)
+      → warn if previous choice references a stale option
+      → collect new user choices
   → collect docsets from all selected options
-  → deduplicate docsets by id (first wins)
-  → filter out docsets listed in excluded_docsets
-  → map enabled docsets to knowledge_sources entries
-  → merge custom section from config.yaml
-  → merge all fragments into one LogicalConfig
-  → write config.lock.yaml (serialized LogicalConfig)
+  → present docset confirmation (opt-out multiselect)
+  → resolve choices + catalog → LogicalConfig
+  → write config.yaml (user choices)
+  → write config.lock.yaml (resolved LogicalConfig snapshot)
+  → run agent writer (generate AGENTS.md, settings.json, etc.)
+  → install skills via @codemcp/skills API
+  → install knowledge via @codemcp/knowledge API
 ```
+
+Resolution expands each selected option's recipe provisions into
+LogicalConfig fragments, deduplicates docsets by id, filters by
+`excluded_docsets`, maps enabled docsets to `knowledge_sources`, adds the
+`@codemcp/knowledge-server` MCP entry if knowledge sources are present,
+merges the custom section, and deduplicates MCP servers by ref.
 
 For **multi-select facets**, each selected option's recipe is resolved
-independently and their LogicalConfig fragments are merged. This means
-selecting both `react` and `node-express` in the frameworks facet produces
-the union of both recipes' provisions.
+independently and their LogicalConfig fragments are merged.
 
-### 2. Generation: LogicalConfig → agent files
+### 2. Install: config.lock.yaml → agent files (idempotent)
 
 ```
-read config.lock.yaml (or use in-memory LogicalConfig)
-  → select agent writer from --agent flag (no auto-detection)
-  → writer reads current agent files (if any) for merge/update
-  → writer produces updated agent-specific files
-  → write files to disk
+read config.lock.yaml
+  → select agent writer (default: claude-code)
+  → apply logical_config from lock file (no re-resolution)
+  → run agent writer
+  → install skills
+  → install knowledge
 ```
+
+`ade install` does **not** re-resolve from `config.yaml`. It treats the
+lock file as the source of truth, like `npm ci` treats `package-lock.json`.
+To change selections, re-run `ade setup`.
 
 The target agent is a **generation-time parameter** (`--agent` flag),
 not stored in `config.yaml`. There is no auto-detection. This keeps the
@@ -168,7 +172,6 @@ interface Facet {
   description: string;
   required: boolean; // false = skippable
   multiSelect?: boolean; // true = user can pick multiple options
-  dependsOn?: string[]; // facet IDs this facet depends on
   options: Option[];
 }
 
@@ -207,15 +210,10 @@ interface Provision {
   config: Record<string, unknown>; // writer-specific, validated at boundary
 }
 
-// Passed to provision writers so they can adapt based on sibling selections.
-// Only contains resolved options from facets declared in dependsOn.
+// Passed to provision writers for future cross-facet context.
+// Currently passed as { resolved: {} }.
 interface ResolutionContext {
-  resolved: Record<string, ResolvedFacet>; // facet_id → resolved info
-}
-
-interface ResolvedFacet {
-  optionId: string;
-  option: Option;
+  resolved: Record<string, unknown>;
 }
 ```
 
@@ -225,7 +223,7 @@ interface ResolvedFacet {
 interface LogicalConfig {
   mcp_servers: McpServerEntry[];
   instructions: string[];
-  cli_actions: CliAction[];
+  skills: SkillDefinition[];
   knowledge_sources: KnowledgeSource[];
 }
 
@@ -234,12 +232,6 @@ interface McpServerEntry {
   command: string; // e.g. "npx"
   args: string[]; // e.g. ["-y", "@codemcp/workflows-server"]
   env: Record<string, string>;
-}
-
-interface CliAction {
-  command: string;
-  args: string[];
-  phase: "setup" | "install"; // when to run
 }
 
 interface KnowledgeSource {
@@ -510,15 +502,6 @@ Pass-through: produces one `McpServerEntry` directly.
 ```
 
 Produces: one `instructions` entry.
-
-### `installable` writer
-
-```typescript
-{ command: "pnpm", check: "pnpm --version" }
-```
-
-Produces: one `CliAction` for validation/installation of a CLI tool or
-dependency.
 
 ## V1 Catalog (TypeScript)
 

@@ -18,7 +18,6 @@ vi.mock("@clack/prompts", () => ({
 import * as clack from "@clack/prompts";
 import { runSetup } from "./setup.js";
 import { runInstall } from "./install.js";
-import { readLockFile } from "@ade/core";
 import { getDefaultCatalog } from "../../../core/src/catalog/index.js";
 
 describe("install integration (real temp dir)", () => {
@@ -33,10 +32,10 @@ describe("install integration (real temp dir)", () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it("re-resolves from existing config.yaml and regenerates agent files", async () => {
+  it("applies lock file to regenerate agent files without re-resolving", async () => {
     const catalog = getDefaultCatalog();
 
-    // Step 1: Run setup to create config.yaml
+    // Step 1: Run setup to create config.yaml + config.lock.yaml
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
       .mockResolvedValueOnce("__skip__"); // architecture
@@ -46,7 +45,7 @@ describe("install integration (real temp dir)", () => {
     await rm(join(dir, "AGENTS.md"));
     await rm(join(dir, ".claude"), { recursive: true, force: true });
 
-    // Step 3: Run install — should regenerate from config.yaml
+    // Step 3: Run install — should regenerate from config.lock.yaml
     await runInstall(dir, "claude-code");
 
     // Agent files should be back
@@ -62,7 +61,7 @@ describe("install integration (real temp dir)", () => {
     });
   });
 
-  it("updates lock file on install", async () => {
+  it("does not modify the lock file", async () => {
     const catalog = getDefaultCatalog();
 
     // Setup first
@@ -71,23 +70,22 @@ describe("install integration (real temp dir)", () => {
       .mockResolvedValueOnce("__skip__"); // architecture
     await runSetup(dir, catalog);
 
-    const lockBefore = await readLockFile(dir);
-
-    // Small delay so timestamp differs
-    await new Promise((r) => setTimeout(r, 10));
+    const lockRawBefore = await readFile(
+      join(dir, "config.lock.yaml"),
+      "utf-8"
+    );
 
     // Re-install
     await runInstall(dir, "claude-code");
 
-    const lockAfter = await readLockFile(dir);
-    expect(lockAfter).not.toBeNull();
-    expect(lockAfter!.generated_at).not.toBe(lockBefore!.generated_at);
-    expect(lockAfter!.logical_config).toEqual(lockBefore!.logical_config);
+    const lockRawAfter = await readFile(join(dir, "config.lock.yaml"), "utf-8");
+    // Lock file should be byte-identical (install doesn't rewrite it)
+    expect(lockRawAfter).toBe(lockRawBefore);
   });
 
-  it("fails when no config.yaml exists", async () => {
+  it("fails when no config.lock.yaml exists", async () => {
     await expect(runInstall(dir, "claude-code")).rejects.toThrow(
-      /config\.yaml not found/i
+      /config\.lock\.yaml not found/i
     );
   });
 

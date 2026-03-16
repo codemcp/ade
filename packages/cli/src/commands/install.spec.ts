@@ -13,19 +13,19 @@ vi.mock("@codemcp/skills/api", () => ({
   runAdd: vi.fn()
 }));
 
+const mockLogical: LogicalConfig = {
+  mcp_servers: [],
+  instructions: ["test instruction"],
+  cli_actions: [],
+  knowledge_sources: [],
+  skills: []
+};
+
 vi.mock("@ade/core", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import("@ade/core");
   return {
     ...actual,
-    readUserConfig: vi.fn(),
-    writeLockFile: vi.fn().mockResolvedValue(undefined),
-    resolve: vi.fn().mockResolvedValue({
-      mcp_servers: [],
-      instructions: ["test instruction"],
-      cli_actions: [],
-      knowledge_sources: [],
-      skills: []
-    } satisfies LogicalConfig),
+    readLockFile: vi.fn(),
     getAgentWriter: vi.fn().mockReturnValue({
       id: "claude-code",
       install: vi.fn().mockResolvedValue(undefined)
@@ -34,12 +34,7 @@ vi.mock("@ade/core", async (importOriginal) => {
 });
 
 import * as clack from "@clack/prompts";
-import {
-  readUserConfig,
-  writeLockFile,
-  resolve,
-  getAgentWriter
-} from "@ade/core";
+import { readLockFile, getAgentWriter } from "@ade/core";
 import { runInstall } from "./install.js";
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -49,23 +44,21 @@ describe("runInstall", () => {
     vi.clearAllMocks();
   });
 
-  it("reads config.yaml and resolves to logical config", async () => {
-    vi.mocked(readUserConfig).mockResolvedValueOnce({
-      choices: { process: "codemcp-workflows" }
+  it("reads config.lock.yaml and applies logical config", async () => {
+    vi.mocked(readLockFile).mockResolvedValueOnce({
+      version: 1,
+      generated_at: "2024-01-01T00:00:00.000Z",
+      choices: { process: "codemcp-workflows" },
+      logical_config: mockLogical
     });
 
     await runInstall("/tmp/project", "claude-code");
 
-    expect(readUserConfig).toHaveBeenCalledWith("/tmp/project");
-    expect(resolve).toHaveBeenCalledOnce();
-    const resolveArgs = vi.mocked(resolve).mock.calls[0];
-    expect(resolveArgs[0]).toMatchObject({
-      choices: { process: "codemcp-workflows" }
-    });
+    expect(readLockFile).toHaveBeenCalledWith("/tmp/project");
   });
 
-  it("writes lock file with resolved config", async () => {
-    const mockLogical: LogicalConfig = {
+  it("does not re-resolve — uses lock file logical_config directly", async () => {
+    const lockedConfig: LogicalConfig = {
       mcp_servers: [
         {
           ref: "workflows",
@@ -79,31 +72,35 @@ describe("runInstall", () => {
       skills: [],
       knowledge_sources: []
     };
-    vi.mocked(readUserConfig).mockResolvedValueOnce({
-      choices: { process: "codemcp-workflows" }
+    vi.mocked(readLockFile).mockResolvedValueOnce({
+      version: 1,
+      generated_at: "2024-01-01T00:00:00.000Z",
+      choices: { process: "codemcp-workflows" },
+      logical_config: lockedConfig
     });
-    vi.mocked(resolve).mockResolvedValueOnce(mockLogical);
 
-    await runInstall("/tmp/project", "claude-code");
-
-    expect(writeLockFile).toHaveBeenCalledWith(
-      "/tmp/project",
-      expect.objectContaining({
-        version: 1,
-        choices: { process: "codemcp-workflows" },
-        logical_config: mockLogical
-      })
-    );
-  });
-
-  it("calls agent writer install with resolved config", async () => {
     const mockInstall = vi.fn().mockResolvedValue(undefined);
     vi.mocked(getAgentWriter).mockReturnValueOnce({
       id: "claude-code",
       install: mockInstall
     });
-    vi.mocked(readUserConfig).mockResolvedValueOnce({
-      choices: { process: "codemcp-workflows" }
+
+    await runInstall("/tmp/project", "claude-code");
+
+    expect(mockInstall).toHaveBeenCalledWith(lockedConfig, "/tmp/project");
+  });
+
+  it("calls agent writer install with lock file config", async () => {
+    const mockInstall = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(getAgentWriter).mockReturnValueOnce({
+      id: "claude-code",
+      install: mockInstall
+    });
+    vi.mocked(readLockFile).mockResolvedValueOnce({
+      version: 1,
+      generated_at: "2024-01-01T00:00:00.000Z",
+      choices: { process: "codemcp-workflows" },
+      logical_config: mockLogical
     });
 
     await runInstall("/tmp/project", "claude-code");
@@ -112,23 +109,23 @@ describe("runInstall", () => {
       expect.anything(),
       "claude-code"
     );
-    expect(mockInstall).toHaveBeenCalledWith(
-      expect.objectContaining({ instructions: expect.any(Array) }),
-      "/tmp/project"
-    );
+    expect(mockInstall).toHaveBeenCalledWith(mockLogical, "/tmp/project");
   });
 
-  it("throws when config.yaml is missing", async () => {
-    vi.mocked(readUserConfig).mockResolvedValueOnce(null);
+  it("throws when config.lock.yaml is missing", async () => {
+    vi.mocked(readLockFile).mockResolvedValueOnce(null);
 
     await expect(runInstall("/tmp/project", "claude-code")).rejects.toThrow(
-      /config\.yaml not found/i
+      /config\.lock\.yaml not found/i
     );
   });
 
   it("throws when agent writer is unknown", async () => {
-    vi.mocked(readUserConfig).mockResolvedValueOnce({
-      choices: { process: "codemcp-workflows" }
+    vi.mocked(readLockFile).mockResolvedValueOnce({
+      version: 1,
+      generated_at: "2024-01-01T00:00:00.000Z",
+      choices: { process: "codemcp-workflows" },
+      logical_config: mockLogical
     });
     vi.mocked(getAgentWriter).mockReturnValueOnce(undefined);
 
@@ -138,8 +135,11 @@ describe("runInstall", () => {
   });
 
   it("shows intro and outro messages", async () => {
-    vi.mocked(readUserConfig).mockResolvedValueOnce({
-      choices: { process: "codemcp-workflows" }
+    vi.mocked(readLockFile).mockResolvedValueOnce({
+      version: 1,
+      generated_at: "2024-01-01T00:00:00.000Z",
+      choices: { process: "codemcp-workflows" },
+      logical_config: mockLogical
     });
 
     await runInstall("/tmp/project", "claude-code");

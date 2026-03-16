@@ -27,10 +27,10 @@ if (command === "setup") {
   console.log();
   console.log("Commands:");
   console.log(
-    "  setup [dir]      Configure your AI agent (default: current dir)"
+    "  setup [dir]      Interactive setup wizard (re-run to change selections)"
   );
   console.log(
-    "  install [dir]    Re-resolve config and regenerate agent files"
+    "  install [dir]    Apply lock file to generate agent files (idempotent)"
   );
   console.log();
   console.log("Options:");
