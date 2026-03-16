@@ -337,6 +337,57 @@ describe("resolve", () => {
       expect(result.knowledge_sources[0].name).toBe("react-docs");
     });
 
+    it("adds knowledge-server MCP entry when knowledge_sources are present", async () => {
+      const docsetCatalog: Catalog = {
+        facets: [
+          {
+            id: "arch",
+            label: "Architecture",
+            description: "Stack",
+            required: false,
+            options: [
+              {
+                id: "react",
+                label: "React",
+                description: "React",
+                recipe: [],
+                docsets: [
+                  {
+                    id: "react-docs",
+                    label: "React Reference",
+                    origin: "https://react.dev/reference",
+                    description: "React docs"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = { choices: { arch: "react" } };
+      const result = await resolve(userConfig, docsetCatalog, registry);
+
+      const knowledgeServer = result.mcp_servers.find(
+        (s) => s.ref === "@codemcp/knowledge-server"
+      );
+      expect(knowledgeServer).toBeDefined();
+      expect(knowledgeServer!.command).toBe("npx");
+      expect(knowledgeServer!.args).toContain("@codemcp/knowledge-server");
+    });
+
+    it("does not add knowledge-server MCP entry when no knowledge_sources", async () => {
+      const userConfig: UserConfig = {
+        choices: { process: "native-agents-md" }
+      };
+      const result = await resolve(userConfig, catalog, registry);
+
+      const knowledgeServer = result.mcp_servers.find(
+        (s) => s.ref === "@codemcp/knowledge-server"
+      );
+      expect(knowledgeServer).toBeUndefined();
+    });
+
     it("produces no knowledge_sources when option has no docsets", async () => {
       const userConfig: UserConfig = {
         choices: { process: "native-agents-md" }

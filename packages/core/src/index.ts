@@ -40,3 +40,4 @@ export { resolve, collectDocsets } from "./resolver.js";
 export { getDefaultCatalog, getFacet, getOption } from "./catalog/index.js";
 export { claudeCodeWriter } from "./agents/claude-code.js";
 export { skillsWriter } from "./writers/skills.js";
+export { knowledgeWriter } from "./writers/knowledge.js";
