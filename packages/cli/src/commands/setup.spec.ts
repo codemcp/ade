@@ -15,10 +15,6 @@ vi.mock("@clack/prompts", () => ({
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
 }));
 
-vi.mock("@codemcp/skills/api", () => ({
-  runAdd: vi.fn()
-}));
-
 vi.mock("@ade/core", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import("@ade/core");
   return {
@@ -52,7 +48,8 @@ vi.mock("@ade/harnesses", () => ({
     description: "test",
     install: vi.fn().mockResolvedValue(undefined)
   }),
-  getHarnessIds: vi.fn().mockReturnValue(["claude-code"])
+  getHarnessIds: vi.fn().mockReturnValue(["claude-code"]),
+  installSkills: vi.fn().mockResolvedValue(undefined)
 }));
 
 import * as clack from "@clack/prompts";

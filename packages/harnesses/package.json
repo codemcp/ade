@@ -19,7 +19,8 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@ade/core": "workspace:*"
+    "@ade/core": "workspace:*",
+    "@codemcp/skills": "^2.3.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.21.0",

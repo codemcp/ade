@@ -38,7 +38,5 @@ export {
 } from "./registry.js";
 export { resolve, collectDocsets } from "./resolver.js";
 export { getDefaultCatalog, getFacet, getOption } from "./catalog/index.js";
-/** @deprecated Use @ade/harnesses package instead */
-export { claudeCodeWriter } from "./agents/claude-code.js";
 export { skillsWriter } from "./writers/skills.js";
 export { knowledgeWriter } from "./writers/knowledge.js";
