@@ -1,7 +1,7 @@
 # ADE — Agentic Development Environment
 
-> A technology-agnostic information architecture for coding agents that enables
-> consistent, professional-grade agentic engineering at team scale.
+> A structured information architecture for harness engineering — organizing what
+> coding agents know into composable, team-shared layers.
 
 ## The alignment problem
 
