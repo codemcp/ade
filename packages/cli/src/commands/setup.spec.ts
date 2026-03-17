@@ -27,7 +27,8 @@ vi.mock("@ade/core", async (importOriginal) => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     } satisfies LogicalConfig),
     collectDocsets: actual.collectDocsets
   };
@@ -176,7 +177,8 @@ describe("runSetup", () => {
       instructions: ["do stuff"],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
     vi.mocked(resolve).mockResolvedValueOnce(mockLogical);
     vi.mocked(clack.select)
