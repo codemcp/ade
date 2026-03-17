@@ -6,8 +6,7 @@ import type { HarnessWriter } from "../types.js";
 export const copilotWriter: HarnessWriter = {
   id: "copilot",
   label: "GitHub Copilot",
-  description:
-    "VS Code Copilot — .vscode/mcp.json + .github/copilot-instructions.md",
+  description: "VS Code + CLI — .vscode/mcp.json + .github/agents/ade.agent.md",
   async install(config: LogicalConfig, projectRoot: string) {
     await writeVsCodeMcp(config, projectRoot);
     await writeCopilotInstructions(config, projectRoot);
