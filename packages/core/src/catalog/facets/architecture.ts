@@ -284,6 +284,155 @@ export const architectureFacet: Facet = {
           description: "TypeScript-first schema validation"
         }
       ]
+    },
+    {
+      id: "java-backend",
+      label: "Java Backend",
+      description:
+        "Production-grade API server with Spring Boot 3, JPA/Hibernate, Gradle, and Lombok",
+      recipe: [
+        {
+          writer: "skills",
+          config: {
+            skills: [
+              {
+                name: "java-backend-architecture",
+                description:
+                  "Architecture conventions for Spring Boot backend applications",
+                body: [
+                  "# Java Backend Architecture Conventions",
+                  "",
+                  "## Project Structure",
+                  "- Layered architecture: `controller/` → `service/` → `repository/`",
+                  "- Organize by feature, not by layer (e.g. `com.app.user/`, `com.app.order/`)",
+                  "- Each feature package contains its own controller, service, repository, DTOs, and entity classes",
+                  "- Shared code in a `common/` or `shared/` package (exceptions, base entities, utilities)",
+                  "- Entry point: `@SpringBootApplication` class in root package",
+                  "",
+                  "## Module Boundaries",
+                  "- Controllers handle HTTP concerns only — delegate to services immediately",
+                  "- Services contain business logic, call repositories, never touch `HttpServletRequest`/`HttpServletResponse`",
+                  "- Repositories extend `JpaRepository` or `CrudRepository` — no business logic",
+                  "- Cross-feature communication goes through service interfaces, not direct repository access",
+                  "",
+                  "## Configuration",
+                  "- Use `application.yml` with Spring profiles (`dev`, `test`, `prod`)",
+                  "- Externalize secrets via environment variables with `${ENV_VAR}` placeholders",
+                  "- Type-safe config with `@ConfigurationProperties` classes annotated with `@Validated`",
+                  "- Gradle build with Kotlin DSL (`build.gradle.kts`)"
+                ].join("\n")
+              },
+              {
+                name: "java-backend-design",
+                description:
+                  "Design patterns for Spring Boot backend applications",
+                body: [
+                  "# Java Backend Design Patterns",
+                  "",
+                  "## REST API Patterns",
+                  "- Use `@RestController` with `@RequestMapping` per feature (e.g. `/api/v1/users`)",
+                  "- DTOs for request/response — never expose JPA entities directly",
+                  "- Use `@Valid` with Jakarta Bean Validation annotations on request DTOs",
+                  "- Return `ResponseEntity<T>` for explicit status codes, or direct objects for 200 OK",
+                  "- Use `@ControllerAdvice` with `@ExceptionHandler` for centralized error handling",
+                  "",
+                  "## JPA/Hibernate Patterns",
+                  "- Entities use Lombok `@Data`, `@Builder`, `@NoArgsConstructor`, `@AllArgsConstructor`",
+                  "- Use `@Entity` with explicit `@Table(name = ...)` and `@Column` mappings",
+                  "- Prefer `FetchType.LAZY` for associations — use `@EntityGraph` or join fetch for eager loading when needed",
+                  "- Database migrations managed by Flyway (`db/migration/V1__description.sql`)",
+                  "- Use Spring Data JPA derived queries or `@Query` with JPQL",
+                  "",
+                  "## Middleware & Cross-Cutting",
+                  "- Security with Spring Security filter chain — JWT or session-based",
+                  "- Structured logging with SLF4J + Logback, MDC for request correlation",
+                  "- Use `@Transactional` on service methods, read-only where appropriate"
+                ].join("\n")
+              },
+              {
+                name: "java-backend-code",
+                description:
+                  "Code style conventions for Spring Boot backend applications",
+                body: [
+                  "# Java Backend Code Conventions",
+                  "",
+                  "## Lombok Usage",
+                  "- Use `@Data` for DTOs, `@Value` for immutable objects",
+                  "- Use `@Builder` for entities and complex DTOs",
+                  "- Use `@RequiredArgsConstructor` for constructor injection (preferred over `@Autowired`)",
+                  "- Use `@Slf4j` for logger injection",
+                  "",
+                  "## Naming",
+                  "- Controllers: `*Controller.java` (e.g. `UserController.java`)",
+                  "- Services: `*Service.java` interface + `*ServiceImpl.java`",
+                  "- Repositories: `*Repository.java` (e.g. `UserRepository.java`)",
+                  "- Entities: singular noun (e.g. `User.java`, `Order.java`)",
+                  "- DTOs: `*Request.java`, `*Response.java` (e.g. `CreateUserRequest.java`)",
+                  "",
+                  "## Dependency Injection",
+                  "- Constructor injection via `@RequiredArgsConstructor` — never field injection",
+                  "- Declare dependencies as `private final` fields",
+                  "- Program to interfaces for services (e.g. inject `UserService`, not `UserServiceImpl`)"
+                ].join("\n")
+              },
+              {
+                name: "java-backend-testing",
+                description:
+                  "Testing conventions for Spring Boot backend applications",
+                body: [
+                  "# Java Backend Testing Conventions",
+                  "",
+                  "## Unit Tests",
+                  "- Test services with mocked repositories using `@ExtendWith(MockitoExtension.class)`",
+                  "- Use `@Mock` for dependencies and `@InjectMocks` for the class under test",
+                  "- Test DTOs and validation annotations independently",
+                  "- Follow `given/when/then` structure with descriptive method names",
+                  "",
+                  "## Integration Tests",
+                  "- Use `@SpringBootTest` with `@AutoConfigureMockMvc` for controller tests",
+                  "- Test through `MockMvc` — assert on status, headers, and JSON body",
+                  "- Use `@DataJpaTest` for repository tests with an embedded H2 database",
+                  "- Use `@Testcontainers` for integration tests against real databases (PostgreSQL, MySQL)",
+                  "- Use `@Transactional` on test classes for automatic rollback",
+                  "",
+                  "## Patterns",
+                  "- JUnit 5 as test framework, AssertJ for fluent assertions",
+                  "- Test file location: `src/test/java/` mirroring main source structure",
+                  "- Factory methods or builders for test data — avoid shared mutable fixtures",
+                  "- Use `@WithMockUser` for security-aware controller tests"
+                ].join("\n")
+              }
+            ]
+          }
+        }
+      ],
+      docsets: [
+        {
+          id: "spring-boot-docs",
+          label: "Spring Boot",
+          origin: "https://github.com/spring-projects/spring-boot.git",
+          description: "Spring Boot framework, auto-configuration, and actuator"
+        },
+        {
+          id: "spring-data-jpa-docs",
+          label: "Spring Data JPA",
+          origin: "https://github.com/spring-projects/spring-data-jpa.git",
+          description: "JPA repositories, derived queries, and specifications"
+        },
+        {
+          id: "spring-security-docs",
+          label: "Spring Security",
+          origin: "https://github.com/spring-projects/spring-security.git",
+          description: "Authentication, authorization, and security filters"
+        },
+        {
+          id: "lombok-docs",
+          label: "Lombok",
+          origin: "https://github.com/projectlombok/lombok.git",
+          description:
+            "Boilerplate reduction with annotations for getters, builders, and constructors"
+        }
+      ]
     }
   ]
 };

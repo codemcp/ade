@@ -139,6 +139,55 @@ describe("catalog", () => {
     });
   });
 
+  describe("java-backend option", () => {
+    it("has java-backend option with skills for architecture, design, code, and testing", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const javaBackend = getOption(architecture, "java-backend");
+
+      expect(javaBackend).toBeDefined();
+      const skillsProvisions = javaBackend!.recipe.filter(
+        (p) => p.writer === "skills"
+      );
+      expect(skillsProvisions).toHaveLength(1);
+
+      const skills = (
+        skillsProvisions[0].config as { skills: { name: string }[] }
+      ).skills;
+      const names = skills.map((s) => s.name);
+      expect(names).toContain("java-backend-architecture");
+      expect(names).toContain("java-backend-design");
+      expect(names).toContain("java-backend-code");
+      expect(names).toContain("java-backend-testing");
+    });
+
+    it("java-backend option declares docsets for Spring Boot, Spring Data JPA, Spring Security, and Lombok", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const javaBackend = getOption(architecture, "java-backend")!;
+
+      expect(javaBackend.docsets).toBeDefined();
+      const ids = javaBackend.docsets!.map((d) => d.id);
+      expect(ids).toContain("spring-boot-docs");
+      expect(ids).toContain("spring-data-jpa-docs");
+      expect(ids).toContain("spring-security-docs");
+      expect(ids).toContain("lombok-docs");
+    });
+
+    it("each java-backend docset has required fields", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const javaBackend = getOption(architecture, "java-backend")!;
+
+      for (const docset of javaBackend.docsets!) {
+        expect(docset.id).toBeTruthy();
+        expect(docset.label).toBeTruthy();
+        expect(docset.origin).toMatch(/^https:\/\//);
+        expect(docset.description).toBeTruthy();
+      }
+    });
+  });
+
   describe("architecture facet docsets", () => {
     it("tanstack option declares docsets for Router, Query, Form, and Table", () => {
       const catalog = getDefaultCatalog();
