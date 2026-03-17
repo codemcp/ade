@@ -90,6 +90,55 @@ describe("catalog", () => {
     });
   });
 
+  describe("nodejs-backend option", () => {
+    it("has nodejs-backend option with skills for architecture, design, code, and testing", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const nodejsBackend = getOption(architecture, "nodejs-backend");
+
+      expect(nodejsBackend).toBeDefined();
+      const skillsProvisions = nodejsBackend!.recipe.filter(
+        (p) => p.writer === "skills"
+      );
+      expect(skillsProvisions).toHaveLength(1);
+
+      const skills = (
+        skillsProvisions[0].config as { skills: { name: string }[] }
+      ).skills;
+      const names = skills.map((s) => s.name);
+      expect(names).toContain("nodejs-backend-architecture");
+      expect(names).toContain("nodejs-backend-design");
+      expect(names).toContain("nodejs-backend-code");
+      expect(names).toContain("nodejs-backend-testing");
+    });
+
+    it("nodejs-backend option declares docsets for tRPC, Drizzle, Express, and Zod", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const nodejsBackend = getOption(architecture, "nodejs-backend")!;
+
+      expect(nodejsBackend.docsets).toBeDefined();
+      const ids = nodejsBackend.docsets!.map((d) => d.id);
+      expect(ids).toContain("trpc-docs");
+      expect(ids).toContain("drizzle-orm-docs");
+      expect(ids).toContain("express-docs");
+      expect(ids).toContain("zod-docs");
+    });
+
+    it("each nodejs-backend docset has required fields", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const nodejsBackend = getOption(architecture, "nodejs-backend")!;
+
+      for (const docset of nodejsBackend.docsets!) {
+        expect(docset.id).toBeTruthy();
+        expect(docset.label).toBeTruthy();
+        expect(docset.origin).toMatch(/^https:\/\//);
+        expect(docset.description).toBeTruthy();
+      }
+    });
+  });
+
   describe("architecture facet docsets", () => {
     it("tanstack option declares docsets for Router, Query, Form, and Table", () => {
       const catalog = getDefaultCatalog();
