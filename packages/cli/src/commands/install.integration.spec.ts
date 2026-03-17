@@ -90,7 +90,7 @@ describe("install integration (real temp dir)", () => {
   });
 
   it("fails when no config.lock.yaml exists", async () => {
-    await expect(runInstall(dir, "claude-code")).rejects.toThrow(
+    await expect(runInstall(dir, ["claude-code"])).rejects.toThrow(
       /config\.lock\.yaml not found/i
     );
   });
