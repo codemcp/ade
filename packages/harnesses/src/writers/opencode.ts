@@ -40,13 +40,14 @@ async function writeOpenCodeJson(
     // Start fresh
   }
 
-  const mcpServers: Record<
+  const mcp: Record<
     string,
-    { command: string[]; env?: Record<string, string> }
-  > = (existing.mcp_servers as typeof mcpServers) ?? {};
+    { type: string; command: string[]; env?: Record<string, string> }
+  > = (existing.mcp as typeof mcp) ?? {};
 
   for (const server of allServers) {
-    mcpServers[server.ref] = {
+    mcp[server.ref] = {
+      type: "local",
       command: [server.command, ...server.args],
       ...(Object.keys(server.env).length > 0 ? { env: server.env } : {})
     };
@@ -55,7 +56,7 @@ async function writeOpenCodeJson(
   const result = {
     $schema: "https://opencode.ai/config.json",
     ...existing,
-    mcp_servers: mcpServers
+    mcp
   };
 
   await writeFile(configPath, JSON.stringify(result, null, 2) + "\n", "utf-8");

@@ -92,7 +92,8 @@ describe("copilotWriter", () => {
     );
     expect(content).toContain("name: ade");
     expect(content).toContain("tools:");
-    expect(content).toContain("  - workflows");
+    expect(content).toContain("  - workflows/*");
+    expect(content).toContain("  - edit");
     expect(content).toContain("Follow TDD.");
   });
 });

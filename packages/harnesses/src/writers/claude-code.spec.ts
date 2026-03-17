@@ -22,9 +22,16 @@ describe("claudeCodeWriter", () => {
     expect(claudeCodeWriter.description).toBeTruthy();
   });
 
-  it("writes AGENTS.md with instructions", async () => {
+  it("writes .claude/agents/ade.md custom agent", async () => {
     const config: LogicalConfig = {
-      mcp_servers: [],
+      mcp_servers: [
+        {
+          ref: "workflows",
+          command: "npx",
+          args: ["-y", "@codemcp/workflows"],
+          env: {}
+        }
+      ],
       instructions: ["Use workflow files.", "Follow conventions."],
       cli_actions: [],
       knowledge_sources: [],
@@ -33,13 +40,17 @@ describe("claudeCodeWriter", () => {
 
     await claudeCodeWriter.install(config, dir);
 
-    const content = await readFile(join(dir, "AGENTS.md"), "utf-8");
-    expect(content).toContain("# AGENTS");
+    const content = await readFile(
+      join(dir, ".claude", "agents", "ade.md"),
+      "utf-8"
+    );
+    expect(content).toContain("name: ade");
+    expect(content).toContain("description:");
     expect(content).toContain("Use workflow files.");
     expect(content).toContain("Follow conventions.");
   });
 
-  it("writes .claude/settings.json with MCP servers", async () => {
+  it("writes .mcp.json with MCP servers", async () => {
     const config: LogicalConfig = {
       mcp_servers: [
         {
@@ -57,12 +68,35 @@ describe("claudeCodeWriter", () => {
 
     await claudeCodeWriter.install(config, dir);
 
-    const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
-    const settings = JSON.parse(raw);
-    expect(settings.mcpServers["@codemcp/workflows"]).toEqual({
+    const raw = await readFile(join(dir, ".mcp.json"), "utf-8");
+    const parsed = JSON.parse(raw);
+    expect(parsed.mcpServers["@codemcp/workflows"]).toEqual({
       command: "npx",
       args: ["-y", "@codemcp/workflows"]
     });
+  });
+
+  it("writes .claude/settings.json with MCP tool permissions", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [
+        {
+          ref: "workflows",
+          command: "npx",
+          args: ["-y", "@codemcp/workflows"],
+          env: {}
+        }
+      ],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: []
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
+    const settings = JSON.parse(raw);
+    expect(settings.permissions.allow).toContain("MCP(workflows:*)");
   });
 
   it("adds skills-server when skills are present", async () => {
@@ -76,9 +110,9 @@ describe("claudeCodeWriter", () => {
 
     await claudeCodeWriter.install(config, dir);
 
-    const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
-    const settings = JSON.parse(raw);
-    expect(settings.mcpServers["agentskills"]).toEqual({
+    const raw = await readFile(join(dir, ".mcp.json"), "utf-8");
+    const parsed = JSON.parse(raw);
+    expect(parsed.mcpServers["agentskills"]).toEqual({
       command: "npx",
       args: ["-y", "@codemcp/skills-server"]
     });
@@ -107,19 +141,5 @@ describe("claudeCodeWriter", () => {
     );
     expect(skillMd).toContain("name: tanstack-architecture");
     expect(skillMd).toContain("# Architecture");
-  });
-
-  it("skips AGENTS.md when no instructions", async () => {
-    const config: LogicalConfig = {
-      mcp_servers: [],
-      instructions: [],
-      cli_actions: [],
-      knowledge_sources: [],
-      skills: []
-    };
-
-    await claudeCodeWriter.install(config, dir);
-
-    await expect(readFile(join(dir, "AGENTS.md"), "utf-8")).rejects.toThrow();
   });
 });

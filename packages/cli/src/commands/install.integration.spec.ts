@@ -45,20 +45,21 @@ describe("install integration (real temp dir)", () => {
     await runSetup(dir, catalog);
 
     // Step 2: Delete agent output files to simulate a fresh clone
-    await rm(join(dir, "AGENTS.md"));
+    await rm(join(dir, ".mcp.json"));
     await rm(join(dir, ".claude"), { recursive: true, force: true });
 
     // Step 3: Run install — should regenerate from config.lock.yaml
     await runInstall(dir, ["claude-code"]);
 
     // Agent files should be back
-    const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
-    expect(agentsMd).toContain("Call whats_next()");
-
-    const settings = JSON.parse(
-      await readFile(join(dir, ".claude", "settings.json"), "utf-8")
+    const agentMd = await readFile(
+      join(dir, ".claude", "agents", "ade.md"),
+      "utf-8"
     );
-    expect(settings.mcpServers["workflows"]).toMatchObject({
+    expect(agentMd).toContain("Call whats_next()");
+
+    const mcpJson = JSON.parse(await readFile(join(dir, ".mcp.json"), "utf-8"));
+    expect(mcpJson.mcpServers["workflows"]).toMatchObject({
       command: "npx",
       args: ["@codemcp/workflows-server@latest"]
     });
@@ -108,12 +109,15 @@ describe("install integration (real temp dir)", () => {
     await runSetup(dir, catalog);
 
     // Delete agent output
-    await rm(join(dir, "AGENTS.md"));
+    await rm(join(dir, ".claude"), { recursive: true, force: true });
 
     // Re-install
     await runInstall(dir, ["claude-code"]);
 
-    const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
-    expect(agentsMd).toContain("AGENTS.md");
+    const agentMd = await readFile(
+      join(dir, ".claude", "agents", "ade.md"),
+      "utf-8"
+    );
+    expect(agentMd).toContain("AGENTS.md");
   });
 });

@@ -111,11 +111,11 @@ describe("knowledge integration", () => {
         ])
       );
 
-      // MCP server entry for knowledge-server should be in settings.json
-      const settings = JSON.parse(
-        await readFile(join(dir, ".claude", "settings.json"), "utf-8")
+      // MCP server entry for knowledge-server should be in .mcp.json
+      const mcpJson = JSON.parse(
+        await readFile(join(dir, ".mcp.json"), "utf-8")
       );
-      expect(settings.mcpServers["@codemcp/knowledge-server"]).toMatchObject({
+      expect(mcpJson.mcpServers["@codemcp/knowledge-server"]).toMatchObject({
         command: "npx",
         args: ["-y", "@codemcp/knowledge-server"]
       });

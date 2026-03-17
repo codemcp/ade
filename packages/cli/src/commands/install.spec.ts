@@ -33,7 +33,7 @@ const mockInstall = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("@ade/harnesses", () => ({
   getHarnessWriter: vi.fn().mockImplementation((id: string) => {
-    if (id === "claude-code" || id === "cursor") {
+    if (id === "universal" || id === "claude-code" || id === "cursor") {
       return { id, install: mockInstall };
     }
     return undefined;
@@ -41,12 +41,15 @@ vi.mock("@ade/harnesses", () => ({
   getHarnessIds: vi
     .fn()
     .mockReturnValue([
+      "universal",
       "claude-code",
       "cursor",
       "copilot",
       "windsurf",
       "cline",
-      "roo-code"
+      "roo-code",
+      "kiro",
+      "opencode"
     ])
 }));
 
@@ -62,7 +65,7 @@ describe("runInstall", () => {
     // Re-set the default implementation after clearAllMocks
     const { getHarnessWriter } = await import("@ade/harnesses");
     vi.mocked(getHarnessWriter).mockImplementation((id: string) => {
-      if (id === "claude-code" || id === "cursor") {
+      if (id === "universal" || id === "claude-code" || id === "cursor") {
         return {
           id,
           label: id,
@@ -87,7 +90,7 @@ describe("runInstall", () => {
     expect(readLockFile).toHaveBeenCalledWith("/tmp/project");
   });
 
-  it("defaults to claude-code harness when none specified", async () => {
+  it("defaults to universal harness when none specified", async () => {
     vi.mocked(readLockFile).mockResolvedValueOnce({
       version: 1,
       generated_at: "2024-01-01T00:00:00.000Z",

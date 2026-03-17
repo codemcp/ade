@@ -115,9 +115,17 @@ async function writeCopilotAgent(
     "description: ADE — Agentic Development Environment agent with project conventions and tools"
   ];
 
-  if (allServers.length > 0) {
-    frontmatter.push("tools:", ...allServers.map((s) => `  - ${s.ref}`));
-  }
+  // Built-in tools + MCP server wildcards (server/* grants all tools)
+  const tools = [
+    "edit",
+    "search",
+    "runCommands",
+    "runTasks",
+    "fetch",
+    "githubRepo",
+    ...allServers.map((s) => `${s.ref}/*`)
+  ];
+  frontmatter.push("tools:", ...tools.map((t) => `  - ${t}`));
 
   frontmatter.push("---");
 
