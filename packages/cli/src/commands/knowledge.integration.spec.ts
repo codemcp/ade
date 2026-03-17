@@ -64,7 +64,8 @@ describe("knowledge integration", () => {
           "tanstack-query-docs",
           "tanstack-form-docs",
           "tanstack-table-docs"
-        ]);
+        ])
+        .mockResolvedValueOnce(["claude-code"]); // harnesses
 
       await runSetup(dir, catalog);
 
@@ -134,7 +135,8 @@ describe("knowledge integration", () => {
       // multiselect order: practices, then docsets (only keep router + query)
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
-        .mockResolvedValueOnce(["tanstack-router-docs", "tanstack-query-docs"]);
+        .mockResolvedValueOnce(["tanstack-router-docs", "tanstack-query-docs"])
+        .mockResolvedValueOnce(["claude-code"]); // harnesses
 
       await runSetup(dir, catalog);
 
@@ -157,7 +159,9 @@ describe("knowledge integration", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture: skip
-    vi.mocked(clack.multiselect).mockResolvedValueOnce(["tdd-london"]); // practices: no docsets
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce(["tdd-london"]) // practices: no docsets
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
 

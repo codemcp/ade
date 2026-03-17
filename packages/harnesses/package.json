@@ -1,11 +1,8 @@
 {
-  "name": "@ade/cli",
+  "name": "@ade/harnesses",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
-  "bin": {
-    "ade": "dist/index.js"
-  },
   "publishConfig": {
     "access": "public"
   },
@@ -22,13 +19,9 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@ade/core": "workspace:*",
-    "@ade/harnesses": "workspace:*",
-    "@clack/prompts": "^1.1.0",
-    "@codemcp/skills": "^2.3.0"
+    "@ade/core": "workspace:*"
   },
   "devDependencies": {
-    "@codemcp/knowledge": "2.1.0",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.21.0",
     "eslint": "^9.18.0",

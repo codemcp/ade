@@ -8,7 +8,7 @@ vi.mock("@clack/prompts", () => ({
   intro: vi.fn(),
   outro: vi.fn(),
   select: vi.fn(),
-  multiselect: vi.fn().mockResolvedValue([]),
+  multiselect: vi.fn(),
   confirm: vi.fn(),
   isCancel: vi.fn().mockReturnValue(false),
   cancel: vi.fn(),
@@ -38,6 +38,9 @@ describe("setup integration (real temp dir)", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
       .mockResolvedValueOnce("__skip__"); // architecture
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
 
@@ -80,6 +83,9 @@ describe("setup integration (real temp dir)", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
 
@@ -118,6 +124,9 @@ describe("setup integration (real temp dir)", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
       .mockResolvedValueOnce("__skip__"); // architecture
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
 

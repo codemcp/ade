@@ -132,11 +132,9 @@ describe("registry", () => {
       expect(registry.provisions.size).toBe(6);
     });
 
-    it("has the 'claude-code' agent writer registered", () => {
+    it("has no agent writers by default (moved to @ade/harnesses)", () => {
       const registry = createDefaultRegistry();
-      const agent = getAgentWriter(registry, "claude-code");
-      expect(agent).toBeDefined();
-      expect(agent!.id).toBe("claude-code");
+      expect(registry.agents.size).toBe(0);
     });
   });
 });

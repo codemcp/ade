@@ -4,6 +4,7 @@ import { version } from "./version.js";
 import { runSetup } from "./commands/setup.js";
 import { runInstall } from "./commands/install.js";
 import { getDefaultCatalog } from "@ade/core";
+import { getHarnessIds } from "@ade/harnesses";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -14,13 +15,30 @@ if (command === "setup") {
   await runSetup(projectRoot, catalog);
 } else if (command === "install") {
   const projectRoot = args[1] ?? process.cwd();
-  const agent = args.includes("--agent")
-    ? args[args.indexOf("--agent") + 1]
-    : "claude-code";
-  await runInstall(projectRoot, agent);
+
+  let harnessIds: string[] | undefined;
+
+  // Support --harness flag (comma-separated)
+  if (args.includes("--harness")) {
+    const val = args[args.indexOf("--harness") + 1];
+    if (val) {
+      harnessIds = val.split(",").map((s) => s.trim());
+    }
+  }
+
+  // Legacy --agent flag maps to single harness
+  if (!harnessIds && args.includes("--agent")) {
+    const val = args[args.indexOf("--agent") + 1];
+    if (val) {
+      harnessIds = [val];
+    }
+  }
+
+  await runInstall(projectRoot, harnessIds);
 } else if (command === "--version" || command === "-v") {
   console.log(version);
 } else {
+  const allIds = getHarnessIds();
   console.log(`ade v${version}`);
   console.log();
   console.log("Usage: ade <command> [options]");
@@ -34,7 +52,10 @@ if (command === "setup") {
   );
   console.log();
   console.log("Options:");
-  console.log("  --agent <name>   Agent writer to use (default: claude-code)");
+  console.log(
+    `  --harness <ids>  Comma-separated harnesses (${allIds.join(", ")})`
+  );
+  console.log("  --agent <name>   Legacy alias for --harness (single value)");
   console.log("  -v, --version    Show version");
   process.exitCode = command ? 1 : 0;
 }

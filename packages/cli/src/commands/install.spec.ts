@@ -25,23 +25,53 @@ vi.mock("@ade/core", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import("@ade/core");
   return {
     ...actual,
-    readLockFile: vi.fn(),
-    getAgentWriter: vi.fn().mockReturnValue({
-      id: "claude-code",
-      install: vi.fn().mockResolvedValue(undefined)
-    })
+    readLockFile: vi.fn()
   };
 });
 
+const mockInstall = vi.fn().mockResolvedValue(undefined);
+
+vi.mock("@ade/harnesses", () => ({
+  getHarnessWriter: vi.fn().mockImplementation((id: string) => {
+    if (id === "claude-code" || id === "cursor") {
+      return { id, install: mockInstall };
+    }
+    return undefined;
+  }),
+  getHarnessIds: vi
+    .fn()
+    .mockReturnValue([
+      "claude-code",
+      "cursor",
+      "copilot",
+      "windsurf",
+      "cline",
+      "roo-code"
+    ])
+}));
+
 import * as clack from "@clack/prompts";
-import { readLockFile, getAgentWriter } from "@ade/core";
+import { readLockFile } from "@ade/core";
 import { runInstall } from "./install.js";
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("runInstall", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // Re-set the default implementation after clearAllMocks
+    const { getHarnessWriter } = await import("@ade/harnesses");
+    vi.mocked(getHarnessWriter).mockImplementation((id: string) => {
+      if (id === "claude-code" || id === "cursor") {
+        return {
+          id,
+          label: id,
+          description: "test",
+          install: mockInstall
+        };
+      }
+      return undefined;
+    });
   });
 
   it("reads config.lock.yaml and applies logical config", async () => {
@@ -52,50 +82,12 @@ describe("runInstall", () => {
       logical_config: mockLogical
     });
 
-    await runInstall("/tmp/project", "claude-code");
+    await runInstall("/tmp/project");
 
     expect(readLockFile).toHaveBeenCalledWith("/tmp/project");
   });
 
-  it("does not re-resolve — uses lock file logical_config directly", async () => {
-    const lockedConfig: LogicalConfig = {
-      mcp_servers: [
-        {
-          ref: "workflows",
-          command: "npx",
-          args: ["@codemcp/workflows-server@latest"],
-          env: {}
-        }
-      ],
-      instructions: ["do stuff"],
-      cli_actions: [],
-      skills: [],
-      knowledge_sources: []
-    };
-    vi.mocked(readLockFile).mockResolvedValueOnce({
-      version: 1,
-      generated_at: "2024-01-01T00:00:00.000Z",
-      choices: { process: "codemcp-workflows" },
-      logical_config: lockedConfig
-    });
-
-    const mockInstall = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(getAgentWriter).mockReturnValueOnce({
-      id: "claude-code",
-      install: mockInstall
-    });
-
-    await runInstall("/tmp/project", "claude-code");
-
-    expect(mockInstall).toHaveBeenCalledWith(lockedConfig, "/tmp/project");
-  });
-
-  it("calls agent writer install with lock file config", async () => {
-    const mockInstall = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(getAgentWriter).mockReturnValueOnce({
-      id: "claude-code",
-      install: mockInstall
-    });
+  it("defaults to claude-code harness when none specified", async () => {
     vi.mocked(readLockFile).mockResolvedValueOnce({
       version: 1,
       generated_at: "2024-01-01T00:00:00.000Z",
@@ -103,34 +95,58 @@ describe("runInstall", () => {
       logical_config: mockLogical
     });
 
-    await runInstall("/tmp/project", "claude-code");
+    await runInstall("/tmp/project");
 
-    expect(getAgentWriter).toHaveBeenCalledWith(
-      expect.anything(),
-      "claude-code"
-    );
     expect(mockInstall).toHaveBeenCalledWith(mockLogical, "/tmp/project");
+  });
+
+  it("uses harnesses from lock file when present", async () => {
+    vi.mocked(readLockFile).mockResolvedValueOnce({
+      version: 1,
+      generated_at: "2024-01-01T00:00:00.000Z",
+      choices: { process: "codemcp-workflows" },
+      harnesses: ["claude-code", "cursor"],
+      logical_config: mockLogical
+    });
+
+    await runInstall("/tmp/project");
+
+    expect(mockInstall).toHaveBeenCalledTimes(2);
+  });
+
+  it("uses explicit harness ids when provided", async () => {
+    vi.mocked(readLockFile).mockResolvedValueOnce({
+      version: 1,
+      generated_at: "2024-01-01T00:00:00.000Z",
+      choices: { process: "codemcp-workflows" },
+      harnesses: ["claude-code"],
+      logical_config: mockLogical
+    });
+
+    await runInstall("/tmp/project", ["cursor"]);
+
+    // Explicit takes priority over lock file
+    expect(mockInstall).toHaveBeenCalledTimes(1);
   });
 
   it("throws when config.lock.yaml is missing", async () => {
     vi.mocked(readLockFile).mockResolvedValueOnce(null);
 
-    await expect(runInstall("/tmp/project", "claude-code")).rejects.toThrow(
+    await expect(runInstall("/tmp/project")).rejects.toThrow(
       /config\.lock\.yaml not found/i
     );
   });
 
-  it("throws when agent writer is unknown", async () => {
+  it("throws when harness id is unknown", async () => {
     vi.mocked(readLockFile).mockResolvedValueOnce({
       version: 1,
       generated_at: "2024-01-01T00:00:00.000Z",
       choices: { process: "codemcp-workflows" },
       logical_config: mockLogical
     });
-    vi.mocked(getAgentWriter).mockReturnValueOnce(undefined);
 
-    await expect(runInstall("/tmp/project", "unknown-agent")).rejects.toThrow(
-      /unknown agent/i
+    await expect(runInstall("/tmp/project", ["unknown-agent"])).rejects.toThrow(
+      /unknown harness/i
     );
   });
 
@@ -142,7 +158,7 @@ describe("runInstall", () => {
       logical_config: mockLogical
     });
 
-    await runInstall("/tmp/project", "claude-code");
+    await runInstall("/tmp/project");
 
     expect(clack.intro).toHaveBeenCalled();
     expect(clack.outro).toHaveBeenCalled();

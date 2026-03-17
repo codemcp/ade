@@ -100,6 +100,7 @@ export interface ResolvedFacet {
 export interface UserConfig {
   choices: Record<string, string | string[]>;
   excluded_docsets?: string[];
+  harnesses?: string[];
   custom?: {
     mcp_servers?: McpServerEntry[];
     instructions?: string[];
@@ -110,6 +111,7 @@ export interface LockFile {
   version: 1;
   generated_at: string;
   choices: Record<string, string | string[]>;
+  harnesses?: string[];
   logical_config: LogicalConfig;
 }
 

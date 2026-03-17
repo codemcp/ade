@@ -1,11 +1,12 @@
 import * as clack from "@clack/prompts";
-import { readLockFile, createDefaultRegistry, getAgentWriter } from "@ade/core";
+import { readLockFile } from "@ade/core";
+import { getHarnessWriter, getHarnessIds } from "@ade/harnesses";
 import { installSkills } from "../skills-installer.js";
 import { installKnowledge } from "../knowledge-installer.js";
 
 export async function runInstall(
   projectRoot: string,
-  agent: string
+  harnessIds?: string[]
 ): Promise<void> {
   clack.intro("ade install");
 
@@ -14,16 +15,30 @@ export async function runInstall(
     throw new Error("config.lock.yaml not found. Run `ade setup` first.");
   }
 
-  const registry = createDefaultRegistry();
+  // Determine which harnesses to install for:
+  // 1. --harness flag (comma-separated)
+  // 2. harnesses saved in the lock file
+  // 3. legacy --agent flag (mapped to harness)
+  // 4. default: claude-code
+  const ids = harnessIds ?? lockFile.harnesses ?? ["claude-code"];
 
-  const agentWriter = getAgentWriter(registry, agent);
-  if (!agentWriter) {
-    throw new Error(`Unknown agent "${agent}". Available: claude-code`);
+  const validIds = getHarnessIds();
+  for (const id of ids) {
+    if (!validIds.includes(id)) {
+      throw new Error(
+        `Unknown harness "${id}". Available: ${validIds.join(", ")}`
+      );
+    }
   }
 
   const logicalConfig = lockFile.logical_config;
 
-  await agentWriter.install(logicalConfig, projectRoot);
+  for (const id of ids) {
+    const writer = getHarnessWriter(id);
+    if (writer) {
+      await writer.install(logicalConfig, projectRoot);
+    }
+  }
 
   await installSkills(logicalConfig.skills, projectRoot);
   await installKnowledge(logicalConfig.knowledge_sources, projectRoot);
