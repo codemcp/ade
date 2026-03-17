@@ -43,7 +43,8 @@ describe("clineWriter", () => {
     const parsed = JSON.parse(raw);
     expect(parsed.mcpServers["workflows"]).toEqual({
       command: "npx",
-      args: ["-y", "@codemcp/workflows"]
+      args: ["-y", "@codemcp/workflows"],
+      alwaysAllow: ["*"]
     });
   });
 

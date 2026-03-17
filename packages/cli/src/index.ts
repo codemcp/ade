@@ -26,14 +26,6 @@ if (command === "setup") {
     }
   }
 
-  // Legacy --agent flag maps to single harness
-  if (!harnessIds && args.includes("--agent")) {
-    const val = args[args.indexOf("--agent") + 1];
-    if (val) {
-      harnessIds = [val];
-    }
-  }
-
   await runInstall(projectRoot, harnessIds);
 } else if (command === "--version" || command === "-v") {
   console.log(version);
@@ -55,7 +47,6 @@ if (command === "setup") {
   console.log(
     `  --harness <ids>  Comma-separated harnesses (${allIds.join(", ")})`
   );
-  console.log("  --agent <name>   Legacy alias for --harness (single value)");
   console.log("  -v, --version    Show version");
   process.exitCode = command ? 1 : 0;
 }

@@ -18,8 +18,7 @@ export async function runInstall(
   // Determine which harnesses to install for:
   // 1. --harness flag (comma-separated)
   // 2. harnesses saved in the lock file
-  // 3. legacy --agent flag (mapped to harness)
-  // 4. default: claude-code
+  // 3. default: claude-code
   const ids = harnessIds ?? lockFile.harnesses ?? ["claude-code"];
 
   const validIds = getHarnessIds();
