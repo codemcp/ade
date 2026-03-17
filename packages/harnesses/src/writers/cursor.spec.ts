@@ -67,9 +67,16 @@ describe("cursorWriter", () => {
     expect(content).toContain("Use conventional commits.");
   });
 
-  it("adds skills-server when skills are present", async () => {
+  it("includes agentskills server from mcp_servers", async () => {
     const config: LogicalConfig = {
-      mcp_servers: [],
+      mcp_servers: [
+        {
+          ref: "agentskills",
+          command: "npx",
+          args: ["-y", "@codemcp/skills-server"],
+          env: {}
+        }
+      ],
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],

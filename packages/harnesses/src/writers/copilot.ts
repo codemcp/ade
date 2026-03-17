@@ -17,16 +17,7 @@ async function writeVsCodeMcp(
   config: LogicalConfig,
   projectRoot: string
 ): Promise<void> {
-  const allServers: McpServerEntry[] = [...config.mcp_servers];
-
-  if (config.skills.length > 0) {
-    allServers.push({
-      ref: "agentskills",
-      command: "npx",
-      args: ["-y", "@codemcp/skills-server"],
-      env: {}
-    });
-  }
+  const allServers: McpServerEntry[] = config.mcp_servers;
 
   if (allServers.length === 0) return;
 
@@ -76,15 +67,7 @@ async function writeCopilotAgent(
   config: LogicalConfig,
   projectRoot: string
 ): Promise<void> {
-  const allServers: McpServerEntry[] = [...config.mcp_servers];
-  if (config.skills.length > 0) {
-    allServers.push({
-      ref: "agentskills",
-      command: "npx",
-      args: ["-y", "@codemcp/skills-server"],
-      env: {}
-    });
-  }
+  const allServers: McpServerEntry[] = config.mcp_servers;
 
   if (config.instructions.length === 0 && allServers.length === 0) return;
 

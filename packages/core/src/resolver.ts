@@ -105,6 +105,16 @@ export async function resolve(
     });
   }
 
+  // Add skills-server MCP entry if any skills were collected
+  if (result.skills.length > 0) {
+    result.mcp_servers.push({
+      ref: "agentskills",
+      command: "npx",
+      args: ["-y", "@codemcp/skills-server"],
+      env: {}
+    });
+  }
+
   // Merge custom section
   if (userConfig.custom) {
     if (userConfig.custom.instructions) {
