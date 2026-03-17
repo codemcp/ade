@@ -83,15 +83,24 @@ flowchart TD
 ### Why this is needed
 
 There is no secret ingredient to interacting with coding agents. We just have to
-instruct them properly. But this "properly" can be achieve in many ways.
-Where do we put write down this steering? In the `AGENTS.md`? In Skills? Move it to a prompt,
-potentially exposed by an MCP server? And how do we share it across team mates?
-It has become good practice to check this into the repo, but honestly:
+instruct them properly. The emerging practice of
+[harness engineering](https://www.humanlayer.dev/blog/skill-issue-harness-engineering-for-coding-agents)
+— leveraging agent configuration points to improve output quality and
+reliability — has shown that most agent failures are configuration problems, not
+capability problems. But _how_ do you configure well?
+
+Where do you write down the steering? In the `AGENTS.md`? In skills? Move it to
+a prompt, potentially exposed by an MCP server? And how do you share it across
+team mates? It has become good practice to check this into the repo, but
+honestly:
 
 Most `AGENTS.md` files are snowflakes: ad-hoc, project-specific, unstructured.
 They mix process instructions with coding conventions and documentation fragments
 in a single flat file. Rule files and skills improve reusability but still lack a
-coherent taxonomy.
+coherent taxonomy. The ETH Zurich study on agentfiles confirmed what
+practitioners already knew: LLM-generated ones hurt performance, bloated ones
+waste instruction budget, and codebase overviews add nothing — agents discover
+repository structure on their own.
 
 ADE brings structure to this space. By separating the three layers explicitly and
 binding each to a specific artifact type, it makes information easier to find,
@@ -205,6 +214,43 @@ discoverability — you get a consistent experience regardless of your agent.
 The CLI supports a growing list of agents. See the
 [harness writers source](packages/harnesses/src/writers) for the current set.
 
+## Where ADE fits in harness engineering
+
+A coding agent's harness has many configuration levers. ADE addresses the
+**information levers** — the ones that determine _what the agent knows_:
+
+| Harness lever                | ADE layer         | Artifact                          |
+| ---------------------------- | ----------------- | --------------------------------- |
+| System prompt / agentfile    | **Process**       | `AGENTS.md`                       |
+| Skills / instruction modules | **Conventions**   | Skills (architecture + practices) |
+| Reference knowledge          | **Documentation** | Text files, read on demand        |
+
+Practitioners have identified additional **runtime levers** that complement the
+information architecture:
+
+- **Sub-agents** — context firewalls that encapsulate discrete tasks in isolated
+  context windows, preventing intermediate noise from accumulating in the parent
+  thread. This keeps the orchestrating agent in the "smart zone" and enables
+  coherent work across many sessions.
+
+- **Hooks** — user-defined scripts triggered at lifecycle events (tool calls,
+  stop events) that add deterministic control flow: auto-approving or denying
+  dangerous commands, surfacing build errors before the agent finishes, or
+  notifying the team on completion.
+
+- **Back-pressure** — verification mechanisms (typechecks, tests, coverage
+  gates) that let the agent check its own work. The likelihood of successfully
+  solving a problem with a coding agent is strongly correlated with the agent's
+  ability to verify its output. Context-efficient verification — where success is
+  silent and only failures surface — keeps the context window clean.
+
+ADE focuses on the information side because that is where most teams struggle
+first: without a coherent taxonomy, every project re-invents its agentfile from
+scratch. The runtime levers are powerful complements — and ADE's process layer
+can reference them (e.g. _"delegate research to a sub-agent"_, _"verify with the
+build hook before committing"_) — but they are orthogonal to the information
+architecture itself.
+
 ## Core principles
 
 **Shared context over personal configuration.**
@@ -227,9 +273,19 @@ stack. What transfers across projects is the structure itself.
 
 ## Customization
 
-All artifacts, that are produced by the CLI, are by default adaptable: You can provide
-own workflows, your own skills, your own docs. It should work out of the box.
-If this is still too opinionated for you, you can swap out each layer.
+All artifacts produced by the CLI are adaptable: you can provide your own
+workflows, your own skills, your own docs. It should work out of the box. If
+this is still too opinionated for you, you can swap out each layer.
 
-After all: there is no secret ingredient, it only about getting relevant information
-into the conversation context.
+Bias towards shipping. Start simple and add configuration only when the agent
+actually fails — then engineer a solution so it does not fail that way again.
+The goal is not the ideal harness; it is shipping high-quality code faster.
+
+After all: there is no secret ingredient. It is only about getting relevant
+information into the conversation context.
+
+## Further reading
+
+- [Skill Issue: Harness Engineering for Coding Agents](https://www.humanlayer.dev/blog/skill-issue-harness-engineering-for-coding-agents)
+  — HumanLayer's practical guide to harness engineering, covering skills,
+  sub-agents, hooks, and back-pressure mechanisms.
