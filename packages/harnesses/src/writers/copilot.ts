@@ -1,102 +1,32 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { LogicalConfig, McpServerEntry } from "@ade/core";
+import type { LogicalConfig } from "@ade/core";
 import type { HarnessWriter } from "../types.js";
+import { writeMcpServers, stdioEntry, writeAgentMd } from "../util.js";
 
 export const copilotWriter: HarnessWriter = {
   id: "copilot",
   label: "GitHub Copilot",
   description: "VS Code + CLI — .vscode/mcp.json + .github/agents/ade.agent.md",
   async install(config: LogicalConfig, projectRoot: string) {
-    await writeVsCodeMcp(config, projectRoot);
-    await writeCopilotAgent(config, projectRoot);
+    await writeMcpServers(config.mcp_servers, {
+      path: join(projectRoot, ".vscode", "mcp.json"),
+      key: "servers",
+      transform: stdioEntry
+    });
+
+    const tools = [
+      "edit",
+      "search",
+      "runCommands",
+      "runTasks",
+      "fetch",
+      "githubRepo",
+      ...config.mcp_servers.map((s) => `${s.ref}/*`)
+    ];
+
+    await writeAgentMd(config, {
+      path: join(projectRoot, ".github", "agents", "ade.agent.md"),
+      extraFrontmatter: ["tools:", ...tools.map((t) => `  - ${t}`)]
+    });
   }
 };
-
-async function writeVsCodeMcp(
-  config: LogicalConfig,
-  projectRoot: string
-): Promise<void> {
-  const allServers: McpServerEntry[] = config.mcp_servers;
-
-  if (allServers.length === 0) return;
-
-  const vscodeDir = join(projectRoot, ".vscode");
-  await mkdir(vscodeDir, { recursive: true });
-
-  const mcpPath = join(vscodeDir, "mcp.json");
-
-  let existing: Record<string, unknown> = {};
-  try {
-    const raw = await readFile(mcpPath, "utf-8");
-    existing = JSON.parse(raw);
-  } catch {
-    // Start fresh
-  }
-
-  // Copilot uses "servers" key, not "mcpServers"
-  const servers: Record<
-    string,
-    {
-      type: string;
-      command: string;
-      args: string[];
-      env?: Record<string, string>;
-    }
-  > = (existing.servers as typeof servers) ?? {};
-
-  for (const server of allServers) {
-    servers[server.ref] = {
-      type: "stdio",
-      command: server.command,
-      args: server.args,
-      ...(Object.keys(server.env).length > 0 ? { env: server.env } : {})
-    };
-  }
-
-  const result = { ...existing, servers };
-  await writeFile(mcpPath, JSON.stringify(result, null, 2) + "\n", "utf-8");
-}
-
-/**
- * Write a dedicated ADE agent definition that combines instructions and
- * references configured MCP servers. Read by both VS Code Copilot and
- * GitHub Copilot CLI.
- */
-async function writeCopilotAgent(
-  config: LogicalConfig,
-  projectRoot: string
-): Promise<void> {
-  const allServers: McpServerEntry[] = config.mcp_servers;
-
-  if (config.instructions.length === 0 && allServers.length === 0) return;
-
-  const agentsDir = join(projectRoot, ".github", "agents");
-  await mkdir(agentsDir, { recursive: true });
-
-  const frontmatter: string[] = [
-    "---",
-    "name: ade",
-    "description: ADE — Agentic Development Environment agent with project conventions and tools"
-  ];
-
-  // Built-in tools + MCP server wildcards (server/* grants all tools)
-  const tools = [
-    "edit",
-    "search",
-    "runCommands",
-    "runTasks",
-    "fetch",
-    "githubRepo",
-    ...allServers.map((s) => `${s.ref}/*`)
-  ];
-  frontmatter.push("tools:", ...tools.map((t) => `  - ${t}`));
-
-  frontmatter.push("---");
-
-  const body =
-    config.instructions.length > 0 ? config.instructions.join("\n\n") : "";
-
-  const content = frontmatter.join("\n") + "\n\n" + body + "\n";
-  await writeFile(join(agentsDir, "ade.agent.md"), content, "utf-8");
-}

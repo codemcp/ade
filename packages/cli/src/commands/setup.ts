@@ -13,8 +13,11 @@ import {
   getFacet,
   getOption
 } from "@ade/core";
-import { allHarnessWriters, getHarnessWriter } from "@ade/harnesses";
-import { installSkills } from "../skills-installer.js";
+import {
+  allHarnessWriters,
+  getHarnessWriter,
+  installSkills
+} from "@ade/harnesses";
 
 export async function runSetup(
   projectRoot: string,

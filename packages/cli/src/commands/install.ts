@@ -1,7 +1,6 @@
 import * as clack from "@clack/prompts";
 import { readLockFile } from "@ade/core";
-import { getHarnessWriter, getHarnessIds } from "@ade/harnesses";
-import { installSkills } from "../skills-installer.js";
+import { getHarnessWriter, getHarnessIds, installSkills } from "@ade/harnesses";
 
 export async function runInstall(
   projectRoot: string,

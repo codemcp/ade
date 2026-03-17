@@ -9,10 +9,6 @@ vi.mock("@clack/prompts", () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 }));
 
-vi.mock("@codemcp/skills/api", () => ({
-  runAdd: vi.fn()
-}));
-
 const mockLogical: LogicalConfig = {
   mcp_servers: [],
   instructions: ["test instruction"],
@@ -50,7 +46,8 @@ vi.mock("@ade/harnesses", () => ({
       "roo-code",
       "kiro",
       "opencode"
-    ])
+    ]),
+  installSkills: vi.fn().mockResolvedValue(undefined)
 }));
 
 import * as clack from "@clack/prompts";

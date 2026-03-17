@@ -104,9 +104,6 @@ importers:
       "@clack/prompts":
         specifier: ^1.1.0
         version: 1.1.0
-      "@codemcp/skills":
-        specifier: ^2.3.0
-        version: 2.3.0
     devDependencies:
       "@codemcp/knowledge":
         specifier: 2.1.0
@@ -166,6 +163,9 @@ importers:
       "@ade/core":
         specifier: workspace:*
         version: link:../core
+      "@codemcp/skills":
+        specifier: ^2.3.0
+        version: 2.3.0
     devDependencies:
       "@typescript-eslint/eslint-plugin":
         specifier: ^8.21.0

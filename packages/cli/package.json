@@ -24,8 +24,7 @@
   "dependencies": {
     "@ade/core": "workspace:*",
     "@ade/harnesses": "workspace:*",
-    "@clack/prompts": "^1.1.0",
-    "@codemcp/skills": "^2.3.0"
+    "@clack/prompts": "^1.1.0"
   },
   "devDependencies": {
     "@codemcp/knowledge": "2.1.0",
