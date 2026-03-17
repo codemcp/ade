@@ -82,11 +82,11 @@ describe("architecture and practices facets integration", () => {
       const skillsLock = JSON.parse(lockRaw);
       expect(skillsLock.skills).toBeDefined();
 
-      // skills-server MCP server should be in settings.json
-      const settings = JSON.parse(
-        await readFile(join(dir, ".claude", "settings.json"), "utf-8")
+      // skills-server MCP server should be in .mcp.json
+      const mcpJson = JSON.parse(
+        await readFile(join(dir, ".mcp.json"), "utf-8")
       );
-      expect(settings.mcpServers["agentskills"]).toMatchObject({
+      expect(mcpJson.mcpServers["agentskills"]).toMatchObject({
         command: "npx",
         args: ["-y", "@codemcp/skills-server"]
       });
@@ -187,7 +187,7 @@ describe("architecture and practices facets integration", () => {
     expect(config!.choices).not.toHaveProperty("practices");
   });
 
-  it("includes practice instructions in AGENTS.md", async () => {
+  it("includes practice instructions in custom agent", async () => {
     const catalog = getDefaultCatalog();
 
     // Facet order: process (select), architecture (select), practices (multiselect)
@@ -200,9 +200,12 @@ describe("architecture and practices facets integration", () => {
 
     await runSetup(dir, catalog);
 
-    const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
-    expect(agentsMd).toContain("tdd-london");
-    expect(agentsMd).toContain("use_skill()");
+    const agentMd = await readFile(
+      join(dir, ".claude", "agents", "ade.md"),
+      "utf-8"
+    );
+    expect(agentMd).toContain("tdd-london");
+    expect(agentMd).toContain("use_skill()");
   });
 
   it(

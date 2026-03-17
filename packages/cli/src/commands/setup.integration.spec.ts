@@ -62,19 +62,20 @@ describe("setup integration (real temp dir)", () => {
     expect(lc.mcp_servers[0].ref).toBe("workflows");
     expect(lc.instructions.length).toBeGreaterThan(0);
 
-    // ── Agent output: .claude/settings.json ──────────────────────────────
+    // ── Agent output: .mcp.json ─────────────────────────────────────────
     const { readFile } = await import("node:fs/promises");
-    const settings = JSON.parse(
-      await readFile(join(dir, ".claude", "settings.json"), "utf-8")
-    );
-    expect(settings.mcpServers["workflows"]).toMatchObject({
+    const mcpJson = JSON.parse(await readFile(join(dir, ".mcp.json"), "utf-8"));
+    expect(mcpJson.mcpServers["workflows"]).toMatchObject({
       command: "npx",
       args: ["@codemcp/workflows-server@latest"]
     });
 
-    // ── Agent output: AGENTS.md ─────────────────────────────────────────
-    const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
-    expect(agentsMd).toContain("Call whats_next()");
+    // ── Agent output: .claude/agents/ade.md ────────────────────────────
+    const agentMd = await readFile(
+      join(dir, ".claude", "agents", "ade.md"),
+      "utf-8"
+    );
+    expect(agentMd).toContain("Call whats_next()");
   });
 
   it("writes config.yaml, lock, and AGENTS.md for native-agents-md", async () => {
@@ -96,10 +97,13 @@ describe("setup integration (real temp dir)", () => {
     expect(lock!.choices).toEqual({ process: "native-agents-md" });
     expect(lock!.logical_config.instructions.length).toBeGreaterThan(0);
 
-    // Agent output: AGENTS.md is written with instruction text
+    // Agent output: .claude/agents/ade.md is written with instruction text
     const { readFile } = await import("node:fs/promises");
-    const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
-    expect(agentsMd).toContain("AGENTS.md");
+    const agentMd = await readFile(
+      join(dir, ".claude", "agents", "ade.md"),
+      "utf-8"
+    );
+    expect(agentMd).toContain("AGENTS.md");
   });
 
   it("does not write any files when user cancels", async () => {

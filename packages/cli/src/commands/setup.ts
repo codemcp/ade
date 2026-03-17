@@ -113,7 +113,7 @@ export async function runSetup(
     initialValues:
       validExistingHarnesses && validExistingHarnesses.length > 0
         ? validExistingHarnesses
-        : ["claude-code"],
+        : ["universal"],
     required: false
   });
 

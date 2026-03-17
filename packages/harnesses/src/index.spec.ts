@@ -3,8 +3,9 @@ import { allHarnessWriters, getHarnessWriter, getHarnessIds } from "./index.js";
 
 describe("harness registry", () => {
   it("exports all harness writers", () => {
-    expect(allHarnessWriters).toHaveLength(8);
+    expect(allHarnessWriters).toHaveLength(9);
     const ids = allHarnessWriters.map((w) => w.id);
+    expect(ids).toContain("universal");
     expect(ids).toContain("claude-code");
     expect(ids).toContain("cursor");
     expect(ids).toContain("copilot");
@@ -23,6 +24,7 @@ describe("harness registry", () => {
   it("returns all harness ids", () => {
     const ids = getHarnessIds();
     expect(ids).toEqual([
+      "universal",
       "claude-code",
       "cursor",
       "copilot",

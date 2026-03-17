@@ -1,5 +1,6 @@
 export type { HarnessWriter } from "./types.js";
 
+export { universalWriter } from "./writers/universal.js";
 export { claudeCodeWriter } from "./writers/claude-code.js";
 export { cursorWriter } from "./writers/cursor.js";
 export { copilotWriter } from "./writers/copilot.js";
@@ -10,6 +11,7 @@ export { kiroWriter } from "./writers/kiro.js";
 export { opencodeWriter } from "./writers/opencode.js";
 
 import type { HarnessWriter } from "./types.js";
+import { universalWriter } from "./writers/universal.js";
 import { claudeCodeWriter } from "./writers/claude-code.js";
 import { cursorWriter } from "./writers/cursor.js";
 import { copilotWriter } from "./writers/copilot.js";
@@ -21,6 +23,7 @@ import { opencodeWriter } from "./writers/opencode.js";
 
 /** All built-in harness writers, ordered for wizard display. */
 export const allHarnessWriters: HarnessWriter[] = [
+  universalWriter,
   claudeCodeWriter,
   cursorWriter,
   copilotWriter,
