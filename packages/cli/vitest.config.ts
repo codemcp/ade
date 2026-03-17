@@ -8,7 +8,8 @@ export default {
   ...baseConfig.default,
   resolve: {
     alias: {
-      "@ade/core": resolve(__dirname, "../core/src/index.ts")
+      "@ade/core": resolve(__dirname, "../core/src/index.ts"),
+      "@ade/harnesses": resolve(__dirname, "../harnesses/src/index.ts")
     }
   }
 };
