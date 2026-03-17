@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { LogicalConfig, McpServerEntry } from "@ade/core";
 import type { HarnessWriter } from "../types.js";
