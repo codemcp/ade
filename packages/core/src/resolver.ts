@@ -98,7 +98,7 @@ export async function resolve(
   // Add knowledge-server MCP entry if any knowledge_sources were collected
   if (result.knowledge_sources.length > 0) {
     result.mcp_servers.push({
-      ref: "@codemcp/knowledge-server",
+      ref: "knowledge",
       command: "npx",
       args: ["-y", "@codemcp/knowledge-server"],
       env: {}

@@ -15,7 +15,6 @@ import {
 } from "@ade/core";
 import { allHarnessWriters, getHarnessWriter } from "@ade/harnesses";
 import { installSkills } from "../skills-installer.js";
-import { installKnowledge } from "../knowledge-installer.js";
 
 export async function runSetup(
   projectRoot: string,
@@ -152,7 +151,12 @@ export async function runSetup(
   }
 
   await installSkills(logicalConfig.skills, projectRoot);
-  await installKnowledge(logicalConfig.knowledge_sources, projectRoot);
+
+  if (logicalConfig.knowledge_sources.length > 0) {
+    clack.log.info(
+      "Knowledge sources selected. Initialize them separately:\n  npx @codemcp/knowledge init"
+    );
+  }
 
   clack.outro("Setup complete!");
 }

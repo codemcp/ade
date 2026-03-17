@@ -187,7 +187,7 @@ describe("architecture and practices facets integration", () => {
     expect(config!.choices).not.toHaveProperty("practices");
   });
 
-  it("includes practice instructions in custom agent", async () => {
+  it("exposes practices as skills, not instructions", async () => {
     const catalog = getDefaultCatalog();
 
     // Facet order: process (select), architecture (select), practices (multiselect)
@@ -200,12 +200,20 @@ describe("architecture and practices facets integration", () => {
 
     await runSetup(dir, catalog);
 
-    const agentMd = await readFile(
-      join(dir, ".claude", "agents", "ade.md"),
+    // Practice produces a skill, not an instruction
+    const skillMd = await readFile(
+      join(dir, ".ade", "skills", "tdd-london", "SKILL.md"),
       "utf-8"
     );
-    expect(agentMd).toContain("tdd-london");
-    expect(agentMd).toContain("use_skill()");
+    expect(skillMd).toContain("name: tdd-london");
+
+    // Lock file should have skill but no practice-specific instructions
+    const lock = await readLockFile(dir);
+    expect(lock!.logical_config.skills.length).toBeGreaterThanOrEqual(1);
+    // Only process-facet instructions should be present (from native-agents-md)
+    for (const instruction of lock!.logical_config.instructions) {
+      expect(instruction).not.toContain("tdd-london");
+    }
   });
 
   it(
