@@ -3,7 +3,7 @@ import { allHarnessWriters, getHarnessWriter, getHarnessIds } from "./index.js";
 
 describe("harness registry", () => {
   it("exports all harness writers", () => {
-    expect(allHarnessWriters).toHaveLength(6);
+    expect(allHarnessWriters).toHaveLength(8);
     const ids = allHarnessWriters.map((w) => w.id);
     expect(ids).toContain("claude-code");
     expect(ids).toContain("cursor");
@@ -11,6 +11,8 @@ describe("harness registry", () => {
     expect(ids).toContain("windsurf");
     expect(ids).toContain("cline");
     expect(ids).toContain("roo-code");
+    expect(ids).toContain("kiro");
+    expect(ids).toContain("opencode");
   });
 
   it("looks up harness by id", () => {
@@ -26,7 +28,9 @@ describe("harness registry", () => {
       "copilot",
       "windsurf",
       "cline",
-      "roo-code"
+      "roo-code",
+      "kiro",
+      "opencode"
     ]);
   });
 

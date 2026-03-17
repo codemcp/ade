@@ -6,6 +6,8 @@ export { copilotWriter } from "./writers/copilot.js";
 export { windsurfWriter } from "./writers/windsurf.js";
 export { clineWriter } from "./writers/cline.js";
 export { rooCodeWriter } from "./writers/roo-code.js";
+export { kiroWriter } from "./writers/kiro.js";
+export { opencodeWriter } from "./writers/opencode.js";
 
 import type { HarnessWriter } from "./types.js";
 import { claudeCodeWriter } from "./writers/claude-code.js";
@@ -14,6 +16,8 @@ import { copilotWriter } from "./writers/copilot.js";
 import { windsurfWriter } from "./writers/windsurf.js";
 import { clineWriter } from "./writers/cline.js";
 import { rooCodeWriter } from "./writers/roo-code.js";
+import { kiroWriter } from "./writers/kiro.js";
+import { opencodeWriter } from "./writers/opencode.js";
 
 /** All built-in harness writers, ordered for wizard display. */
 export const allHarnessWriters: HarnessWriter[] = [
@@ -22,7 +26,9 @@ export const allHarnessWriters: HarnessWriter[] = [
   copilotWriter,
   windsurfWriter,
   clineWriter,
-  rooCodeWriter
+  rooCodeWriter,
+  kiroWriter,
+  opencodeWriter
 ];
 
 /** Look up a harness writer by id. */

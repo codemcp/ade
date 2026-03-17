@@ -70,6 +70,11 @@ export interface McpServerEntry {
   command: string;
   args: string[];
   env: Record<string, string>;
+  /**
+   * Tool names the agent is pre-approved to use from this server.
+   * Defaults to `["*"]` (all tools) when not specified.
+   */
+  allowedTools?: string[];
 }
 
 export interface CliAction {

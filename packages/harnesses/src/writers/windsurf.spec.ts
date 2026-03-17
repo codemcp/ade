@@ -44,7 +44,8 @@ describe("windsurfWriter", () => {
     expect(parsed.mcpServers["workflows"]).toEqual({
       command: "npx",
       args: ["-y", "@codemcp/workflows"],
-      env: { API_KEY: "test" }
+      env: { API_KEY: "test" },
+      alwaysAllow: ["*"]
     });
   });
 

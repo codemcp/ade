@@ -45,14 +45,21 @@ async function writeMcpJson(
 
   const mcpServers: Record<
     string,
-    { command: string; args: string[]; env?: Record<string, string> }
+    {
+      command: string;
+      args: string[];
+      env?: Record<string, string>;
+      alwaysAllow?: string[];
+    }
   > = (existing.mcpServers as typeof mcpServers) ?? {};
 
   for (const server of allServers) {
+    const allowed = server.allowedTools ?? ["*"];
     mcpServers[server.ref] = {
       command: server.command,
       args: server.args,
-      ...(Object.keys(server.env).length > 0 ? { env: server.env } : {})
+      ...(Object.keys(server.env).length > 0 ? { env: server.env } : {}),
+      alwaysAllow: allowed
     };
   }
 
