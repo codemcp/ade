@@ -6,7 +6,8 @@
     "baseUrl": ".",
     "paths": {
       "@ade/core/*": ["packages/core/src/*"],
-      "@ade/cli/*": ["packages/cli/src/*"]
+      "@ade/cli/*": ["packages/cli/src/*"],
+      "@ade/harnesses/*": ["packages/harnesses/src/*"]
     }
   }
 }

@@ -9,7 +9,7 @@ vi.mock("@clack/prompts", () => ({
   outro: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   select: vi.fn(),
-  multiselect: vi.fn().mockResolvedValue([]),
+  multiselect: vi.fn(),
   isCancel: vi.fn().mockReturnValue(false),
   cancel: vi.fn(),
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
@@ -39,6 +39,9 @@ describe("install integration (real temp dir)", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
       .mockResolvedValueOnce("__skip__"); // architecture
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
     await runSetup(dir, catalog);
 
     // Step 2: Delete agent output files to simulate a fresh clone
@@ -46,7 +49,7 @@ describe("install integration (real temp dir)", () => {
     await rm(join(dir, ".claude"), { recursive: true, force: true });
 
     // Step 3: Run install — should regenerate from config.lock.yaml
-    await runInstall(dir, "claude-code");
+    await runInstall(dir, ["claude-code"]);
 
     // Agent files should be back
     const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
@@ -68,6 +71,9 @@ describe("install integration (real temp dir)", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
       .mockResolvedValueOnce("__skip__"); // architecture
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
     await runSetup(dir, catalog);
 
     const lockRawBefore = await readFile(
@@ -76,7 +82,7 @@ describe("install integration (real temp dir)", () => {
     );
 
     // Re-install
-    await runInstall(dir, "claude-code");
+    await runInstall(dir, ["claude-code"]);
 
     const lockRawAfter = await readFile(join(dir, "config.lock.yaml"), "utf-8");
     // Lock file should be byte-identical (install doesn't rewrite it)
@@ -96,13 +102,16 @@ describe("install integration (real temp dir)", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
     await runSetup(dir, catalog);
 
     // Delete agent output
     await rm(join(dir, "AGENTS.md"));
 
     // Re-install
-    await runInstall(dir, "claude-code");
+    await runInstall(dir, ["claude-code"]);
 
     const agentsMd = await readFile(join(dir, "AGENTS.md"), "utf-8");
     expect(agentsMd).toContain("AGENTS.md");

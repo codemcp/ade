@@ -43,7 +43,8 @@ describe("architecture and practices facets integration", () => {
         .mockResolvedValueOnce("tanstack"); // architecture
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
-        .mockResolvedValueOnce([]); // docsets: deselect all
+        .mockResolvedValueOnce([]) // docsets: deselect all
+        .mockResolvedValueOnce(["claude-code"]); // harnesses
 
       await runSetup(dir, catalog);
 
@@ -99,10 +100,10 @@ describe("architecture and practices facets integration", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture: skip
-    vi.mocked(clack.multiselect).mockResolvedValueOnce([
-      "conventional-commits",
-      "tdd-london"
-    ]);
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce(["conventional-commits", "tdd-london"]) // practices
+      .mockResolvedValueOnce([]) // docsets: deselect all (conventional-commits has docset)
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
 
@@ -148,7 +149,9 @@ describe("architecture and practices facets integration", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture: skip
-    vi.mocked(clack.multiselect).mockResolvedValueOnce(["adr-nygard"]);
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce(["adr-nygard"])
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
 
@@ -169,7 +172,9 @@ describe("architecture and practices facets integration", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture: skip
-    vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
 
@@ -189,7 +194,9 @@ describe("architecture and practices facets integration", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture: skip
-    vi.mocked(clack.multiselect).mockResolvedValueOnce(["tdd-london"]);
+    vi.mocked(clack.multiselect)
+      .mockResolvedValueOnce(["tdd-london"])
+      .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
 
@@ -210,7 +217,8 @@ describe("architecture and practices facets integration", () => {
         .mockResolvedValueOnce("tanstack"); // architecture
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce(["tdd-london", "conventional-commits"]) // practices
-        .mockResolvedValueOnce([]); // docsets: deselect all
+        .mockResolvedValueOnce([]) // docsets: deselect all
+        .mockResolvedValueOnce(["claude-code"]); // harnesses
 
       await runSetup(dir, catalog);
 

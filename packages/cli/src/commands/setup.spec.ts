@@ -33,13 +33,27 @@ vi.mock("@ade/core", async (importOriginal) => {
       knowledge_sources: [],
       skills: []
     } satisfies LogicalConfig),
-    getAgentWriter: vi.fn().mockReturnValue({
-      id: "claude-code",
-      install: vi.fn().mockResolvedValue(undefined)
-    }),
     collectDocsets: actual.collectDocsets
   };
 });
+
+vi.mock("@ade/harnesses", () => ({
+  allHarnessWriters: [
+    {
+      id: "claude-code",
+      label: "Claude Code",
+      description: "test",
+      install: vi.fn().mockResolvedValue(undefined)
+    }
+  ],
+  getHarnessWriter: vi.fn().mockReturnValue({
+    id: "claude-code",
+    label: "Claude Code",
+    description: "test",
+    install: vi.fn().mockResolvedValue(undefined)
+  }),
+  getHarnessIds: vi.fn().mockReturnValue(["claude-code"])
+}));
 
 import * as clack from "@clack/prompts";
 import {
@@ -142,6 +156,8 @@ describe("runSetup", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("workflow-a")
       .mockResolvedValueOnce("vitest");
+    // Harness multiselect
+    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
     await runSetup("/tmp/test-project", testCatalog);
 
@@ -169,6 +185,7 @@ describe("runSetup", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("workflow-a")
       .mockResolvedValueOnce("vitest");
+    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
     await runSetup("/tmp/test-project", testCatalog);
 
@@ -194,6 +211,7 @@ describe("runSetup", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("workflow-a")
       .mockResolvedValueOnce("__skip__");
+    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
     await runSetup("/tmp/test-project", testCatalog);
 
@@ -221,11 +239,10 @@ describe("runSetup", () => {
   describe("docset confirmation step", () => {
     it("presents implied docsets as a multiselect after facet selection", async () => {
       vi.mocked(clack.select).mockResolvedValueOnce("react");
-      // User accepts all docsets (returns all ids)
-      vi.mocked(clack.multiselect).mockResolvedValueOnce([
-        "react-docs",
-        "react-tutorial"
-      ]);
+      // User accepts all docsets (returns all ids), then harness selection
+      vi.mocked(clack.multiselect)
+        .mockResolvedValueOnce(["react-docs", "react-tutorial"])
+        .mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", docsetCatalog);
 
@@ -239,8 +256,10 @@ describe("runSetup", () => {
 
     it("stores deselected docsets as excluded_docsets in user config", async () => {
       vi.mocked(clack.select).mockResolvedValueOnce("react");
-      // User deselects react-tutorial, keeps only react-docs
-      vi.mocked(clack.multiselect).mockResolvedValueOnce(["react-docs"]);
+      // User deselects react-tutorial, keeps only react-docs; then harness
+      vi.mocked(clack.multiselect)
+        .mockResolvedValueOnce(["react-docs"])
+        .mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", docsetCatalog);
 
@@ -254,10 +273,9 @@ describe("runSetup", () => {
 
     it("does not set excluded_docsets when all docsets are accepted", async () => {
       vi.mocked(clack.select).mockResolvedValueOnce("react");
-      vi.mocked(clack.multiselect).mockResolvedValueOnce([
-        "react-docs",
-        "react-tutorial"
-      ]);
+      vi.mocked(clack.multiselect)
+        .mockResolvedValueOnce(["react-docs", "react-tutorial"])
+        .mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", docsetCatalog);
 
@@ -269,11 +287,18 @@ describe("runSetup", () => {
       vi.mocked(clack.select)
         .mockResolvedValueOnce("workflow-a")
         .mockResolvedValueOnce("vitest");
+      // Only the harness multiselect should be called (no docsets in testCatalog)
+      vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", testCatalog);
 
-      // multiselect should NOT have been called (no docsets in testCatalog)
-      expect(clack.multiselect).not.toHaveBeenCalled();
+      // multiselect should have been called exactly once (for harnesses only)
+      expect(clack.multiselect).toHaveBeenCalledTimes(1);
+      expect(clack.multiselect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining("Harnesses")
+        })
+      );
     });
   });
 
@@ -281,6 +306,7 @@ describe("runSetup", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("workflow-a")
       .mockResolvedValueOnce("vitest");
+    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
     await runSetup("/tmp/test-project", testCatalog);
 
@@ -297,6 +323,7 @@ describe("runSetup", () => {
       vi.mocked(clack.select)
         .mockResolvedValueOnce("workflow-b")
         .mockResolvedValueOnce("jest");
+      vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", testCatalog);
 
@@ -341,7 +368,9 @@ describe("runSetup", () => {
         choices: { practices: ["tdd", "adr"] }
       });
 
-      vi.mocked(clack.multiselect).mockResolvedValueOnce(["tdd", "adr"]);
+      vi.mocked(clack.multiselect)
+        .mockResolvedValueOnce(["tdd", "adr"])
+        .mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", multiCatalog);
 
@@ -358,6 +387,7 @@ describe("runSetup", () => {
       vi.mocked(clack.select)
         .mockResolvedValueOnce("workflow-a")
         .mockResolvedValueOnce("vitest");
+      vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", testCatalog);
 
@@ -374,6 +404,7 @@ describe("runSetup", () => {
       vi.mocked(clack.select)
         .mockResolvedValueOnce("workflow-a")
         .mockResolvedValueOnce("vitest");
+      vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", testCatalog);
 

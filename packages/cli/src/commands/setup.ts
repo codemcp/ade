@@ -10,10 +10,10 @@ import {
   resolve,
   collectDocsets,
   createDefaultRegistry,
-  getAgentWriter,
   getFacet,
   getOption
 } from "@ade/core";
+import { allHarnessWriters, getHarnessWriter } from "@ade/harnesses";
 import { installSkills } from "../skills-installer.js";
 import { installKnowledge } from "../knowledge-installer.js";
 
@@ -95,9 +95,39 @@ export async function runSetup(
     }
   }
 
+  // Harness selection — multi-select from all available harnesses
+  const existingHarnesses = existingConfig?.harnesses;
+  const harnessOptions = allHarnessWriters.map((w) => ({
+    value: w.id,
+    label: w.label,
+    hint: w.description
+  }));
+
+  const validExistingHarnesses = existingHarnesses?.filter((h) =>
+    allHarnessWriters.some((w) => w.id === h)
+  );
+
+  const selectedHarnesses = await clack.multiselect({
+    message: "Harnesses — which coding agents should receive config?",
+    options: harnessOptions,
+    initialValues:
+      validExistingHarnesses && validExistingHarnesses.length > 0
+        ? validExistingHarnesses
+        : ["claude-code"],
+    required: false
+  });
+
+  if (typeof selectedHarnesses === "symbol") {
+    clack.cancel("Setup cancelled.");
+    return;
+  }
+
+  const harnesses = selectedHarnesses as string[];
+
   const userConfig: UserConfig = {
     choices,
-    ...(excludedDocsets && { excluded_docsets: excludedDocsets })
+    ...(excludedDocsets && { excluded_docsets: excludedDocsets }),
+    ...(harnesses.length > 0 && { harnesses })
   };
   const registry = createDefaultRegistry();
   const logicalConfig = await resolve(userConfig, catalog, registry);
@@ -108,13 +138,17 @@ export async function runSetup(
     version: 1,
     generated_at: new Date().toISOString(),
     choices: userConfig.choices,
+    ...(harnesses.length > 0 && { harnesses }),
     logical_config: logicalConfig
   };
   await writeLockFile(projectRoot, lockFile);
 
-  const agentWriter = getAgentWriter(registry, "claude-code");
-  if (agentWriter) {
-    await agentWriter.install(logicalConfig, projectRoot);
+  // Install to all selected harnesses
+  for (const harnessId of harnesses) {
+    const writer = getHarnessWriter(harnessId);
+    if (writer) {
+      await writer.install(logicalConfig, projectRoot);
+    }
   }
 
   await installSkills(logicalConfig.skills, projectRoot);

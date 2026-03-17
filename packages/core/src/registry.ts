@@ -7,7 +7,6 @@ import { instructionWriter } from "./writers/instruction.js";
 import { workflowsWriter } from "./writers/workflows.js";
 import { skillsWriter } from "./writers/skills.js";
 import { knowledgeWriter } from "./writers/knowledge.js";
-import { claudeCodeWriter } from "./agents/claude-code.js";
 
 export function createRegistry(): WriterRegistry {
   return {
@@ -60,8 +59,6 @@ export function createDefaultRegistry(): WriterRegistry {
       write: async () => ({})
     });
   }
-
-  registerAgentWriter(registry, claudeCodeWriter);
 
   return registry;
 }
