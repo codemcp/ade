@@ -44,6 +44,7 @@ describe("knowledge integration", () => {
 
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
+        .mockResolvedValueOnce([]) // backpressure: none
         .mockResolvedValueOnce([
           "tanstack-router-docs",
           "tanstack-query-docs",
@@ -94,6 +95,7 @@ describe("knowledge integration", () => {
 
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
+        .mockResolvedValueOnce([]) // backpressure: none
         .mockResolvedValueOnce(["tanstack-router-docs", "tanstack-query-docs"])
         .mockResolvedValueOnce(["claude-code"]); // harnesses
 
@@ -116,6 +118,7 @@ describe("knowledge integration", () => {
       .mockResolvedValueOnce("__skip__"); // architecture: skip
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce(["tdd-london"]) // practices: no docsets
+      .mockResolvedValueOnce([]) // backpressure: none
       .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);

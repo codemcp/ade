@@ -40,6 +40,7 @@ describe("setup integration (real temp dir)", () => {
       .mockResolvedValueOnce("__skip__"); // architecture
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce([]) // backpressure: none
       .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
@@ -86,6 +87,7 @@ describe("setup integration (real temp dir)", () => {
       .mockResolvedValueOnce("__skip__"); // architecture
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce([]) // backpressure: none
       .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
@@ -130,6 +132,7 @@ describe("setup integration (real temp dir)", () => {
       .mockResolvedValueOnce("__skip__"); // architecture
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce([]) // practices: none
+      .mockResolvedValueOnce([]) // backpressure: none
       .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
