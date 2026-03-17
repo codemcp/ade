@@ -124,7 +124,8 @@ describe("config", () => {
               description: "TypeScript documentation"
             }
           ],
-          skills: []
+          skills: [],
+          git_hooks: []
         }
       };
 

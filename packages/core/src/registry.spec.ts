@@ -99,7 +99,8 @@ describe("registry", () => {
         instructions: ["be helpful"],
         cli_actions: [],
         knowledge_sources: [],
-        skills: []
+        skills: [],
+        git_hooks: []
       };
       await found!.install(config, "/tmp/my-project");
       expect(mockInstall).toHaveBeenCalledWith(config, "/tmp/my-project");
