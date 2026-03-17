@@ -115,12 +115,6 @@ export const architectureFacet: Facet = {
               }
             ]
           }
-        },
-        {
-          writer: "instruction",
-          config: {
-            text: "This project follows TanStack conventions. Use use_skill() to access the tanstack-architecture, tanstack-design, tanstack-code, tanstack-testing, and playwright-cli skills before making changes."
-          }
         }
       ],
       docsets: [

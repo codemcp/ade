@@ -49,10 +49,10 @@ describe("copilotWriter", () => {
     });
   });
 
-  it("writes .github/copilot-instructions.md with instructions", async () => {
+  it("does not write copilot-instructions.md (prefers agent definition)", async () => {
     const config: LogicalConfig = {
       mcp_servers: [],
-      instructions: ["Follow TDD.", "Use ADRs."],
+      instructions: ["Follow TDD."],
       cli_actions: [],
       knowledge_sources: [],
       skills: []
@@ -60,12 +60,9 @@ describe("copilotWriter", () => {
 
     await copilotWriter.install(config, dir);
 
-    const content = await readFile(
-      join(dir, ".github", "copilot-instructions.md"),
-      "utf-8"
-    );
-    expect(content).toContain("Follow TDD.");
-    expect(content).toContain("Use ADRs.");
+    await expect(
+      readFile(join(dir, ".github", "copilot-instructions.md"), "utf-8")
+    ).rejects.toThrow();
   });
 
   it("writes dedicated .github/agents/ade.agent.md with agent definition", async () => {

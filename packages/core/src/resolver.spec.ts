@@ -369,7 +369,7 @@ describe("resolve", () => {
       const result = await resolve(userConfig, docsetCatalog, registry);
 
       const knowledgeServer = result.mcp_servers.find(
-        (s) => s.ref === "@codemcp/knowledge-server"
+        (s) => s.ref === "knowledge"
       );
       expect(knowledgeServer).toBeDefined();
       expect(knowledgeServer!.command).toBe("npx");
@@ -383,7 +383,7 @@ describe("resolve", () => {
       const result = await resolve(userConfig, catalog, registry);
 
       const knowledgeServer = result.mcp_servers.find(
-        (s) => s.ref === "@codemcp/knowledge-server"
+        (s) => s.ref === "knowledge"
       );
       expect(knowledgeServer).toBeUndefined();
     });

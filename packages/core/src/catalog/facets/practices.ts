@@ -55,12 +55,6 @@ export const practicesFacet: Facet = {
               }
             ]
           }
-        },
-        {
-          writer: "instruction",
-          config: {
-            text: "Use the conventional-commits skill (via use_skill()) when writing commit messages."
-          }
         }
       ],
       docsets: [
@@ -117,12 +111,6 @@ export const practicesFacet: Facet = {
               }
             ]
           }
-        },
-        {
-          writer: "instruction",
-          config: {
-            text: "This project uses London-style TDD. Use the tdd-london skill (via use_skill()) before writing tests. Always follow the Red-Green-Refactor cycle."
-          }
         }
       ]
     },
@@ -177,12 +165,6 @@ export const practicesFacet: Facet = {
                 ].join("\n")
               }
             ]
-          }
-        },
-        {
-          writer: "instruction",
-          config: {
-            text: "This project uses Architecture Decision Records. Use the adr-nygard skill (via use_skill()) when making or documenting architectural decisions. Store ADRs in docs/adr/."
           }
         }
       ]

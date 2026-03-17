@@ -9,7 +9,6 @@ export const copilotWriter: HarnessWriter = {
   description: "VS Code + CLI — .vscode/mcp.json + .github/agents/ade.agent.md",
   async install(config: LogicalConfig, projectRoot: string) {
     await writeVsCodeMcp(config, projectRoot);
-    await writeCopilotInstructions(config, projectRoot);
     await writeCopilotAgent(config, projectRoot);
   }
 };
@@ -68,26 +67,10 @@ async function writeVsCodeMcp(
   await writeFile(mcpPath, JSON.stringify(result, null, 2) + "\n", "utf-8");
 }
 
-async function writeCopilotInstructions(
-  config: LogicalConfig,
-  projectRoot: string
-): Promise<void> {
-  if (config.instructions.length === 0) return;
-
-  const githubDir = join(projectRoot, ".github");
-  await mkdir(githubDir, { recursive: true });
-
-  const lines = config.instructions.flatMap((i) => [i, ""]);
-  await writeFile(
-    join(githubDir, "copilot-instructions.md"),
-    lines.join("\n"),
-    "utf-8"
-  );
-}
-
 /**
  * Write a dedicated ADE agent definition that combines instructions and
- * references configured MCP servers.
+ * references configured MCP servers. Read by both VS Code Copilot and
+ * GitHub Copilot CLI.
  */
 async function writeCopilotAgent(
   config: LogicalConfig,
