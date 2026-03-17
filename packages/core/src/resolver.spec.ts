@@ -190,6 +190,26 @@ describe("resolve", () => {
 
       expect(result.skills).toHaveLength(1);
       expect(result.skills[0].name).toBe("test-skill");
+
+      // Resolver should auto-add agentskills MCP entry when skills are present
+      const agentskills = result.mcp_servers.find(
+        (s) => s.ref === "agentskills"
+      );
+      expect(agentskills).toBeDefined();
+      expect(agentskills!.command).toBe("npx");
+      expect(agentskills!.args).toContain("@codemcp/skills-server");
+    });
+
+    it("does not add agentskills MCP entry when no skills", async () => {
+      const userConfig: UserConfig = {
+        choices: { process: "native-agents-md" }
+      };
+      const result = await resolve(userConfig, catalog, registry);
+
+      const agentskills = result.mcp_servers.find(
+        (s) => s.ref === "agentskills"
+      );
+      expect(agentskills).toBeUndefined();
     });
   });
 
