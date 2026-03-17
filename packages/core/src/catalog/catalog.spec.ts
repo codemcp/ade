@@ -272,6 +272,110 @@ describe("catalog", () => {
     });
   });
 
+  describe("backpressure facet", () => {
+    it("exists in the default catalog", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure");
+      expect(backpressure).toBeDefined();
+      expect(backpressure!.required).toBe(false);
+    });
+
+    it("is multi-select", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+      expect(backpressure.multiSelect).toBe(true);
+    });
+
+    it("has lint-build-precommit option with a git-hooks provision", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+      const option = getOption(backpressure, "lint-build-precommit");
+
+      expect(option).toBeDefined();
+      expect(option!.recipe.some((p) => p.writer === "git-hooks")).toBe(true);
+    });
+
+    it("lint-build-precommit hook targets the pre-commit phase", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+      const option = getOption(backpressure, "lint-build-precommit")!;
+
+      const gitHooksProvision = option.recipe.find(
+        (p) => p.writer === "git-hooks"
+      )!;
+      const hooks = (gitHooksProvision.config as { hooks: { phase: string }[] })
+        .hooks;
+      expect(hooks.some((h) => h.phase === "pre-commit")).toBe(true);
+    });
+
+    it("lint-build-precommit has an instruction provision for WIP commits", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+      const option = getOption(backpressure, "lint-build-precommit")!;
+
+      expect(option.recipe.some((p) => p.writer === "instruction")).toBe(true);
+    });
+
+    it("has unit-test-prepush option with a git-hooks provision", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+      const option = getOption(backpressure, "unit-test-prepush");
+
+      expect(option).toBeDefined();
+      expect(option!.recipe.some((p) => p.writer === "git-hooks")).toBe(true);
+    });
+
+    it("unit-test-prepush hook targets the pre-push phase", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+      const option = getOption(backpressure, "unit-test-prepush")!;
+
+      const gitHooksProvision = option.recipe.find(
+        (p) => p.writer === "git-hooks"
+      )!;
+      const hooks = (gitHooksProvision.config as { hooks: { phase: string }[] })
+        .hooks;
+      expect(hooks.some((h) => h.phase === "pre-push")).toBe(true);
+    });
+
+    it("hook scripts contain the swallow-on-success pattern", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+
+      for (const option of backpressure.options) {
+        const gitHooksProvision = option.recipe.find(
+          (p) => p.writer === "git-hooks"
+        )!;
+        const hooks = (
+          gitHooksProvision.config as { hooks: { script: string }[] }
+        ).hooks;
+        for (const hook of hooks) {
+          expect(hook.script).toContain("✓");
+          expect(hook.script).toContain("exit_code");
+        }
+      }
+    });
+
+    it("hook scripts auto-detect multiple project types", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+
+      for (const option of backpressure.options) {
+        const gitHooksProvision = option.recipe.find(
+          (p) => p.writer === "git-hooks"
+        )!;
+        const hooks = (
+          gitHooksProvision.config as { hooks: { script: string }[] }
+        ).hooks;
+        for (const hook of hooks) {
+          expect(hook.script).toContain("package.json");
+          expect(hook.script).toContain("pom.xml");
+          expect(hook.script).toContain("Cargo.toml");
+        }
+      }
+    });
+  });
+
   describe("catalog + registry integration", () => {
     it("every recipe provision references a writer that exists in the default registry", () => {
       const catalog = getDefaultCatalog();

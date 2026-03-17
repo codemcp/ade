@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import type { LogicalConfig } from "@ade/core";
 import type { HarnessWriter } from "../types.js";
-import { writeMcpServers, writeAgentMd } from "../util.js";
+import { writeMcpServers, writeAgentMd, writeGitHooks } from "../util.js";
 
 export const opencodeWriter: HarnessWriter = {
   id: "opencode",
@@ -49,5 +49,6 @@ export const opencodeWriter: HarnessWriter = {
       fallbackBody:
         "ADE — Agentic Development Environment agent with project conventions and tools."
     });
+    await writeGitHooks(config.git_hooks, projectRoot);
   }
 };

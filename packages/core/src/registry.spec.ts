@@ -113,7 +113,7 @@ describe("registry", () => {
   });
 
   describe("createDefaultRegistry", () => {
-    it("has all 6 built-in provision writer IDs registered", () => {
+    it("has all 7 built-in provision writer IDs registered", () => {
       const registry = createDefaultRegistry();
       const expectedIds = [
         "workflows",
@@ -121,7 +121,8 @@ describe("registry", () => {
         "knowledge",
         "mcp-server",
         "instruction",
-        "installable"
+        "installable",
+        "git-hooks"
       ];
       for (const id of expectedIds) {
         expect(
@@ -129,7 +130,7 @@ describe("registry", () => {
           `expected provision writer "${id}" to be registered`
         ).toBeDefined();
       }
-      expect(registry.provisions.size).toBe(6);
+      expect(registry.provisions.size).toBe(7);
     });
 
     it("has no agent writers by default (moved to @ade/harnesses)", () => {

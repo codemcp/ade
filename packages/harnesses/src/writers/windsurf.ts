@@ -1,7 +1,12 @@
 import { join } from "node:path";
 import type { LogicalConfig } from "@ade/core";
 import type { HarnessWriter } from "../types.js";
-import { writeMcpServers, alwaysAllowEntry, writeRulesFile } from "../util.js";
+import {
+  writeMcpServers,
+  alwaysAllowEntry,
+  writeRulesFile,
+  writeGitHooks
+} from "../util.js";
 
 export const windsurfWriter: HarnessWriter = {
   id: "windsurf",
@@ -17,5 +22,6 @@ export const windsurfWriter: HarnessWriter = {
       config.instructions,
       join(projectRoot, ".windsurfrules")
     );
+    await writeGitHooks(config.git_hooks, projectRoot);
   }
 };

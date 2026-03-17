@@ -40,7 +40,8 @@ export type ProvisionWriter =
   | "knowledge"
   | "mcp-server"
   | "instruction"
-  | "installable";
+  | "installable"
+  | "git-hooks";
 
 // --- LogicalConfig types ---
 
@@ -57,12 +58,18 @@ export interface ExternalSkill {
 
 export type SkillDefinition = InlineSkill | ExternalSkill;
 
+export interface GitHook {
+  phase: "pre-commit" | "pre-push";
+  script: string;
+}
+
 export interface LogicalConfig {
   mcp_servers: McpServerEntry[];
   instructions: string[];
   cli_actions: CliAction[];
   knowledge_sources: KnowledgeSource[];
   skills: SkillDefinition[];
+  git_hooks: GitHook[];
 }
 
 export interface McpServerEntry {

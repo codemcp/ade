@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { LogicalConfig } from "@ade/core";
 import type { HarnessWriter } from "../types.js";
-import { writeMcpServers } from "../util.js";
+import { writeMcpServers, writeGitHooks } from "../util.js";
 
 export const cursorWriter: HarnessWriter = {
   id: "cursor",
@@ -28,5 +28,6 @@ export const cursorWriter: HarnessWriter = {
 
       await writeFile(join(rulesDir, "ade.mdc"), content, "utf-8");
     }
+    await writeGitHooks(config.git_hooks, projectRoot);
   }
 };

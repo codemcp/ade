@@ -70,7 +70,8 @@ describe("resolve", () => {
         instructions: [],
         cli_actions: [],
         knowledge_sources: [],
-        skills: []
+        skills: [],
+        git_hooks: []
       });
     });
   });
@@ -132,7 +133,8 @@ describe("resolve", () => {
         instructions: [],
         cli_actions: [],
         knowledge_sources: [],
-        skills: []
+        skills: [],
+        git_hooks: []
       });
     });
   });

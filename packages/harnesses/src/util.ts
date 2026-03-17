@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { LogicalConfig, McpServerEntry } from "@ade/core";
+import type { GitHook, LogicalConfig, McpServerEntry } from "@ade/core";
 
 // ---------------------------------------------------------------------------
 // JSON helpers
@@ -161,6 +161,26 @@ export async function writeAgentMd(
 // ---------------------------------------------------------------------------
 // Inline skill SKILL.md writer (used by claude-code)
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Git hook installer
+// ---------------------------------------------------------------------------
+
+/**
+ * Write git hook scripts to `.git/hooks/<phase>`.
+ * Files are created with executable permissions (0o755).
+ * No-op when the hooks array is empty.
+ */
+export async function writeGitHooks(
+  hooks: GitHook[] | undefined,
+  projectRoot: string
+): Promise<void> {
+  if (!hooks) return;
+  for (const hook of hooks) {
+    const hookPath = join(projectRoot, ".git", "hooks", hook.phase);
+    await writeFile(hookPath, hook.script, { mode: 0o755 });
+  }
+}
 
 export async function writeInlineSkills(
   config: LogicalConfig,

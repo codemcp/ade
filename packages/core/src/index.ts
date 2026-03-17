@@ -12,7 +12,8 @@ export {
   type KnowledgeSource,
   type SkillDefinition,
   type InlineSkill,
-  type ExternalSkill
+  type ExternalSkill,
+  type GitHook
 } from "./types.js";
 export { type ResolutionContext, type ResolvedFacet } from "./types.js";
 export { type UserConfig, type LockFile } from "./types.js";
