@@ -194,14 +194,16 @@ reference knowledge.
 
 ### Coding agent agnostic setup tooling
 
-ADE will :soon: include a simple cli to setup your coding agent. All configuration
-can be placed into your repo, so that you can check it in.
+ADE includes a CLI (`ade setup`) that generates the correct configuration for
+whichever coding agent you use. All configuration is placed into your repo so
+you can check it in.
 
-We're using STDIO based MCP-servers to expose process guidance, conventions and docs
-to coding agents. There are other proprietary ways to do this, but by using the
-well-established Model Context Protocol which is optimized for discoverability, we
-make sure that you get a similar experience, no matter whether you are using Claude
-Code, Copilot or Kiro.
+We use STDIO-based MCP servers to expose process guidance, conventions, and docs
+to coding agents. By using the Model Context Protocol — optimized for
+discoverability — you get a consistent experience regardless of your agent.
+
+The CLI supports a growing list of agents. See the
+[harness writers source](packages/harnesses/src/writers) for the current set.
 
 ## Core principles
 
