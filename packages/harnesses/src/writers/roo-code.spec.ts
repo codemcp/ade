@@ -34,7 +34,8 @@ describe("rooCodeWriter", () => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
 
     await rooCodeWriter.install(config, dir);
@@ -54,7 +55,8 @@ describe("rooCodeWriter", () => {
       instructions: ["Follow TDD."],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
 
     await rooCodeWriter.install(config, dir);

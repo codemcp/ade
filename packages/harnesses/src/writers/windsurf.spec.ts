@@ -34,7 +34,8 @@ describe("windsurfWriter", () => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
 
     await windsurfWriter.install(config, dir);
@@ -55,7 +56,8 @@ describe("windsurfWriter", () => {
       instructions: ["Follow TDD."],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
 
     await windsurfWriter.install(config, dir);

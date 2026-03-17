@@ -34,7 +34,8 @@ describe("cursorWriter", () => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
 
     await cursorWriter.install(config, dir);
@@ -53,7 +54,8 @@ describe("cursorWriter", () => {
       instructions: ["Follow TDD.", "Use conventional commits."],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
 
     await cursorWriter.install(config, dir);
@@ -80,7 +82,8 @@ describe("cursorWriter", () => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: [{ name: "my-skill", description: "A skill", body: "content" }]
+      skills: [{ name: "my-skill", description: "A skill", body: "content" }],
+      git_hooks: []
     };
 
     await cursorWriter.install(config, dir);
@@ -96,7 +99,8 @@ describe("cursorWriter", () => {
       instructions: ["hello"],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
 
     await cursorWriter.install(config, dir);

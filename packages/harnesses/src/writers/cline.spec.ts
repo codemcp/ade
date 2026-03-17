@@ -34,7 +34,8 @@ describe("clineWriter", () => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
 
     await clineWriter.install(config, dir);
@@ -54,7 +55,8 @@ describe("clineWriter", () => {
       instructions: ["Follow TDD."],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: []
     };
 
     await clineWriter.install(config, dir);
