@@ -1,0 +1,9 @@
+version: "1.0"
+docsets:
+  - id: conventional-commits-spec
+    name: The Conventional Commits specification
+    description: "Git repository: https://github.com/conventional-commits/conventionalcommits.org.git"
+    sources:
+      - url: https://github.com/conventional-commits/conventionalcommits.org.git
+        type: git_repo
+        branch: main
