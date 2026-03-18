@@ -1,11 +1,15 @@
 {
   "name": "ade",
+  "description": "ADE — Agentic Development Environment agent with project conventions and tools.",
   "prompt": "You are an AI assistant that helps users develop software features using the workflows server.\nIMPORTANT: Call whats_next() after each user message to get phase-specific instructions and maintain the development workflow.\nEach tool call returns a JSON response with an \"instructions\" field. Follow these instructions immediately after you receive them.\nUse the development plan which you will retrieve via whats_next() to record important insights and decisions as per the structure of the plan.\nDo not use your own task management tools.",
   "mcpServers": {
     "workflows": {
       "command": "npx",
       "args": [
         "@codemcp/workflows-server@latest"
+      ],
+      "autoApprove": [
+        "*"
       ]
     },
     "agentskills": {
@@ -13,20 +17,25 @@
       "args": [
         "-y",
         "@codemcp/skills-server"
+      ],
+      "autoApprove": [
+        "*"
       ]
     }
   },
   "tools": [
-    "execute_bash",
-    "fs_read",
-    "fs_write",
-    "knowledge",
-    "thinking",
-    "@workflows",
-    "@agentskills"
-  ],
-  "allowedTools": [
+    "read",
+    "write",
+    "spec",
     "@workflows/*",
     "@agentskills/*"
-  ]
+  ],
+  "allowedTools": [
+    "read",
+    "write",
+    "spec",
+    "@workflows/*",
+    "@agentskills/*"
+  ],
+  "useLegacyMcpJson": true
 }

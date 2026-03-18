@@ -1,10 +1,10 @@
 version: 1
-generated_at: 2026-03-18T08:57:05.075Z
+generated_at: 2026-03-18T11:52:51.718Z
 choices:
   process: codemcp-workflows
   practices:
     - adr-nygard
-  autonomy: max-autonomy
+  autonomy: sensible-defaults
 harnesses:
   - universal
   - opencode
@@ -107,7 +107,12 @@ logical_config:
   git_hooks: []
   setup_notes: []
   permission_policy:
-    profile: max-autonomy
-    web: ask
-    mcp:
-      default: allow
+    profile: sensible-defaults
+    capabilities:
+      read: allow
+      edit_write: allow
+      search_list: allow
+      bash_safe: allow
+      bash_unsafe: ask
+      web: ask
+      task_agent: allow
