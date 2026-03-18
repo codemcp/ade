@@ -7,5 +7,5 @@ export default defineConfig({
   tsconfig: "tsconfig.build.json",
   target: "node22",
   clean: true,
-  noExternal: ["@clack/prompts"]
+  noExternal: [/^@clack\//, /^@codemcp\//]
 });
