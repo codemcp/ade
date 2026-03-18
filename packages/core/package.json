@@ -29,5 +29,6 @@
   },
   "dependencies": {
     "yaml": "^2.8.2"
-  }
+  },
+  "version": "0.0.1"
 }
