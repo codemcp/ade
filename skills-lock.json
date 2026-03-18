@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "adr-nygard": {
+      "source": "./.ade/skills/adr-nygard",
+      "sourceType": "local",
+      "computedHash": "13cd33eb604e9e090057cce458469b2a1b609a6db3313a03df88d91776095b19"
+    },
+    "commit": {
+      "source": "mrsimpson/skills-coding",
+      "sourceType": "github",
+      "computedHash": "fc628c7d577d2d9cf3cb0a917d3c5e2e35b460fdc62c353595b7472b6f1c6548"
+    },
+    "tdd": {
+      "source": "mrsimpson/skills-coding",
+      "sourceType": "github",
+      "computedHash": "f8b4618b54124be85c06cf13099f797594322df3f94e339e7d2f38dd4974e1f1"
+    }
+  }
+}

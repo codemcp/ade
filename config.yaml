@@ -1,0 +1,9 @@
+choices:
+  process: codemcp-workflows
+  practices:
+    - adr-nygard
+harnesses:
+  - universal
+  - opencode
+  - copilot
+  - kiro
