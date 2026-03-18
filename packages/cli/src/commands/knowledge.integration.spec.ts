@@ -118,7 +118,6 @@ describe("knowledge integration", () => {
       .mockResolvedValueOnce("__skip__"); // architecture: skip
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce(["tdd-london"]) // practices: no docsets
-      .mockResolvedValueOnce([]) // backpressure: none
       .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);

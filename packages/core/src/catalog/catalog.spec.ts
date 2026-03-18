@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { getDefaultCatalog, getFacet, getOption } from "./index.js";
+import {
+  getDefaultCatalog,
+  getFacet,
+  getOption,
+  sortFacets,
+  getVisibleOptions
+} from "./index.js";
 import { createDefaultRegistry, getProvisionWriter } from "../registry.js";
 
 describe("catalog", () => {
@@ -286,56 +292,66 @@ describe("catalog", () => {
       expect(backpressure.multiSelect).toBe(true);
     });
 
-    it("has lint-build-precommit option with a git-hooks provision", () => {
+    it("depends on architecture facet", () => {
       const catalog = getDefaultCatalog();
       const backpressure = getFacet(catalog, "backpressure")!;
-      const option = getOption(backpressure, "lint-build-precommit");
-
-      expect(option).toBeDefined();
-      expect(option!.recipe.some((p) => p.writer === "git-hooks")).toBe(true);
+      expect(backpressure.dependsOn).toContain("architecture");
     });
 
-    it("lint-build-precommit hook targets the pre-commit phase", () => {
+    it("has per-architecture lint-build-precommit options with git-hooks provisions", () => {
       const catalog = getDefaultCatalog();
       const backpressure = getFacet(catalog, "backpressure")!;
-      const option = getOption(backpressure, "lint-build-precommit")!;
 
-      const gitHooksProvision = option.recipe.find(
-        (p) => p.writer === "git-hooks"
-      )!;
-      const hooks = (gitHooksProvision.config as { hooks: { phase: string }[] })
-        .hooks;
-      expect(hooks.some((h) => h.phase === "pre-commit")).toBe(true);
+      for (const archId of ["tanstack", "nodejs-backend", "java-backend"]) {
+        const option = getOption(
+          backpressure,
+          `lint-build-precommit-${archId}`
+        );
+        expect(option, `lint-build-precommit-${archId} missing`).toBeDefined();
+        expect(option!.recipe.some((p) => p.writer === "git-hooks")).toBe(true);
+
+        const gitHooksProvision = option!.recipe.find(
+          (p) => p.writer === "git-hooks"
+        )!;
+        const hooks = (
+          gitHooksProvision.config as { hooks: { phase: string }[] }
+        ).hooks;
+        expect(hooks.some((h) => h.phase === "pre-commit")).toBe(true);
+      }
     });
 
-    it("lint-build-precommit has an instruction provision for WIP commits", () => {
+    it("lint-build-precommit options have an instruction provision for WIP commits", () => {
       const catalog = getDefaultCatalog();
       const backpressure = getFacet(catalog, "backpressure")!;
-      const option = getOption(backpressure, "lint-build-precommit")!;
 
-      expect(option.recipe.some((p) => p.writer === "instruction")).toBe(true);
+      for (const archId of ["tanstack", "nodejs-backend", "java-backend"]) {
+        const option = getOption(
+          backpressure,
+          `lint-build-precommit-${archId}`
+        )!;
+        expect(option.recipe.some((p) => p.writer === "instruction")).toBe(
+          true
+        );
+      }
     });
 
-    it("has unit-test-prepush option with a git-hooks provision", () => {
+    it("has per-architecture unit-test-prepush options with git-hooks provisions", () => {
       const catalog = getDefaultCatalog();
       const backpressure = getFacet(catalog, "backpressure")!;
-      const option = getOption(backpressure, "unit-test-prepush");
 
-      expect(option).toBeDefined();
-      expect(option!.recipe.some((p) => p.writer === "git-hooks")).toBe(true);
-    });
+      for (const archId of ["tanstack", "nodejs-backend", "java-backend"]) {
+        const option = getOption(backpressure, `unit-test-prepush-${archId}`);
+        expect(option, `unit-test-prepush-${archId} missing`).toBeDefined();
+        expect(option!.recipe.some((p) => p.writer === "git-hooks")).toBe(true);
 
-    it("unit-test-prepush hook targets the pre-push phase", () => {
-      const catalog = getDefaultCatalog();
-      const backpressure = getFacet(catalog, "backpressure")!;
-      const option = getOption(backpressure, "unit-test-prepush")!;
-
-      const gitHooksProvision = option.recipe.find(
-        (p) => p.writer === "git-hooks"
-      )!;
-      const hooks = (gitHooksProvision.config as { hooks: { phase: string }[] })
-        .hooks;
-      expect(hooks.some((h) => h.phase === "pre-push")).toBe(true);
+        const gitHooksProvision = option!.recipe.find(
+          (p) => p.writer === "git-hooks"
+        )!;
+        const hooks = (
+          gitHooksProvision.config as { hooks: { phase: string }[] }
+        ).hooks;
+        expect(hooks.some((h) => h.phase === "pre-push")).toBe(true);
+      }
     });
 
     it("hook scripts contain the swallow-on-success pattern", () => {
@@ -356,23 +372,124 @@ describe("catalog", () => {
       }
     });
 
-    it("hook scripts auto-detect multiple project types", () => {
+    it("all options have an available() function", () => {
       const catalog = getDefaultCatalog();
       const backpressure = getFacet(catalog, "backpressure")!;
 
       for (const option of backpressure.options) {
-        const gitHooksProvision = option.recipe.find(
-          (p) => p.writer === "git-hooks"
-        )!;
-        const hooks = (
-          gitHooksProvision.config as { hooks: { script: string }[] }
-        ).hooks;
-        for (const hook of hooks) {
-          expect(hook.script).toContain("package.json");
-          expect(hook.script).toContain("pom.xml");
-          expect(hook.script).toContain("Cargo.toml");
+        expect(
+          typeof option.available,
+          `option ${option.id} missing available()`
+        ).toBe("function");
+      }
+    });
+  });
+
+  describe("backpressure facet — available()", () => {
+    it("tanstack options are visible when architecture=tanstack", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+      const architectureFacet = getFacet(catalog, "architecture")!;
+      const tanstackOption = getOption(architectureFacet, "tanstack")!;
+
+      const visible = getVisibleOptions(
+        backpressure,
+        { architecture: "tanstack" },
+        catalog
+      );
+      const ids = visible.map((o) => o.id);
+      expect(ids).toContain("lint-build-precommit-tanstack");
+      expect(ids).toContain("unit-test-prepush-tanstack");
+      expect(ids).not.toContain("lint-build-precommit-java-backend");
+      expect(tanstackOption).toBeDefined(); // guard
+    });
+
+    it("java-backend options are visible when architecture=java-backend", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+
+      const visible = getVisibleOptions(
+        backpressure,
+        { architecture: "java-backend" },
+        catalog
+      );
+      const ids = visible.map((o) => o.id);
+      expect(ids).toContain("lint-build-precommit-java-backend");
+      expect(ids).toContain("unit-test-prepush-java-backend");
+      expect(ids).not.toContain("lint-build-precommit-tanstack");
+    });
+
+    it("no options visible when architecture is not selected", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+
+      const visible = getVisibleOptions(backpressure, {}, catalog);
+      expect(visible).toHaveLength(0);
+    });
+
+    it("only the two matching options are visible per architecture", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+
+      for (const archId of ["tanstack", "nodejs-backend", "java-backend"]) {
+        const visible = getVisibleOptions(
+          backpressure,
+          { architecture: archId },
+          catalog
+        );
+        expect(visible, `expected 2 options for ${archId}`).toHaveLength(2);
+        expect(visible.every((o) => o.id.endsWith(`-${archId}`))).toBe(true);
+      }
+    });
+  });
+
+  describe("sortFacets", () => {
+    it("returns all facets", () => {
+      const catalog = getDefaultCatalog();
+      const sorted = sortFacets(catalog);
+      expect(sorted).toHaveLength(catalog.facets.length);
+    });
+
+    it("places backpressure after architecture", () => {
+      const catalog = getDefaultCatalog();
+      const sorted = sortFacets(catalog);
+      const archIdx = sorted.findIndex((f) => f.id === "architecture");
+      const bpIdx = sorted.findIndex((f) => f.id === "backpressure");
+      expect(archIdx).toBeLessThan(bpIdx);
+    });
+
+    it("facets without dependsOn are not placed after their dependents", () => {
+      const catalog = getDefaultCatalog();
+      const sorted = sortFacets(catalog);
+      for (const facet of sorted) {
+        const facetIdx = sorted.findIndex((f) => f.id === facet.id);
+        for (const depId of facet.dependsOn ?? []) {
+          const depIdx = sorted.findIndex((f) => f.id === depId);
+          expect(depIdx, `${depId} must come before ${facet.id}`).toBeLessThan(
+            facetIdx
+          );
         }
       }
+    });
+  });
+
+  describe("getVisibleOptions", () => {
+    it("returns all options when none have available()", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const visible = getVisibleOptions(architecture, {}, catalog);
+      expect(visible).toHaveLength(architecture.options.length);
+    });
+
+    it("returns all options when available() returns true for all", () => {
+      const catalog = getDefaultCatalog();
+      const architecture = getFacet(catalog, "architecture")!;
+      const visible = getVisibleOptions(
+        architecture,
+        { architecture: "tanstack" },
+        catalog
+      );
+      expect(visible).toHaveLength(architecture.options.length);
     });
   });
 

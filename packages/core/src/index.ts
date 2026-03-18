@@ -38,6 +38,12 @@ export {
   createDefaultRegistry
 } from "./registry.js";
 export { resolve, collectDocsets } from "./resolver.js";
-export { getDefaultCatalog, getFacet, getOption } from "./catalog/index.js";
+export {
+  getDefaultCatalog,
+  getFacet,
+  getOption,
+  sortFacets,
+  getVisibleOptions
+} from "./catalog/index.js";
 export { skillsWriter } from "./writers/skills.js";
 export { knowledgeWriter } from "./writers/knowledge.js";

@@ -1,38 +1,27 @@
 import type { Facet } from "../../types.js";
 
-const LINT_BUILD_SCRIPT = `#!/bin/sh
-set -e
-if [ -f package.json ]; then
-  cmd="npm run lint 2>&1 && npm run build 2>&1"
-elif [ -f pom.xml ]; then
-  cmd="mvn -q validate compile 2>&1"
-elif [ -f Cargo.toml ]; then
-  cmd="cargo clippy -- -D warnings 2>&1"
-elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
-  cmd="./gradlew compileJava lintDebug 2>&1"
-else
-  echo "✓"; exit 0
-fi
-output=$(eval "$cmd"); exit_code=$?
+const NODEJS_LINT_BUILD_SCRIPT = `#!/bin/sh
+output=$(npm run lint 2>&1 && npm run build 2>&1); exit_code=$?
 if [ $exit_code -eq 0 ]; then echo "✓"; else echo "$output"; exit $exit_code; fi
 `;
 
-const UNIT_TEST_SCRIPT = `#!/bin/sh
-set -e
-if [ -f package.json ]; then
-  cmd="npm test -- --bail 2>&1"
-elif [ -f pom.xml ]; then
-  cmd="mvn -q test 2>&1"
-elif [ -f Cargo.toml ]; then
-  cmd="cargo test 2>&1"
-elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
-  cmd="./gradlew test 2>&1"
-else
-  echo "✓"; exit 0
-fi
-output=$(eval "$cmd"); exit_code=$?
+const JAVA_LINT_BUILD_SCRIPT = `#!/bin/sh
+output=$(./gradlew compileJava checkstyleMain 2>&1); exit_code=$?
 if [ $exit_code -eq 0 ]; then echo "✓"; else echo "$output"; exit $exit_code; fi
 `;
+
+const NODEJS_UNIT_TEST_SCRIPT = `#!/bin/sh
+output=$(npm test -- --bail 2>&1); exit_code=$?
+if [ $exit_code -eq 0 ]; then echo "✓"; else echo "$output"; exit $exit_code; fi
+`;
+
+const JAVA_UNIT_TEST_SCRIPT = `#!/bin/sh
+output=$(./gradlew test 2>&1); exit_code=$?
+if [ $exit_code -eq 0 ]; then echo "✓"; else echo "$output"; exit $exit_code; fi
+`;
+
+const WIP_COMMIT_INSTRUCTION =
+  "Commit often using small WIP commits so pre-commit quality gates run frequently and catch issues early.";
 
 export const backpressureFacet: Facet = {
   id: "backpressure",
@@ -41,46 +30,103 @@ export const backpressureFacet: Facet = {
     "Install git hooks that enforce quality gates — silent on success, surface only relevant failures",
   required: false,
   multiSelect: true,
+  dependsOn: ["architecture"],
   options: [
     {
-      id: "lint-build-precommit",
+      id: "lint-build-precommit-tanstack",
       label: "Lint + Build (pre-commit)",
       description:
         "Block commits if lint or build fails; emit only ✓ on success",
+      available: (deps) => deps["architecture"]?.id === "tanstack",
       recipe: [
         {
           writer: "git-hooks",
           config: {
-            hooks: [
-              {
-                phase: "pre-commit",
-                script: LINT_BUILD_SCRIPT
-              }
-            ]
+            hooks: [{ phase: "pre-commit", script: NODEJS_LINT_BUILD_SCRIPT }]
           }
         },
         {
           writer: "instruction",
+          config: { text: WIP_COMMIT_INSTRUCTION }
+        }
+      ]
+    },
+    {
+      id: "lint-build-precommit-nodejs-backend",
+      label: "Lint + Build (pre-commit)",
+      description:
+        "Block commits if lint or build fails; emit only ✓ on success",
+      available: (deps) => deps["architecture"]?.id === "nodejs-backend",
+      recipe: [
+        {
+          writer: "git-hooks",
           config: {
-            text: "Commit often using small WIP commits so pre-commit quality gates run frequently and catch issues early."
+            hooks: [{ phase: "pre-commit", script: NODEJS_LINT_BUILD_SCRIPT }]
+          }
+        },
+        {
+          writer: "instruction",
+          config: { text: WIP_COMMIT_INSTRUCTION }
+        }
+      ]
+    },
+    {
+      id: "lint-build-precommit-java-backend",
+      label: "Lint + Build (pre-commit)",
+      description:
+        "Block commits if lint or build fails; emit only ✓ on success",
+      available: (deps) => deps["architecture"]?.id === "java-backend",
+      recipe: [
+        {
+          writer: "git-hooks",
+          config: {
+            hooks: [{ phase: "pre-commit", script: JAVA_LINT_BUILD_SCRIPT }]
+          }
+        },
+        {
+          writer: "instruction",
+          config: { text: WIP_COMMIT_INSTRUCTION }
+        }
+      ]
+    },
+    {
+      id: "unit-test-prepush-tanstack",
+      label: "Unit Tests (pre-push)",
+      description: "Block pushes if unit tests fail; emit only ✓ on success",
+      available: (deps) => deps["architecture"]?.id === "tanstack",
+      recipe: [
+        {
+          writer: "git-hooks",
+          config: {
+            hooks: [{ phase: "pre-push", script: NODEJS_UNIT_TEST_SCRIPT }]
           }
         }
       ]
     },
     {
-      id: "unit-test-prepush",
+      id: "unit-test-prepush-nodejs-backend",
       label: "Unit Tests (pre-push)",
       description: "Block pushes if unit tests fail; emit only ✓ on success",
+      available: (deps) => deps["architecture"]?.id === "nodejs-backend",
       recipe: [
         {
           writer: "git-hooks",
           config: {
-            hooks: [
-              {
-                phase: "pre-push",
-                script: UNIT_TEST_SCRIPT
-              }
-            ]
+            hooks: [{ phase: "pre-push", script: NODEJS_UNIT_TEST_SCRIPT }]
+          }
+        }
+      ]
+    },
+    {
+      id: "unit-test-prepush-java-backend",
+      label: "Unit Tests (pre-push)",
+      description: "Block pushes if unit tests fail; emit only ✓ on success",
+      available: (deps) => deps["architecture"]?.id === "java-backend",
+      recipe: [
+        {
+          writer: "git-hooks",
+          config: {
+            hooks: [{ phase: "pre-push", script: JAVA_UNIT_TEST_SCRIPT }]
           }
         }
       ]

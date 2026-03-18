@@ -20,6 +20,7 @@ export interface Option {
   description: string;
   recipe: Provision[];
   docsets?: DocsetDef[];
+  available?: (deps: Record<string, Option | undefined>) => boolean;
 }
 
 export interface DocsetDef {
