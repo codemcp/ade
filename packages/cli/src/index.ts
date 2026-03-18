@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-// Force rebuild by adding comment
 import { version } from "./version.js";
 import { runSetup } from "./commands/setup.js";
 import { runInstall } from "./commands/install.js";

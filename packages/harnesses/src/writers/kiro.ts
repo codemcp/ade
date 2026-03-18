@@ -53,7 +53,7 @@ function getKiroTools(config: LogicalConfig): string[] {
   return [
     ...(getCapabilityDecision(config, "read") !== "deny" ? ["read"] : []),
     ...(allowsCapability(config, "edit_write") ? ["write"] : []),
-    ...(allowsCapability(config, "bash_unsafe") ? ["shell"] : []),
+    ...(allowsCapability(config, "bash_unsafe") ? ["shell(*)"] : ["shell"]),
     "spec",
     ...mcpTools
   ];
