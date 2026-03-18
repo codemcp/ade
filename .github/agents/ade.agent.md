@@ -2,14 +2,23 @@
 name: ade
 description: ADE — Agentic Development Environment agent with project conventions and tools
 tools:
+  - read
   - edit
   - search
-  - runCommands
-  - runTasks
-  - fetch
-  - githubRepo
+  - agent
   - workflows/*
   - agentskills/*
+mcp-servers:
+  workflows:
+    type: stdio
+    command: "npx"
+    args: ["@codemcp/workflows-server@latest"]
+    tools: ["*"]
+  agentskills:
+    type: stdio
+    command: "npx"
+    args: ["-y","@codemcp/skills-server"]
+    tools: ["*"]
 ---
 
 You are an AI assistant that helps users develop software features using the workflows server.

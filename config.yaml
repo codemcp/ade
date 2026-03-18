@@ -2,7 +2,7 @@ choices:
   process: codemcp-workflows
   practices:
     - adr-nygard
-  autonomy: max-autonomy
+  autonomy: sensible-defaults
 harnesses:
   - universal
   - opencode

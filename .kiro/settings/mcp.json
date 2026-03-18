@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "workflows": {
+      "command": "npx",
+      "args": [
+        "@codemcp/workflows-server@latest"
+      ],
+      "autoApprove": [
+        "*"
+      ]
+    },
+    "agentskills": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@codemcp/skills-server"
+      ],
+      "autoApprove": [
+        "*"
+      ]
+    }
+  }
+}
