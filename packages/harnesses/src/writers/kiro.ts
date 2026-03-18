@@ -1,52 +1,89 @@
 import { join } from "node:path";
-import type { LogicalConfig } from "@codemcp/ade-core";
+import type { LogicalConfig, McpServerEntry } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
-import { standardEntry, writeJson, writeGitHooks } from "../util.js";
+import {
+  standardEntry,
+  writeGitHooks,
+  writeJson,
+  writeMcpServers
+} from "../util.js";
+import {
+  allowsCapability,
+  getCapabilityDecision,
+  hasPermissionPolicy
+} from "../permission-policy.js";
 
 export const kiroWriter: HarnessWriter = {
   id: "kiro",
   label: "Kiro",
-  description: "AWS AI IDE — .kiro/agents/ade.json",
+  description: "AWS AI IDE — .kiro/agents/ade.json + .kiro/settings/mcp.json",
   async install(config: LogicalConfig, projectRoot: string) {
-    const servers = config.mcp_servers;
-    if (servers.length > 0 || config.instructions.length > 0) {
-      const mcpServers: Record<string, unknown> = {};
-      for (const s of servers) {
-        mcpServers[s.ref] = standardEntry(s);
-      }
+    await writeMcpServers(config.mcp_servers, {
+      path: join(projectRoot, ".kiro", "settings", "mcp.json"),
+      transform: (server) => ({
+        ...standardEntry(server),
+        autoApprove: server.allowedTools ?? ["*"]
+      })
+    });
 
-      const tools: string[] = [
-        "execute_bash",
-        "fs_read",
-        "fs_write",
-        "knowledge",
-        "thinking",
-        ...Object.keys(mcpServers).map((n) => `@${n}`)
-      ];
+    await writeJson(join(projectRoot, ".kiro", "agents", "ade.json"), {
+      name: "ade",
+      description:
+        "ADE — Agentic Development Environment agent with project conventions and tools.",
+      prompt:
+        config.instructions.join("\n\n") ||
+        "ADE — Agentic Development Environment agent.",
+      mcpServers: getKiroAgentMcpServers(config.mcp_servers),
+      tools: getKiroTools(config),
+      allowedTools: getKiroAllowedTools(config),
+      useLegacyMcpJson: true
+    });
 
-      const allowedTools: string[] = [];
-      for (const s of servers) {
-        const explicit = s.allowedTools;
-        if (explicit && !explicit.includes("*")) {
-          for (const tool of explicit) {
-            allowedTools.push(`@${s.ref}/${tool}`);
-          }
-        } else {
-          allowedTools.push(`@${s.ref}/*`);
-        }
-      }
-
-      await writeJson(join(projectRoot, ".kiro", "agents", "ade.json"), {
-        name: "ade",
-        prompt:
-          config.instructions.length > 0
-            ? config.instructions.join("\n\n")
-            : "ADE — Agentic Development Environment agent",
-        mcpServers,
-        tools,
-        allowedTools
-      });
-    }
     await writeGitHooks(config.git_hooks, projectRoot);
   }
 };
+
+function getKiroTools(config: LogicalConfig): string[] {
+  const mcpTools = getKiroForwardedMcpTools(config.mcp_servers);
+
+  if (!hasPermissionPolicy(config)) {
+    return ["read", "write", "shell", "spec", ...mcpTools];
+  }
+
+  return [
+    ...(getCapabilityDecision(config, "read") !== "deny" ? ["read"] : []),
+    ...(allowsCapability(config, "edit_write") ? ["write"] : []),
+    ...(allowsCapability(config, "bash_unsafe") ? ["shell"] : []),
+    "spec",
+    ...mcpTools
+  ];
+}
+
+function getKiroAllowedTools(config: LogicalConfig): string[] {
+  return getKiroTools(config);
+}
+
+function getKiroForwardedMcpTools(servers: McpServerEntry[]): string[] {
+  return servers.flatMap((server) => {
+    const allowedTools = server.allowedTools ?? ["*"];
+    if (allowedTools.includes("*")) {
+      return [`@${server.ref}/*`];
+    }
+
+    return allowedTools.map((tool) => `@${server.ref}/${tool}`);
+  });
+}
+
+function getKiroAgentMcpServers(
+  servers: McpServerEntry[]
+): Record<string, Record<string, unknown>> {
+  return Object.fromEntries(
+    servers.map((server) => [
+      server.ref,
+      {
+        ...standardEntry(server),
+        autoApprove: server.allowedTools ?? ["*"]
+      }
+    ])
+  );
+}

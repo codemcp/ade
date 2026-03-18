@@ -9,6 +9,7 @@ import { skillsWriter } from "./writers/skills.js";
 import { knowledgeWriter } from "./writers/knowledge.js";
 import { gitHooksWriter } from "./writers/git-hooks.js";
 import { setupNoteWriter } from "./writers/setup-note.js";
+import { permissionPolicyWriter } from "./writers/permission-policy.js";
 
 export function createRegistry(): WriterRegistry {
   return {
@@ -55,6 +56,7 @@ export function createDefaultRegistry(): WriterRegistry {
   registerProvisionWriter(registry, knowledgeWriter);
   registerProvisionWriter(registry, gitHooksWriter);
   registerProvisionWriter(registry, setupNoteWriter);
+  registerProvisionWriter(registry, permissionPolicyWriter);
 
   // Stub writers for types not yet implemented
   for (const id of ["mcp-server", "installable"]) {

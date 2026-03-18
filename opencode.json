@@ -15,6 +15,14 @@
         "-y",
         "@codemcp/skills-server"
       ]
+    },
+    "knowledge": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@codemcp/knowledge-server"
+      ]
     }
   }
 }

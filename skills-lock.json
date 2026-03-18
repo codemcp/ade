@@ -2,7 +2,7 @@
   "version": 1,
   "skills": {
     "adr-nygard": {
-      "source": "./.ade/skills/adr-nygard",
+      "source": "/Users/oliverjaegle/projects/privat/codemcp/ade/.ade/skills/adr-nygard",
       "sourceType": "local",
       "computedHash": "13cd33eb604e9e090057cce458469b2a1b609a6db3313a03df88d91776095b19"
     },

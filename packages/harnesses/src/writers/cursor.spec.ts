@@ -2,8 +2,56 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { LogicalConfig } from "@codemcp/ade-core";
+import type {
+  AutonomyProfile,
+  LogicalConfig,
+  PermissionPolicy
+} from "@codemcp/ade-core";
 import { cursorWriter } from "./cursor.js";
+
+function autonomyPolicy(profile: AutonomyProfile): PermissionPolicy {
+  switch (profile) {
+    case "rigid":
+      return {
+        profile,
+        capabilities: {
+          read: "ask",
+          edit_write: "ask",
+          search_list: "ask",
+          bash_safe: "ask",
+          bash_unsafe: "ask",
+          web: "ask",
+          task_agent: "ask"
+        }
+      };
+    case "sensible-defaults":
+      return {
+        profile,
+        capabilities: {
+          read: "allow",
+          edit_write: "allow",
+          search_list: "allow",
+          bash_safe: "allow",
+          bash_unsafe: "ask",
+          web: "ask",
+          task_agent: "allow"
+        }
+      };
+    case "max-autonomy":
+      return {
+        profile,
+        capabilities: {
+          read: "allow",
+          edit_write: "allow",
+          search_list: "allow",
+          bash_safe: "allow",
+          bash_unsafe: "allow",
+          web: "ask",
+          task_agent: "allow"
+        }
+      };
+  }
+}
 
 describe("cursorWriter", () => {
   let dir: string;
@@ -69,6 +117,61 @@ describe("cursorWriter", () => {
     expect(content).toContain("description: ADE project conventions");
     expect(content).toContain("Follow TDD.");
     expect(content).toContain("Use conventional commits.");
+  });
+
+  it("documents autonomy limits in Cursor rules without inventing built-in permission config", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [
+        {
+          ref: "workflows",
+          command: "npx",
+          args: ["-y", "@codemcp/workflows"],
+          env: {},
+          allowedTools: ["whats_next"]
+        }
+      ],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: [],
+      permission_policy: autonomyPolicy("sensible-defaults")
+    };
+
+    await cursorWriter.install(config, dir);
+
+    const content = await readFile(
+      join(dir, ".cursor", "rules", "ade.mdc"),
+      "utf-8"
+    );
+    expect(content).toContain(
+      "Cursor autonomy note (documented, not enforced): sensible-defaults."
+    );
+    expect(content).toContain(
+      "Cursor has no verified committed project-local built-in ask/allow/deny config surface"
+    );
+    expect(content).toContain(
+      "Prefer handling these built-in capabilities without extra approval when Cursor permits it: read project files, edit and write project files, search and list project contents, run safe local shell commands, delegate or decompose work into agent tasks."
+    );
+    expect(content).toContain(
+      "Request approval before these capabilities: run high-impact shell commands, use web or network access."
+    );
+    expect(content).toContain(
+      "Web and network access must remain approval-gated."
+    );
+    expect(content).toContain(
+      "MCP server registration stays in .cursor/mcp.json; MCP tool approvals remain owned by provisioning"
+    );
+
+    const raw = await readFile(join(dir, ".cursor", "mcp.json"), "utf-8");
+    const parsed = JSON.parse(raw);
+    expect(parsed).not.toHaveProperty("permissions");
+    expect(parsed.mcpServers["workflows"]).toEqual({
+      command: "npx",
+      args: ["-y", "@codemcp/workflows"]
+    });
+    expect(parsed.mcpServers["workflows"]).not.toHaveProperty("allowedTools");
   });
 
   it("includes agentskills server from mcp_servers", async () => {

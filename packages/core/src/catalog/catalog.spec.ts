@@ -461,6 +461,45 @@ describe("catalog", () => {
     });
   });
 
+  describe("autonomy facet", () => {
+    it("exists in the default catalog with the supported autonomy profiles", () => {
+      const catalog = getDefaultCatalog();
+      const autonomy = getFacet(catalog, "autonomy");
+
+      expect(autonomy).toBeDefined();
+      expect(autonomy!.required).toBe(false);
+      expect(autonomy!.multiSelect).toBe(false);
+      expect(autonomy!.options.map((option) => option.id)).toEqual([
+        "rigid",
+        "sensible-defaults",
+        "max-autonomy"
+      ]);
+    });
+
+    it("uses the abstract capability model for autonomy recipes", () => {
+      const catalog = getDefaultCatalog();
+      const autonomy = getFacet(catalog, "autonomy")!;
+      const sensibleDefaults = getOption(autonomy, "sensible-defaults")!;
+      const provision = sensibleDefaults.recipe.find(
+        (entry) => entry.writer === "permission-policy"
+      );
+
+      expect(provision).toBeDefined();
+      expect(provision!.config).toEqual({
+        profile: "sensible-defaults",
+        capabilities: {
+          read: "allow",
+          edit_write: "allow",
+          search_list: "allow",
+          bash_safe: "allow",
+          bash_unsafe: "ask",
+          web: "ask",
+          task_agent: "allow"
+        }
+      });
+    });
+  });
+
   describe("sortFacets", () => {
     it("returns all facets", () => {
       const catalog = getDefaultCatalog();

@@ -21,14 +21,15 @@ describe("windsurfWriter", () => {
     expect(windsurfWriter.label).toBe("Windsurf");
   });
 
-  it("writes .windsurf/mcp.json with MCP servers", async () => {
+  it("writes .windsurf/mcp.json with forwarded MCP approvals", async () => {
     const config: LogicalConfig = {
       mcp_servers: [
         {
           ref: "workflows",
           command: "npx",
           args: ["-y", "@codemcp/workflows"],
-          env: { API_KEY: "test" }
+          env: { API_KEY: "test" },
+          allowedTools: ["whats_next", "proceed_to_phase"]
         }
       ],
       instructions: [],
@@ -47,8 +48,66 @@ describe("windsurfWriter", () => {
       command: "npx",
       args: ["-y", "@codemcp/workflows"],
       env: { API_KEY: "test" },
-      alwaysAllow: ["*"]
+      alwaysAllow: ["whats_next", "proceed_to_phase"]
     });
+  });
+
+  it("records autonomy as advisory guidance because Windsurf has no verified committed built-in permission schema", async () => {
+    const rigidRoot = join(dir, "rigid");
+    const sensibleRoot = join(dir, "sensible");
+    const maxRoot = join(dir, "max");
+
+    const rigidConfig: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: [],
+      permission_policy: autonomyPolicy("rigid")
+    };
+
+    const sensibleConfig: LogicalConfig = {
+      ...rigidConfig,
+      permission_policy: autonomyPolicy("sensible-defaults")
+    };
+
+    const maxConfig: LogicalConfig = {
+      ...rigidConfig,
+      permission_policy: autonomyPolicy("max-autonomy")
+    };
+
+    await windsurfWriter.install(rigidConfig, rigidRoot);
+    await windsurfWriter.install(sensibleConfig, sensibleRoot);
+    await windsurfWriter.install(maxConfig, maxRoot);
+
+    const rigidRules = await readFile(join(rigidRoot, ".windsurfrules"), "utf-8");
+    const sensibleRules = await readFile(
+      join(sensibleRoot, ".windsurfrules"),
+      "utf-8"
+    );
+    const maxRules = await readFile(join(maxRoot, ".windsurfrules"), "utf-8");
+
+    expect(rigidRules).toContain("Windsurf limitation:");
+    expect(rigidRules).toContain("advisory only");
+    expect(rigidRules).toContain(
+      "Ask before: read files, edit and write files, search and list files, safe local shell commands, unsafe local shell commands, web and network access, task or agent delegation."
+    );
+
+    expect(sensibleRules).toContain("Windsurf limitation:");
+    expect(sensibleRules).toContain(
+      "May proceed without extra approval: read files, edit and write files, search and list files, safe local shell commands, task or agent delegation."
+    );
+    expect(sensibleRules).toContain(
+      "Ask before: unsafe local shell commands, web and network access."
+    );
+
+    expect(maxRules).toContain("Windsurf limitation:");
+    expect(maxRules).toContain(
+      "May proceed without extra approval: read files, edit and write files, search and list files, safe local shell commands, unsafe local shell commands, task or agent delegation."
+    );
+    expect(maxRules).toContain("Ask before: web and network access.");
   });
 
   it("writes .windsurfrules with instructions", async () => {
@@ -68,3 +127,49 @@ describe("windsurfWriter", () => {
     expect(content).toContain("Follow TDD.");
   });
 });
+
+function autonomyPolicy(
+  profile: "rigid" | "sensible-defaults" | "max-autonomy"
+): LogicalConfig["permission_policy"] {
+  switch (profile) {
+    case "rigid":
+      return {
+        profile,
+        capabilities: {
+          read: "ask",
+          edit_write: "ask",
+          search_list: "ask",
+          bash_safe: "ask",
+          bash_unsafe: "ask",
+          web: "ask",
+          task_agent: "ask"
+        }
+      };
+    case "sensible-defaults":
+      return {
+        profile,
+        capabilities: {
+          read: "allow",
+          edit_write: "allow",
+          search_list: "allow",
+          bash_safe: "allow",
+          bash_unsafe: "ask",
+          web: "ask",
+          task_agent: "allow"
+        }
+      };
+    case "max-autonomy":
+      return {
+        profile,
+        capabilities: {
+          read: "allow",
+          edit_write: "allow",
+          search_list: "allow",
+          bash_safe: "allow",
+          bash_unsafe: "allow",
+          web: "ask",
+          task_agent: "allow"
+        }
+      };
+  }
+}

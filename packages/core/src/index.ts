@@ -13,7 +13,12 @@ export {
   type SkillDefinition,
   type InlineSkill,
   type ExternalSkill,
-  type GitHook
+  type GitHook,
+  type PermissionPolicy,
+  type AutonomyProfile,
+  type AutonomyCapability,
+  type PermissionDecision,
+  type PermissionRule
 } from "./types.js";
 export { type ResolutionContext, type ResolvedFacet } from "./types.js";
 export { type UserConfig, type LockFile } from "./types.js";
@@ -47,3 +52,4 @@ export {
 } from "./catalog/index.js";
 export { skillsWriter } from "./writers/skills.js";
 export { knowledgeWriter } from "./writers/knowledge.js";
+export { permissionPolicyWriter } from "./writers/permission-policy.js";

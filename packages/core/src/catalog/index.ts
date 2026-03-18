@@ -3,10 +3,17 @@ import { processFacet } from "./facets/process.js";
 import { architectureFacet } from "./facets/architecture.js";
 import { practicesFacet } from "./facets/practices.js";
 import { backpressureFacet } from "./facets/backpressure.js";
+import { autonomyFacet } from "./facets/autonomy.js";
 
 export function getDefaultCatalog(): Catalog {
   return {
-    facets: [processFacet, architectureFacet, practicesFacet, backpressureFacet]
+    facets: [
+      processFacet,
+      architectureFacet,
+      practicesFacet,
+      backpressureFacet,
+      autonomyFacet
+    ]
   };
 }
 

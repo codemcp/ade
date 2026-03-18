@@ -1,9 +1,10 @@
 version: 1
-generated_at: 2026-03-18T07:14:43.770Z
+generated_at: 2026-03-18T08:57:05.075Z
 choices:
   process: codemcp-workflows
   practices:
     - adr-nygard
+  autonomy: max-autonomy
 harnesses:
   - universal
   - opencode
@@ -105,3 +106,8 @@ logical_config:
         persistence")
   git_hooks: []
   setup_notes: []
+  permission_policy:
+    profile: max-autonomy
+    web: ask
+    mcp:
+      default: allow

@@ -19,6 +19,13 @@
         "-y",
         "@codemcp/skills-server"
       ]
+    },
+    "knowledge": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@codemcp/knowledge-server"
+      ]
     }
   }
 }

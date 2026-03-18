@@ -22,6 +22,14 @@
         "-y",
         "@codemcp/skills-server"
       ]
+    },
+    "knowledge": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@codemcp/knowledge-server"
+      ]
     }
   }
 }
