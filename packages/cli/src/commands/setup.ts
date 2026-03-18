@@ -170,6 +170,21 @@ export async function runSetup(
     );
   }
 
+  if (logicalConfig.git_hooks.length > 0) {
+    const archId = choices["architecture"];
+    const archNote =
+      archId === "java-backend"
+        ? "  • Apply the Checkstyle Gradle plugin (plugins { checkstyle }) so\n" +
+          "    ./gradlew compileJava checkstyleMain succeeds before any commit."
+        : "  • Add lint and build scripts to package.json:\n" +
+          '      "lint": "eslint .",\n' +
+          '      "build": "tsc --noEmit"';
+    clack.log.info(
+      "Git hooks installed. Before committing, make sure your quality tools are set up:\n" +
+        archNote
+    );
+  }
+
   clack.outro("Setup complete!");
 }
 
