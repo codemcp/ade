@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { GitHook, LogicalConfig, McpServerEntry } from "@ade/core";
+import type { GitHook, LogicalConfig, McpServerEntry } from "@codemcp/ade-core";
 
 // ---------------------------------------------------------------------------
 // JSON helpers

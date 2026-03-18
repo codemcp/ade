@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { LogicalConfig } from "@ade/core";
+import type { LogicalConfig } from "@codemcp/ade-core";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -19,8 +19,8 @@ const mockLogical: LogicalConfig = {
   setup_notes: []
 };
 
-vi.mock("@ade/core", async (importOriginal) => {
-  const actual = (await importOriginal()) as typeof import("@ade/core");
+vi.mock("@codemcp/ade-core", async (importOriginal) => {
+  const actual = (await importOriginal()) as typeof import("@codemcp/ade-core");
   return {
     ...actual,
     readLockFile: vi.fn()
@@ -29,7 +29,7 @@ vi.mock("@ade/core", async (importOriginal) => {
 
 const mockInstall = vi.fn().mockResolvedValue(undefined);
 
-vi.mock("@ade/harnesses", () => ({
+vi.mock("@codemcp/ade-harnesses", () => ({
   getHarnessWriter: vi.fn().mockImplementation((id: string) => {
     if (id === "universal" || id === "claude-code" || id === "cursor") {
       return { id, install: mockInstall };
@@ -53,7 +53,7 @@ vi.mock("@ade/harnesses", () => ({
 }));
 
 import * as clack from "@clack/prompts";
-import { readLockFile } from "@ade/core";
+import { readLockFile } from "@codemcp/ade-core";
 import { runInstall } from "./install.js";
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -62,7 +62,7 @@ describe("runInstall", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     // Re-set the default implementation after clearAllMocks
-    const { getHarnessWriter } = await import("@ade/harnesses");
+    const { getHarnessWriter } = await import("@codemcp/ade-harnesses");
     vi.mocked(getHarnessWriter).mockImplementation((id: string) => {
       if (id === "universal" || id === "claude-code" || id === "cursor") {
         return {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Catalog, LogicalConfig } from "@ade/core";
+import type { Catalog, LogicalConfig } from "@codemcp/ade-core";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -15,8 +15,8 @@ vi.mock("@clack/prompts", () => ({
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
 }));
 
-vi.mock("@ade/core", async (importOriginal) => {
-  const actual = (await importOriginal()) as typeof import("@ade/core");
+vi.mock("@codemcp/ade-core", async (importOriginal) => {
+  const actual = (await importOriginal()) as typeof import("@codemcp/ade-core");
   return {
     ...actual,
     readUserConfig: vi.fn().mockResolvedValue(null),
@@ -35,7 +35,7 @@ vi.mock("@ade/core", async (importOriginal) => {
   };
 });
 
-vi.mock("@ade/harnesses", () => ({
+vi.mock("@codemcp/ade-harnesses", () => ({
   allHarnessWriters: [
     {
       id: "claude-code",
@@ -60,7 +60,7 @@ import {
   writeUserConfig,
   writeLockFile,
   resolve
-} from "@ade/core";
+} from "@codemcp/ade-core";
 import { runSetup } from "./setup.js";
 
 // ── Test catalog fixture ─────────────────────────────────────────────────────

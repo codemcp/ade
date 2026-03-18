@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import type { LogicalConfig } from "@ade/core";
+import type { LogicalConfig } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
 import {
   readJsonOrEmpty,

@@ -17,7 +17,7 @@ vi.mock("@clack/prompts", () => ({
 
 import * as clack from "@clack/prompts";
 import { runSetup } from "./setup.js";
-import { readUserConfig, readLockFile } from "@ade/core";
+import { readUserConfig, readLockFile } from "@codemcp/ade-core";
 import { getDefaultCatalog } from "../../../core/src/catalog/index.js";
 
 describe("setup integration (real temp dir)", () => {

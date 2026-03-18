@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import type { SkillDefinition, InlineSkill } from "@ade/core";
+import type { SkillDefinition, InlineSkill } from "@codemcp/ade-core";
 import { runAdd } from "@codemcp/skills/api";
 
 function isInlineSkill(skill: SkillDefinition): skill is InlineSkill {

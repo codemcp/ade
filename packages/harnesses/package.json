@@ -1,5 +1,5 @@
 {
-  "name": "@ade/harnesses",
+  "name": "@codemcp/ade-harnesses",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -19,7 +19,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@ade/core": "workspace:*",
+    "@codemcp/ade-core": "workspace:*",
     "@codemcp/skills": "^2.3.0"
   },
   "devDependencies": {

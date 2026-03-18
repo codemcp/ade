@@ -17,7 +17,7 @@ vi.mock("@clack/prompts", () => ({
 
 import * as clack from "@clack/prompts";
 import { runSetup } from "./setup.js";
-import { readLockFile } from "@ade/core";
+import { readLockFile } from "@codemcp/ade-core";
 import { getDefaultCatalog } from "../../../core/src/catalog/index.js";
 
 describe("knowledge integration", () => {

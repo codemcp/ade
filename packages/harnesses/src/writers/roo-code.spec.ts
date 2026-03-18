@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { LogicalConfig } from "@ade/core";
+import type { LogicalConfig } from "@codemcp/ade-core";
 import { rooCodeWriter } from "./roo-code.js";
 
 describe("rooCodeWriter", () => {

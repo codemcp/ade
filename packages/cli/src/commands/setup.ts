@@ -14,12 +14,12 @@ import {
   getOption,
   sortFacets,
   getVisibleOptions
-} from "@ade/core";
+} from "@codemcp/ade-core";
 import {
   allHarnessWriters,
   getHarnessWriter,
   installSkills
-} from "@ade/harnesses";
+} from "@codemcp/ade-harnesses";
 
 export async function runSetup(
   projectRoot: string,
