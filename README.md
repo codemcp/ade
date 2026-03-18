@@ -3,6 +3,8 @@
 > A structured information architecture for harness engineering — organizing what
 > coding agents know into composable, team-shared layers.
 
+**TL;DR** — Run `npx @codemcp/ade setup` in your project to get started.
+
 ## The alignment problem
 
 The biggest challenge in agentic development is not agent capability — it is alignment.
