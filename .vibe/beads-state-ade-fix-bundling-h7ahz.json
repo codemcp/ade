@@ -1,0 +1,34 @@
+{
+  "conversationId": "ade-fix-bundling-h7ahz",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-3",
+  "phaseTasks": [
+    {
+      "phaseId": "reproduce",
+      "phaseName": "Reproduce",
+      "taskId": "ade-3.1"
+    },
+    {
+      "phaseId": "analyze",
+      "phaseName": "Analyze",
+      "taskId": "ade-3.2"
+    },
+    {
+      "phaseId": "fix",
+      "phaseName": "Fix",
+      "taskId": "ade-3.3"
+    },
+    {
+      "phaseId": "verify",
+      "phaseName": "Verify",
+      "taskId": "ade-3.4"
+    },
+    {
+      "phaseId": "finalize",
+      "phaseName": "Finalize",
+      "taskId": "ade-3.5"
+    }
+  ],
+  "createdAt": "2026-03-18T15:29:11.195Z",
+  "updatedAt": "2026-03-18T15:29:11.195Z"
+}

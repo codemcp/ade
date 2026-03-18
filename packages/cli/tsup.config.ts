@@ -6,5 +6,6 @@ export default defineConfig({
   dts: true,
   tsconfig: "tsconfig.build.json",
   target: "node22",
-  clean: true
+  clean: true,
+  noExternal: ["@clack/prompts"]
 });
