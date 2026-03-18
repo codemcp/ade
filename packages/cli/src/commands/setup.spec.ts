@@ -51,7 +51,8 @@ vi.mock("@codemcp/ade-harnesses", () => ({
     install: vi.fn().mockResolvedValue(undefined)
   }),
   getHarnessIds: vi.fn().mockReturnValue(["claude-code"]),
-  installSkills: vi.fn().mockResolvedValue(undefined)
+  installSkills: vi.fn().mockResolvedValue(undefined),
+  writeInlineSkills: vi.fn().mockResolvedValue([])
 }));
 
 import * as clack from "@clack/prompts";

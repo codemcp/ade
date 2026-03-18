@@ -6,7 +6,6 @@ import {
   writeJson,
   writeMcpServers,
   writeAgentMd,
-  writeInlineSkills,
   writeGitHooks
 } from "../util.js";
 import { allowsCapability, keepsWebOnAsk } from "../permission-policy.js";
@@ -27,7 +26,6 @@ export const claudeCodeWriter: HarnessWriter = {
     });
 
     await writeClaudeSettings(config, projectRoot);
-    await writeInlineSkills(config, projectRoot);
     await writeGitHooks(config.git_hooks, projectRoot);
   }
 };
