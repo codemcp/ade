@@ -6,20 +6,23 @@
   "bin": {
     "ade": "dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsup",
     "clean:build": "rimraf ./dist",
-    "dev": "nodemon",
-    "lint": "eslint .",
-    "lint:fix": "eslint --fix .",
+    "dev": "tsup --watch",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "typecheck": "tsc"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@codemcp/ade-core": "workspace:*",
@@ -28,13 +31,12 @@
   },
   "devDependencies": {
     "@codemcp/knowledge": "2.1.0",
-    "@typescript-eslint/eslint-plugin": "^8.21.0",
-    "@typescript-eslint/parser": "^8.21.0",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "prettier": "^3.4.2",
-    "rimraf": "^6.0.1",
-    "typescript": "^5.7.3"
+    "oxlint": "catalog:",
+    "prettier": "catalog:",
+    "rimraf": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "version": "0.2.0"
 }

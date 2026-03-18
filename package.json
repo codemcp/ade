@@ -16,7 +16,7 @@
   },
   "engines": {
     "node": ">=22",
-    "pnpm": ">=9.0.0"
+    "pnpm": ">=10.0.0"
   },
   "type": "module",
   "bin": {
@@ -27,54 +27,57 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "build:clean": "turbo run clean:build",
+    "clean": "turbo run clean:build",
     "dev": "turbo run dev",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "test": "turbo run --parallel test",
-    "test:watch": "turbo run --parallel test:watch",
+    "test": "vitest --run",
+    "test:watch": "vitest",
     "lint:all": "turbo run --parallel lint",
     "lint:fix:all": "turbo run --parallel lint:fix",
     "format:check:all": "turbo run --parallel format",
     "format:all": "turbo run --parallel format:fix",
     "typecheck:all": "turbo run --parallel typecheck",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
+    "knip": "knip",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish",
     "prepare": "husky"
   },
   "devDependencies": {
-    "@braintree/sanitize-url": "7.1.1",
-    "@eslint/js": "9.18.0",
-    "@swc/core": "^1.10.9",
-    "@tsconfig/node22": "22.0.0",
-    "@tsconfig/strictest": "2.0.5",
-    "@types/eslint-config-prettier": "6.11.3",
-    "@types/node": "^22.10.7",
-    "@typescript-eslint/eslint-plugin": "^8.21.0",
-    "@typescript-eslint/parser": "^8.21.0",
-    "@vitest/coverage-v8": "^3.0.3",
+    "@changesets/cli": "^2.30.0",
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@tsconfig/node22": "catalog:",
+    "@turbo/gen": "^2.8.17",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "cytoscape": "3.31.0",
     "cytoscape-cose-bilkent": "4.1.0",
     "dayjs": "1.11.13",
     "debug": "4.4.0",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.1",
-    "nodemon": "^3.1.9",
-    "prettier": "^3.4.2",
-    "rimraf": "^6.0.1",
-    "turbo": "^2.3.3",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "8.21.0",
+    "knip": "^5.86.0",
+    "lint-staged": "^16.0.0",
+    "oxlint": "catalog:",
+    "prettier": "catalog:",
+    "turbo": "^2.8.17",
+    "typescript": "catalog:",
     "vitepress": "1.6.2",
     "vitepress-plugin-mermaid": "2.0.17",
-    "vitest": "^3.0.3"
+    "vitest": "catalog:"
   },
-  "packageManager": "pnpm@9.14.2",
+  "packageManager": "pnpm@10.32.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
   "dependencies": {
     "yaml": "^2.8.2"
   }
