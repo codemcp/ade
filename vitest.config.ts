@@ -12,8 +12,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@ade/core": resolve(__dirname, "packages/core/src/index.ts"),
-      "@ade/harnesses": resolve(__dirname, "packages/harnesses/src/index.ts")
+      "@codemcp/ade-core": resolve(__dirname, "packages/core/src/index.ts"),
+      "@codemcp/ade-harnesses": resolve(
+        __dirname,
+        "packages/harnesses/src/index.ts"
+      )
     }
   }
 });

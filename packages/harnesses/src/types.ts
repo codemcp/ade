@@ -1,4 +1,4 @@
-import type { AgentWriterDef } from "@ade/core";
+import type { AgentWriterDef } from "@codemcp/ade-core";
 
 /**
  * A harness writer extends AgentWriterDef with metadata for display in the

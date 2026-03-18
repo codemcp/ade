@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { LogicalConfig } from "@ade/core";
+import type { LogicalConfig } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
 import { writeMcpServers, writeGitHooks } from "../util.js";
 

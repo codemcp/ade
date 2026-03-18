@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { KnowledgeSource } from "@ade/core";
+import type { KnowledgeSource } from "@codemcp/ade-core";
 
 vi.mock("@codemcp/knowledge/packages/cli/dist/exports.js", () => ({
   createDocset: vi.fn().mockResolvedValue({

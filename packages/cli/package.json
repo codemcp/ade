@@ -1,5 +1,5 @@
 {
-  "name": "@ade/cli",
+  "name": "@codemcp/ade-cli",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -22,8 +22,8 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@ade/core": "workspace:*",
-    "@ade/harnesses": "workspace:*",
+    "@codemcp/ade-core": "workspace:*",
+    "@codemcp/ade-harnesses": "workspace:*",
     "@clack/prompts": "^1.1.0"
   },
   "devDependencies": {

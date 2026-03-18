@@ -1,4 +1,4 @@
-import type { KnowledgeSource } from "@ade/core";
+import type { KnowledgeSource } from "@codemcp/ade-core";
 import {
   createDocset,
   initDocset

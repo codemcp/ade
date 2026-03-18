@@ -3,8 +3,8 @@
 import { version } from "./version.js";
 import { runSetup } from "./commands/setup.js";
 import { runInstall } from "./commands/install.js";
-import { getDefaultCatalog } from "@ade/core";
-import { getHarnessIds } from "@ade/harnesses";
+import { getDefaultCatalog } from "@codemcp/ade-core";
+import { getHarnessIds } from "@codemcp/ade-harnesses";
 
 const args = process.argv.slice(2);
 const command = args[0];

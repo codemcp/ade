@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@ade/core": ["../core/src/index.ts"]
+      "@codemcp/ade-core": ["../core/src/index.ts"]
     }
   },
   "include": ["src/**/*"]

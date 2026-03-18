@@ -95,15 +95,15 @@ importers:
 
   packages/cli:
     dependencies:
-      "@ade/core":
-        specifier: workspace:*
-        version: link:../core
-      "@ade/harnesses":
-        specifier: workspace:*
-        version: link:../harnesses
       "@clack/prompts":
         specifier: ^1.1.0
         version: 1.1.0
+      "@codemcp/ade-core":
+        specifier: workspace:*
+        version: link:../core
+      "@codemcp/ade-harnesses":
+        specifier: workspace:*
+        version: link:../harnesses
     devDependencies:
       "@codemcp/knowledge":
         specifier: 2.1.0
@@ -160,7 +160,7 @@ importers:
 
   packages/harnesses:
     dependencies:
-      "@ade/core":
+      "@codemcp/ade-core":
         specifier: workspace:*
         version: link:../core
       "@codemcp/skills":

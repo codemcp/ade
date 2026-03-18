@@ -1,5 +1,5 @@
 {
-  "name": "ade",
+  "name": "@codemcp/ade",
   "version": "0.0.1",
   "private": true,
   "description": "ADE CLI — Agentic Development Environment setup and configuration tool",

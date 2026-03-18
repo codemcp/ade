@@ -1,6 +1,10 @@
 import * as clack from "@clack/prompts";
-import { readLockFile } from "@ade/core";
-import { getHarnessWriter, getHarnessIds, installSkills } from "@ade/harnesses";
+import { readLockFile } from "@codemcp/ade-core";
+import {
+  getHarnessWriter,
+  getHarnessIds,
+  installSkills
+} from "@codemcp/ade-harnesses";
 
 export async function runInstall(
   projectRoot: string,
