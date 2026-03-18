@@ -11,10 +11,10 @@ import {
 export const clineWriter: HarnessWriter = {
   id: "cline",
   label: "Cline",
-  description: "VS Code AI agent — .cline/mcp.json + .clinerules",
+  description: "VS Code AI agent — cline_mcp_settings.json + .clinerules",
   async install(config: LogicalConfig, projectRoot: string) {
     await writeMcpServers(config.mcp_servers, {
-      path: join(projectRoot, ".cline", "mcp.json"),
+      path: join(projectRoot, "cline_mcp_settings.json"),
       transform: alwaysAllowEntry
     });
 

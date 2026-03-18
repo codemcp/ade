@@ -2,8 +2,56 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { LogicalConfig } from "@codemcp/ade-core";
+import type {
+  AutonomyProfile,
+  LogicalConfig,
+  PermissionPolicy
+} from "@codemcp/ade-core";
 import { claudeCodeWriter } from "./claude-code.js";
+
+function autonomyPolicy(profile: AutonomyProfile): PermissionPolicy {
+  switch (profile) {
+    case "rigid":
+      return {
+        profile,
+        capabilities: {
+          read: "ask",
+          edit_write: "ask",
+          search_list: "ask",
+          bash_safe: "ask",
+          bash_unsafe: "ask",
+          web: "ask",
+          task_agent: "ask"
+        }
+      };
+    case "sensible-defaults":
+      return {
+        profile,
+        capabilities: {
+          read: "allow",
+          edit_write: "allow",
+          search_list: "allow",
+          bash_safe: "allow",
+          bash_unsafe: "ask",
+          web: "ask",
+          task_agent: "allow"
+        }
+      };
+    case "max-autonomy":
+      return {
+        profile,
+        capabilities: {
+          read: "allow",
+          edit_write: "allow",
+          search_list: "allow",
+          bash_safe: "allow",
+          bash_unsafe: "allow",
+          web: "ask",
+          task_agent: "allow"
+        }
+      };
+  }
+}
 
 describe("claudeCodeWriter", () => {
   let dir: string;
@@ -80,7 +128,38 @@ describe("claudeCodeWriter", () => {
     });
   });
 
-  it("writes .claude/settings.json with MCP tool permissions", async () => {
+  it("forwards explicit MCP tool permissions using Claude rule names", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [
+        {
+          ref: "workflows",
+          command: "npx",
+          args: ["-y", "@codemcp/workflows"],
+          env: {},
+          allowedTools: ["use_skill", "whats_next"]
+        }
+      ],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: []
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
+    const settings = JSON.parse(raw);
+    expect(settings.permissions.allow).toEqual(
+      expect.arrayContaining([
+        "mcp__workflows__use_skill",
+        "mcp__workflows__whats_next"
+      ])
+    );
+  });
+
+  it("does not invent wildcard MCP permission rules", async () => {
     const config: LogicalConfig = {
       mcp_servers: [
         {
@@ -102,7 +181,85 @@ describe("claudeCodeWriter", () => {
 
     const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
     const settings = JSON.parse(raw);
-    expect(settings.permissions.allow).toContain("MCP(workflows:*)");
+    expect(settings.permissions.allow ?? []).toEqual([]);
+  });
+
+  it("keeps web on ask for rigid autonomy without broad built-in allows", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: [],
+      permission_policy: autonomyPolicy("rigid")
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
+    const settings = JSON.parse(raw);
+    expect(settings.permissions.allow ?? []).toEqual([]);
+    expect(settings.permissions.ask).toEqual(
+      expect.arrayContaining(["WebFetch", "WebSearch"])
+    );
+  });
+
+  it("maps sensible-defaults to Claude built-in permission rules", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: [],
+      permission_policy: autonomyPolicy("sensible-defaults")
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
+    const settings = JSON.parse(raw);
+    expect(settings.permissions.allow).toEqual(
+      expect.arrayContaining(["Read", "Edit", "Glob", "Grep", "TodoWrite"])
+    );
+    expect(settings.permissions.allow).not.toContain("Bash");
+    expect(settings.permissions.ask).toEqual(
+      expect.arrayContaining(["WebFetch", "WebSearch"])
+    );
+  });
+
+  it("maps max-autonomy to broad Claude built-in permission rules while preserving web ask", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: [],
+      permission_policy: autonomyPolicy("max-autonomy")
+    };
+
+    await claudeCodeWriter.install(config, dir);
+
+    const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
+    const settings = JSON.parse(raw);
+    expect(settings.permissions.allow).toEqual(
+      expect.arrayContaining([
+        "Read",
+        "Edit",
+        "Bash",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ])
+    );
+    expect(settings.permissions.ask).toEqual(
+      expect.arrayContaining(["WebFetch", "WebSearch"])
+    );
   });
 
   it("includes agentskills server from mcp_servers", async () => {

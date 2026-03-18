@@ -5,10 +5,13 @@ import type {
   LogicalConfig,
   McpServerEntry,
   ResolutionContext,
-  DocsetDef
+  DocsetDef,
+  Provision,
+  PermissionPolicy
 } from "./types.js";
 import { getFacet, getOption } from "./catalog/index.js";
 import { getProvisionWriter } from "./registry.js";
+import { permissionPolicyWriter } from "./writers/permission-policy.js";
 
 export async function resolve(
   userConfig: UserConfig,
@@ -46,32 +49,12 @@ export async function resolve(
       context.resolved[facetId] = { optionId: selectedId, option };
 
       for (const provision of option.recipe) {
-        const writer = getProvisionWriter(registry, provision.writer);
+        const writer = getProvisionWriter(registry, provision.writer) ?? getBuiltInProvisionWriter(provision);
         if (!writer) {
           continue;
         }
         const partial = await writer.write(provision.config, context);
-        if (partial.mcp_servers) {
-          result.mcp_servers.push(...partial.mcp_servers);
-        }
-        if (partial.instructions) {
-          result.instructions.push(...partial.instructions);
-        }
-        if (partial.cli_actions) {
-          result.cli_actions.push(...partial.cli_actions);
-        }
-        if (partial.knowledge_sources) {
-          result.knowledge_sources.push(...partial.knowledge_sources);
-        }
-        if (partial.skills) {
-          result.skills.push(...partial.skills);
-        }
-        if (partial.git_hooks) {
-          result.git_hooks.push(...partial.git_hooks);
-        }
-        if (partial.setup_notes) {
-          result.setup_notes.push(...partial.setup_notes);
-        }
+        mergeLogicalConfig(result, partial);
       }
     }
   }
@@ -141,6 +124,65 @@ export async function resolve(
   result.mcp_servers = Array.from(serversByRef.values());
 
   return result;
+}
+
+function getBuiltInProvisionWriter(provision: Provision) {
+  if (provision.writer === "permission-policy") {
+    return permissionPolicyWriter;
+  }
+
+  return undefined;
+}
+
+function mergeLogicalConfig(
+  result: LogicalConfig,
+  partial: Partial<LogicalConfig>
+): void {
+  if (partial.mcp_servers) {
+    result.mcp_servers.push(...partial.mcp_servers);
+  }
+  if (partial.instructions) {
+    result.instructions.push(...partial.instructions);
+  }
+  if (partial.cli_actions) {
+    result.cli_actions.push(...partial.cli_actions);
+  }
+  if (partial.knowledge_sources) {
+    result.knowledge_sources.push(...partial.knowledge_sources);
+  }
+  if (partial.skills) {
+    result.skills.push(...partial.skills);
+  }
+  if (partial.git_hooks) {
+    result.git_hooks.push(...partial.git_hooks);
+  }
+  if (partial.setup_notes) {
+    result.setup_notes.push(...partial.setup_notes);
+  }
+  if (partial.permission_policy) {
+    result.permission_policy = mergePermissionPolicy(
+      result.permission_policy,
+      partial.permission_policy
+    );
+  }
+}
+
+function mergePermissionPolicy(
+  existing: PermissionPolicy | undefined,
+  incoming: PermissionPolicy
+): PermissionPolicy {
+  if (!existing) {
+    return incoming;
+  }
+
+  return {
+    ...existing,
+    ...incoming,
+    capabilities: {
+      ...existing.capabilities,
+      ...incoming.capabilities
+    }
+  };
 }
 
 /**

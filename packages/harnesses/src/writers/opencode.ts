@@ -1,7 +1,12 @@
 import { join } from "node:path";
-import type { LogicalConfig } from "@codemcp/ade-core";
+import type { LogicalConfig, PermissionRule } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
-import { writeMcpServers, writeAgentMd, writeGitHooks } from "../util.js";
+import {
+  writeAgentMd,
+  writeGitHooks,
+  writeMcpServers
+} from "../util.js";
+import { getHarnessPermissionRules } from "../permission-policy.js";
 
 export const opencodeWriter: HarnessWriter = {
   id: "opencode",
@@ -14,41 +19,51 @@ export const opencodeWriter: HarnessWriter = {
       transform: (s) => ({
         type: "local",
         command: [s.command, ...s.args],
-        ...(Object.keys(s.env).length > 0 ? { env: s.env } : {})
+        ...(Object.keys(s.env).length > 0 ? { environment: s.env } : {})
       }),
       defaults: { $schema: "https://opencode.ai/config.json" }
     });
 
-    const servers = config.mcp_servers;
-    const extraFm: string[] = [
-      "tools:",
-      "  read: true",
-      "  edit: approve",
-      "  bash: approve"
-    ];
-
-    if (servers.length > 0) {
-      extraFm.push("mcp_servers:");
-      for (const s of servers) {
-        extraFm.push(`  ${s.ref}:`);
-        extraFm.push(
-          `    command: [${[s.command, ...s.args].map((a) => `"${a}"`).join(", ")}]`
-        );
-        if (Object.keys(s.env).length > 0) {
-          extraFm.push("    env:");
-          for (const [k, v] of Object.entries(s.env)) {
-            extraFm.push(`      ${k}: "${v}"`);
-          }
-        }
-      }
-    }
+    const permission = getHarnessPermissionRules(config);
 
     await writeAgentMd(config, {
       path: join(projectRoot, ".opencode", "agents", "ade.md"),
-      extraFrontmatter: extraFm,
+      extraFrontmatter: permission
+        ? renderYamlMapping("permission", permission)
+        : undefined,
       fallbackBody:
         "ADE — Agentic Development Environment agent with project conventions and tools."
     });
     await writeGitHooks(config.git_hooks, projectRoot);
   }
 };
+
+function renderYamlMapping(
+  key: string,
+  value: Record<string, PermissionRule>,
+  indent = 0
+): string[] {
+  const prefix = " ".repeat(indent);
+  const lines = [`${prefix}${formatYamlKey(key)}:`];
+
+  for (const [childKey, childValue] of Object.entries(value)) {
+    if (
+      typeof childValue === "object" &&
+      childValue !== null &&
+      !Array.isArray(childValue)
+    ) {
+      lines.push(...renderYamlMapping(childKey, childValue, indent + 2));
+      continue;
+    }
+
+    lines.push(
+      `${" ".repeat(indent + 2)}${formatYamlKey(childKey)}: ${JSON.stringify(childValue)}`
+    );
+  }
+
+  return lines;
+}
+
+function formatYamlKey(value: string): string {
+  return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value) ? value : JSON.stringify(value);
+}

@@ -1,0 +1,29 @@
+{
+  "conversationId": "ade-autonomy-facet-46zodk",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-2",
+  "phaseTasks": [
+    {
+      "phaseId": "explore",
+      "phaseName": "Explore",
+      "taskId": "ade-2.1"
+    },
+    {
+      "phaseId": "plan",
+      "phaseName": "Plan",
+      "taskId": "ade-2.2"
+    },
+    {
+      "phaseId": "code",
+      "phaseName": "Code",
+      "taskId": "ade-2.3"
+    },
+    {
+      "phaseId": "commit",
+      "phaseName": "Commit",
+      "taskId": "ade-2.4"
+    }
+  ],
+  "createdAt": "2026-03-18T07:42:25.681Z",
+  "updatedAt": "2026-03-18T07:42:25.681Z"
+}

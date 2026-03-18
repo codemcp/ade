@@ -9,6 +9,10 @@ import {
   writeInlineSkills,
   writeGitHooks
 } from "../util.js";
+import {
+  allowsCapability,
+  keepsWebOnAsk
+} from "../permission-policy.js";
 
 export const claudeCodeWriter: HarnessWriter = {
   id: "claude-code",
@@ -35,30 +39,66 @@ async function writeClaudeSettings(
   config: LogicalConfig,
   projectRoot: string
 ): Promise<void> {
-  const servers = config.mcp_servers;
-  if (servers.length === 0) return;
-
   const settingsPath = join(projectRoot, ".claude", "settings.json");
   const existing = await readJsonOrEmpty(settingsPath);
-
-  const allowRules: string[] = [];
-  for (const server of servers) {
-    const allowed = server.allowedTools ?? ["*"];
-    if (allowed.includes("*")) {
-      allowRules.push(`MCP(${server.ref}:*)`);
-    } else {
-      for (const tool of allowed) {
-        allowRules.push(`MCP(${server.ref}:${tool})`);
-      }
-    }
-  }
-
   const existingPerms = (existing.permissions as Record<string, unknown>) ?? {};
-  const existingAllow = (existingPerms.allow as string[]) ?? [];
-  const mergedAllow = [...new Set([...existingAllow, ...allowRules])];
+  const existingAllow = asStringArray(existingPerms.allow);
+  const existingAsk = asStringArray(existingPerms.ask);
+
+  const autonomyRules = getClaudeAutonomyRules(config);
+  const mcpRules = getClaudeMcpAllowRules(config);
+  const allowRules = [...new Set([...existingAllow, ...autonomyRules.allow, ...mcpRules])];
+  const askRules = [...new Set([...existingAsk, ...autonomyRules.ask])];
+
+  if (allowRules.length === 0 && askRules.length === 0 && config.mcp_servers.length === 0) {
+    return;
+  }
 
   await writeJson(settingsPath, {
     ...existing,
-    permissions: { ...existingPerms, allow: mergedAllow }
+    permissions: {
+      ...existingPerms,
+      ...(allowRules.length > 0 ? { allow: allowRules } : {}),
+      ...(askRules.length > 0 ? { ask: askRules } : {})
+    }
   });
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+}
+
+function getClaudeMcpAllowRules(config: LogicalConfig): string[] {
+  const allowRules: string[] = [];
+
+  for (const server of config.mcp_servers) {
+    const allowedTools = server.allowedTools;
+    if (!allowedTools || allowedTools.includes("*")) {
+      continue;
+    }
+
+    for (const tool of allowedTools) {
+      allowRules.push(`mcp__${server.ref}__${tool}`);
+    }
+  }
+
+  return allowRules;
+}
+
+function getClaudeAutonomyRules(config: LogicalConfig): {
+  allow: string[];
+  ask: string[];
+} {
+  const ask = keepsWebOnAsk(config) ? ["WebFetch", "WebSearch"] : [];
+
+  return {
+    allow: [
+      ...(allowsCapability(config, "read") ? ["Read"] : []),
+      ...(allowsCapability(config, "edit_write") ? ["Edit"] : []),
+      ...(allowsCapability(config, "search_list") ? ["Glob", "Grep"] : []),
+      ...(allowsCapability(config, "bash_unsafe") ? ["Bash"] : []),
+      ...(allowsCapability(config, "task_agent") ? ["TodoWrite"] : [])
+    ],
+    ask
+  };
 }

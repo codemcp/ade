@@ -578,4 +578,49 @@ describe("resolve", () => {
       expect(duplicates[0].env).toEqual({ CUSTOM: "true" });
     });
   });
+
+  describe("autonomy permission policy", () => {
+    it("adds a capability-based permission policy to LogicalConfig and keeps web access on ask", async () => {
+      const userConfig: UserConfig = {
+        choices: { autonomy: "rigid" }
+      };
+
+      const result = await resolve(userConfig, catalog, registry);
+
+      expect(result).toHaveProperty("permission_policy");
+      expect((result as Record<string, unknown>).permission_policy).toEqual({
+        profile: "rigid",
+        capabilities: {
+          read: "ask",
+          edit_write: "ask",
+          search_list: "ask",
+          bash_safe: "ask",
+          bash_unsafe: "ask",
+          web: "ask",
+          task_agent: "ask"
+        }
+      });
+    });
+
+    it("uses curated built-in defaults for the sensible-defaults autonomy profile", async () => {
+      const userConfig: UserConfig = {
+        choices: { autonomy: "sensible-defaults" }
+      };
+
+      const result = await resolve(userConfig, catalog, registry);
+
+      expect(result.permission_policy).toEqual({
+        profile: "sensible-defaults",
+        capabilities: {
+          read: "allow",
+          edit_write: "allow",
+          search_list: "allow",
+          bash_safe: "allow",
+          bash_unsafe: "ask",
+          web: "ask",
+          task_agent: "allow"
+        }
+      });
+    });
+  });
 });
