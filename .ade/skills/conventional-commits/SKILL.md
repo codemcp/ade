@@ -6,6 +6,7 @@ description: Conventional Commits specification for structured commit messages
 # Conventional Commits
 
 ## Format
+
 ```
 <type>[optional scope]: <description>
 
@@ -15,6 +16,7 @@ description: Conventional Commits specification for structured commit messages
 ```
 
 ## Types
+
 - `feat`: A new feature (correlates with MINOR in SemVer)
 - `fix`: A bug fix (correlates with PATCH in SemVer)
 - `docs`: Documentation only changes
@@ -25,6 +27,7 @@ description: Conventional Commits specification for structured commit messages
 - `chore`: Changes to the build process or auxiliary tools
 
 ## Rules
+
 - Subject line must not exceed 72 characters
 - Use imperative mood in the subject line ("add" not "added")
 - Do not end the subject line with a period

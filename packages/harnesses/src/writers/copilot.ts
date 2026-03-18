@@ -41,9 +41,7 @@ export const copilotWriter: HarnessWriter = {
   }
 };
 
-function getBuiltInTools(
-  config: LogicalConfig
-): string[] {
+function getBuiltInTools(config: LogicalConfig): string[] {
   if (!hasPermissionPolicy(config)) {
     return ["read", "edit", "search", "execute", "agent", "web"];
   }
@@ -54,10 +52,13 @@ function getBuiltInTools(
     ...(allowsCapability(config, "search_list") ? ["search"] : []),
     ...(allowsCapability(config, "bash_unsafe") ? ["execute"] : []),
     ...(allowsCapability(config, "task_agent") ? ["agent"] : []),
-    ...(allowsCapability(config, "task_agent") && allowsCapability(config, "bash_unsafe")
+    ...(allowsCapability(config, "task_agent") &&
+    allowsCapability(config, "bash_unsafe")
       ? ["todo"]
       : []),
-    ...(!keepsWebOnAsk(config) && allowsCapability(config, "web") ? ["web"] : [])
+    ...(!keepsWebOnAsk(config) && allowsCapability(config, "web")
+      ? ["web"]
+      : [])
   ];
 }
 
@@ -84,9 +85,7 @@ function renderCopilotAgentMcpServers(servers: McpServerEntry[]): string[] {
     lines.push("    type: stdio");
     lines.push(`    command: ${JSON.stringify(server.command)}`);
     lines.push(`    args: ${JSON.stringify(server.args)}`);
-    lines.push(
-      `    tools: ${JSON.stringify(server.allowedTools ?? ["*"])}`
-    );
+    lines.push(`    tools: ${JSON.stringify(server.allowedTools ?? ["*"])}`);
 
     if (Object.keys(server.env).length > 0) {
       lines.push("    env:");
@@ -100,5 +99,7 @@ function renderCopilotAgentMcpServers(servers: McpServerEntry[]): string[] {
 }
 
 function formatYamlKey(value: string): string {
-  return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value) ? value : JSON.stringify(value);
+  return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value)
+    ? value
+    : JSON.stringify(value);
 }

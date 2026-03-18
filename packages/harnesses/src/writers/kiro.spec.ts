@@ -90,7 +90,10 @@ describe("kiroWriter", () => {
 
     await kiroWriter.install(config, dir);
 
-    const raw = await readFile(join(dir, ".kiro", "agents", "ade.json"), "utf-8");
+    const raw = await readFile(
+      join(dir, ".kiro", "agents", "ade.json"),
+      "utf-8"
+    );
     const content = JSON.parse(raw);
 
     expect(content.name).toBe("ade");

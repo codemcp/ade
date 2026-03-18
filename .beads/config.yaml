@@ -11,7 +11,8 @@ issue-prefix: "ade"
 # Use no-db mode: load from JSONL, no SQLite, write back after each command
 # When true, bd will use .beads/issues.jsonl as the source of truth
 # instead of SQLite database
-no-db: true  # JSONL-only mode, no SQLite database
+no-db: true # JSONL-only mode, no SQLite database
+
 
 # Disable daemon for RPC communication (forces direct database access)
 # no-daemon: false

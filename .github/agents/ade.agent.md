@@ -17,7 +17,7 @@ mcp-servers:
   agentskills:
     type: stdio
     command: "npx"
-    args: ["-y","@codemcp/skills-server"]
+    args: ["-y", "@codemcp/skills-server"]
     tools: ["*"]
 ---
 

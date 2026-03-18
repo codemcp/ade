@@ -19,7 +19,10 @@ export const windsurfWriter: HarnessWriter = {
       transform: alwaysAllowEntry
     });
 
-    await writeRulesFile(getWindsurfRules(config), join(projectRoot, ".windsurfrules"));
+    await writeRulesFile(
+      getWindsurfRules(config),
+      join(projectRoot, ".windsurfrules")
+    );
     await writeGitHooks(config.git_hooks, projectRoot);
   }
 };
