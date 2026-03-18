@@ -35,7 +35,9 @@ describe("claudeCodeWriter", () => {
       instructions: ["Use workflow files.", "Follow conventions."],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -63,7 +65,9 @@ describe("claudeCodeWriter", () => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -89,7 +93,9 @@ describe("claudeCodeWriter", () => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -112,7 +118,9 @@ describe("claudeCodeWriter", () => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: [{ name: "my-skill", description: "A skill", body: "Do stuff." }]
+      skills: [{ name: "my-skill", description: "A skill", body: "Do stuff." }],
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -137,7 +145,9 @@ describe("claudeCodeWriter", () => {
           description: "TanStack architecture conventions",
           body: "# Architecture\n\nUse file-based routing."
         }
-      ]
+      ],
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);

@@ -44,6 +44,7 @@ describe("knowledge integration", () => {
 
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
+        .mockResolvedValueOnce([]) // backpressure: none
         .mockResolvedValueOnce([
           "tanstack-router-docs",
           "tanstack-query-docs",
@@ -94,6 +95,7 @@ describe("knowledge integration", () => {
 
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
+        .mockResolvedValueOnce([]) // backpressure: none
         .mockResolvedValueOnce(["tanstack-router-docs", "tanstack-query-docs"])
         .mockResolvedValueOnce(["claude-code"]); // harnesses
 

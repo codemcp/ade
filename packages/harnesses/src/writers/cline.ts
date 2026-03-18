@@ -1,7 +1,12 @@
 import { join } from "node:path";
 import type { LogicalConfig } from "@ade/core";
 import type { HarnessWriter } from "../types.js";
-import { writeMcpServers, alwaysAllowEntry, writeRulesFile } from "../util.js";
+import {
+  writeMcpServers,
+  alwaysAllowEntry,
+  writeRulesFile,
+  writeGitHooks
+} from "../util.js";
 
 export const clineWriter: HarnessWriter = {
   id: "cline",
@@ -14,5 +19,6 @@ export const clineWriter: HarnessWriter = {
     });
 
     await writeRulesFile(config.instructions, join(projectRoot, ".clinerules"));
+    await writeGitHooks(config.git_hooks, projectRoot);
   }
 };

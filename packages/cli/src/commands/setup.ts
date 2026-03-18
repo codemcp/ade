@@ -11,7 +11,9 @@ import {
   collectDocsets,
   createDefaultRegistry,
   getFacet,
-  getOption
+  getOption,
+  sortFacets,
+  getVisibleOptions
 } from "@ade/core";
 import {
   allHarnessWriters,
@@ -45,9 +47,16 @@ export async function runSetup(
 
   const choices: Record<string, string | string[]> = {};
 
-  for (const facet of catalog.facets) {
+  const sortedFacets = sortFacets(catalog);
+
+  for (const facet of sortedFacets) {
+    const visibleOptions = getVisibleOptions(facet, choices, catalog);
+    if (visibleOptions.length === 0) continue;
+
+    const visibleFacet = { ...facet, options: visibleOptions };
+
     if (facet.multiSelect) {
-      const selected = await promptMultiSelect(facet, existingChoices);
+      const selected = await promptMultiSelect(visibleFacet, existingChoices);
       if (typeof selected === "symbol") {
         clack.cancel("Setup cancelled.");
         return;
@@ -56,7 +65,7 @@ export async function runSetup(
         choices[facet.id] = selected;
       }
     } else {
-      const selected = await promptSelect(facet, existingChoices);
+      const selected = await promptSelect(visibleFacet, existingChoices);
       if (typeof selected === "symbol") {
         clack.cancel("Setup cancelled.");
         return;
@@ -159,6 +168,10 @@ export async function runSetup(
     clack.log.info(
       "Knowledge sources selected. Initialize them separately:\n  npx @codemcp/knowledge init"
     );
+  }
+
+  for (const note of logicalConfig.setup_notes) {
+    clack.log.info(note);
   }
 
   clack.outro("Setup complete!");

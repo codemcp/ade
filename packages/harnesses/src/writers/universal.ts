@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { writeFile } from "node:fs/promises";
 import type { LogicalConfig } from "@ade/core";
 import type { HarnessWriter } from "../types.js";
-import { writeMcpServers } from "../util.js";
+import { writeMcpServers, writeGitHooks } from "../util.js";
 
 export const universalWriter: HarnessWriter = {
   id: "universal",
@@ -26,5 +26,6 @@ export const universalWriter: HarnessWriter = {
     await writeMcpServers(config.mcp_servers, {
       path: join(projectRoot, ".mcp.json")
     });
+    await writeGitHooks(config.git_hooks, projectRoot);
   }
 };

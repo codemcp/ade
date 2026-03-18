@@ -20,6 +20,7 @@ export interface Option {
   description: string;
   recipe: Provision[];
   docsets?: DocsetDef[];
+  available?: (deps: Record<string, Option | undefined>) => boolean;
 }
 
 export interface DocsetDef {
@@ -40,7 +41,9 @@ export type ProvisionWriter =
   | "knowledge"
   | "mcp-server"
   | "instruction"
-  | "installable";
+  | "installable"
+  | "git-hooks"
+  | "setup-note";
 
 // --- LogicalConfig types ---
 
@@ -57,12 +60,19 @@ export interface ExternalSkill {
 
 export type SkillDefinition = InlineSkill | ExternalSkill;
 
+export interface GitHook {
+  phase: "pre-commit" | "pre-push";
+  script: string;
+}
+
 export interface LogicalConfig {
   mcp_servers: McpServerEntry[];
   instructions: string[];
   cli_actions: CliAction[];
   knowledge_sources: KnowledgeSource[];
   skills: SkillDefinition[];
+  git_hooks: GitHook[];
+  setup_notes: string[];
 }
 
 export interface McpServerEntry {

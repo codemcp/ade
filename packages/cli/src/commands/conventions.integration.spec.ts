@@ -43,6 +43,7 @@ describe("architecture and practices facets integration", () => {
         .mockResolvedValueOnce("tanstack"); // architecture
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
+        .mockResolvedValueOnce([]) // backpressure: none
         .mockResolvedValueOnce([]) // docsets: deselect all
         .mockResolvedValueOnce(["claude-code"]); // harnesses
 
@@ -228,6 +229,7 @@ describe("architecture and practices facets integration", () => {
         .mockResolvedValueOnce("tanstack"); // architecture
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce(["tdd-london", "conventional-commits"]) // practices
+        .mockResolvedValueOnce([]) // backpressure: none
         .mockResolvedValueOnce([]) // docsets: deselect all
         .mockResolvedValueOnce(["claude-code"]); // harnesses
 

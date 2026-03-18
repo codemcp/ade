@@ -6,7 +6,8 @@ import {
   writeJson,
   writeMcpServers,
   writeAgentMd,
-  writeInlineSkills
+  writeInlineSkills,
+  writeGitHooks
 } from "../util.js";
 
 export const claudeCodeWriter: HarnessWriter = {
@@ -26,6 +27,7 @@ export const claudeCodeWriter: HarnessWriter = {
 
     await writeClaudeSettings(config, projectRoot);
     await writeInlineSkills(config, projectRoot);
+    await writeGitHooks(config.git_hooks, projectRoot);
   }
 };
 

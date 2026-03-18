@@ -27,7 +27,9 @@ vi.mock("@ade/core", async (importOriginal) => {
       instructions: [],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: [],
+      setup_notes: []
     } satisfies LogicalConfig),
     collectDocsets: actual.collectDocsets
   };
@@ -176,7 +178,9 @@ describe("runSetup", () => {
       instructions: ["do stuff"],
       cli_actions: [],
       knowledge_sources: [],
-      skills: []
+      skills: [],
+      git_hooks: [],
+      setup_notes: []
     };
     vi.mocked(resolve).mockResolvedValueOnce(mockLogical);
     vi.mocked(clack.select)
@@ -309,6 +313,30 @@ describe("runSetup", () => {
 
     expect(clack.intro).toHaveBeenCalled();
     expect(clack.outro).toHaveBeenCalled();
+  });
+
+  it("displays each setup note via clack.log.info", async () => {
+    const mockLogical: LogicalConfig = {
+      mcp_servers: [],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: ["Add lint script to package.json", "Run npm install"]
+    };
+    vi.mocked(resolve).mockResolvedValueOnce(mockLogical);
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("workflow-a")
+      .mockResolvedValueOnce("vitest");
+    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
+
+    await runSetup("/tmp/test-project", testCatalog);
+
+    expect(clack.log.info).toHaveBeenCalledWith(
+      "Add lint script to package.json"
+    );
+    expect(clack.log.info).toHaveBeenCalledWith("Run npm install");
   });
 
   describe("re-run with existing config", () => {

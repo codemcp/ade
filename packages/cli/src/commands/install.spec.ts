@@ -14,7 +14,9 @@ const mockLogical: LogicalConfig = {
   instructions: ["test instruction"],
   cli_actions: [],
   knowledge_sources: [],
-  skills: []
+  skills: [],
+  git_hooks: [],
+  setup_notes: []
 };
 
 vi.mock("@ade/core", async (importOriginal) => {
