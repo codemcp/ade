@@ -82,7 +82,10 @@ describe("windsurfWriter", () => {
     await windsurfWriter.install(sensibleConfig, sensibleRoot);
     await windsurfWriter.install(maxConfig, maxRoot);
 
-    const rigidRules = await readFile(join(rigidRoot, ".windsurfrules"), "utf-8");
+    const rigidRules = await readFile(
+      join(rigidRoot, ".windsurfrules"),
+      "utf-8"
+    );
     const sensibleRules = await readFile(
       join(sensibleRoot, ".windsurfrules"),
       "utf-8"

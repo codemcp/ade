@@ -27,7 +27,9 @@ function capabilityMap(
   ) as Record<AutonomyCapability, PermissionDecision>;
 }
 
-function autonomyPolicy(profile: PermissionPolicy["profile"]): PermissionPolicy {
+function autonomyPolicy(
+  profile: PermissionPolicy["profile"]
+): PermissionPolicy {
   switch (profile) {
     case "rigid":
       return {
@@ -59,7 +61,8 @@ function autonomyPolicy(profile: PermissionPolicy["profile"]): PermissionPolicy 
 export const autonomyFacet: Facet = {
   id: "autonomy",
   label: "Autonomy",
-  description: "How much initiative and execution freedom the agent should have",
+  description:
+    "How much initiative and execution freedom the agent should have",
   required: false,
   multiSelect: false,
   options: [

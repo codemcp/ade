@@ -115,11 +115,15 @@ describe("opencodeWriter", () => {
     const defaultsFrontmatter = parseFrontmatter(defaultsAgent);
     const maxFrontmatter = parseFrontmatter(maxAgent);
 
-    await expect(readFile(join(rigidRoot, "opencode.json"), "utf-8")).rejects.toThrow();
+    await expect(
+      readFile(join(rigidRoot, "opencode.json"), "utf-8")
+    ).rejects.toThrow();
     await expect(
       readFile(join(defaultsRoot, "opencode.json"), "utf-8")
     ).rejects.toThrow();
-    await expect(readFile(join(maxRoot, "opencode.json"), "utf-8")).rejects.toThrow();
+    await expect(
+      readFile(join(maxRoot, "opencode.json"), "utf-8")
+    ).rejects.toThrow();
 
     expect(rigidAgent).toContain("permission:");
     expect(rigidAgent).toContain('"*": "ask"');

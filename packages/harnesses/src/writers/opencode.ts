@@ -1,11 +1,7 @@
 import { join } from "node:path";
 import type { LogicalConfig, PermissionRule } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
-import {
-  writeAgentMd,
-  writeGitHooks,
-  writeMcpServers
-} from "../util.js";
+import { writeAgentMd, writeGitHooks, writeMcpServers } from "../util.js";
 import { getHarnessPermissionRules } from "../permission-policy.js";
 
 export const opencodeWriter: HarnessWriter = {
@@ -65,5 +61,7 @@ function renderYamlMapping(
 }
 
 function formatYamlKey(value: string): string {
-  return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value) ? value : JSON.stringify(value);
+  return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value)
+    ? value
+    : JSON.stringify(value);
 }

@@ -241,7 +241,9 @@ describe("copilotWriter", () => {
     expect(sensibleAgent).toContain("  - workflows/whats_next");
     expect(sensibleAgent).toContain("  - workflows/proceed_to_phase");
     expect(sensibleAgent).not.toContain("  - workflows/*");
-    expect(sensibleAgent).toContain('    tools: ["whats_next","proceed_to_phase"]');
+    expect(sensibleAgent).toContain(
+      '    tools: ["whats_next","proceed_to_phase"]'
+    );
 
     expect(maxAgent).toContain("  - read");
     expect(maxAgent).toContain("  - edit");

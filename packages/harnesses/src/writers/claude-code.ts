@@ -9,10 +9,7 @@ import {
   writeInlineSkills,
   writeGitHooks
 } from "../util.js";
-import {
-  allowsCapability,
-  keepsWebOnAsk
-} from "../permission-policy.js";
+import { allowsCapability, keepsWebOnAsk } from "../permission-policy.js";
 
 export const claudeCodeWriter: HarnessWriter = {
   id: "claude-code",
@@ -47,10 +44,16 @@ async function writeClaudeSettings(
 
   const autonomyRules = getClaudeAutonomyRules(config);
   const mcpRules = getClaudeMcpAllowRules(config);
-  const allowRules = [...new Set([...existingAllow, ...autonomyRules.allow, ...mcpRules])];
+  const allowRules = [
+    ...new Set([...existingAllow, ...autonomyRules.allow, ...mcpRules])
+  ];
   const askRules = [...new Set([...existingAsk, ...autonomyRules.ask])];
 
-  if (allowRules.length === 0 && askRules.length === 0 && config.mcp_servers.length === 0) {
+  if (
+    allowRules.length === 0 &&
+    askRules.length === 0 &&
+    config.mcp_servers.length === 0
+  ) {
     return;
   }
 
@@ -65,7 +68,9 @@ async function writeClaudeSettings(
 }
 
 function asStringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === "string")
+    : [];
 }
 
 function getClaudeMcpAllowRules(config: LogicalConfig): string[] {

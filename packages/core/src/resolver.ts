@@ -49,7 +49,9 @@ export async function resolve(
       context.resolved[facetId] = { optionId: selectedId, option };
 
       for (const provision of option.recipe) {
-        const writer = getProvisionWriter(registry, provision.writer) ?? getBuiltInProvisionWriter(provision);
+        const writer =
+          getProvisionWriter(registry, provision.writer) ??
+          getBuiltInProvisionWriter(provision);
         if (!writer) {
           continue;
         }

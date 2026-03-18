@@ -3,33 +3,22 @@
     "workflows": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "@codemcp/workflows-server@latest"
-      ]
+      "args": ["@codemcp/workflows-server@latest"]
     },
     "@codemcp/knowledge-server": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@codemcp/knowledge-server"
-      ]
+      "args": ["-y", "@codemcp/knowledge-server"]
     },
     "agentskills": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@codemcp/skills-server"
-      ]
+      "args": ["-y", "@codemcp/skills-server"]
     },
     "knowledge": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@codemcp/knowledge-server"
-      ]
+      "args": ["-y", "@codemcp/knowledge-server"]
     }
   }
 }

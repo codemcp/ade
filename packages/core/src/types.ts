@@ -66,10 +66,7 @@ export interface GitHook {
   script: string;
 }
 
-export type AutonomyProfile =
-  | "rigid"
-  | "sensible-defaults"
-  | "max-autonomy";
+export type AutonomyProfile = "rigid" | "sensible-defaults" | "max-autonomy";
 
 export type PermissionDecision = "ask" | "allow" | "deny";
 

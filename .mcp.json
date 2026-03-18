@@ -2,30 +2,19 @@
   "mcpServers": {
     "workflows": {
       "command": "npx",
-      "args": [
-        "@codemcp/workflows-server@latest"
-      ]
+      "args": ["@codemcp/workflows-server@latest"]
     },
     "@codemcp/knowledge-server": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@codemcp/knowledge-server"
-      ]
+      "args": ["-y", "@codemcp/knowledge-server"]
     },
     "agentskills": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@codemcp/skills-server"
-      ]
+      "args": ["-y", "@codemcp/skills-server"]
     },
     "knowledge": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@codemcp/knowledge-server"
-      ]
+      "args": ["-y", "@codemcp/knowledge-server"]
     }
   }
 }
