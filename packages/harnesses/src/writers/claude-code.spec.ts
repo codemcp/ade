@@ -36,7 +36,8 @@ describe("claudeCodeWriter", () => {
       cli_actions: [],
       knowledge_sources: [],
       skills: [],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -65,7 +66,8 @@ describe("claudeCodeWriter", () => {
       cli_actions: [],
       knowledge_sources: [],
       skills: [],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -92,7 +94,8 @@ describe("claudeCodeWriter", () => {
       cli_actions: [],
       knowledge_sources: [],
       skills: [],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -116,7 +119,8 @@ describe("claudeCodeWriter", () => {
       cli_actions: [],
       knowledge_sources: [],
       skills: [{ name: "my-skill", description: "A skill", body: "Do stuff." }],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);
@@ -142,7 +146,8 @@ describe("claudeCodeWriter", () => {
           body: "# Architecture\n\nUse file-based routing."
         }
       ],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await claudeCodeWriter.install(config, dir);

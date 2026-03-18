@@ -71,7 +71,8 @@ describe("resolve", () => {
         cli_actions: [],
         knowledge_sources: [],
         skills: [],
-        git_hooks: []
+        git_hooks: [],
+        setup_notes: []
       });
     });
   });
@@ -134,7 +135,8 @@ describe("resolve", () => {
         cli_actions: [],
         knowledge_sources: [],
         skills: [],
-        git_hooks: []
+        git_hooks: [],
+        setup_notes: []
       });
     });
   });

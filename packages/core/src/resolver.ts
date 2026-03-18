@@ -21,7 +21,8 @@ export async function resolve(
     cli_actions: [],
     knowledge_sources: [],
     skills: [],
-    git_hooks: []
+    git_hooks: [],
+    setup_notes: []
   };
 
   const context: ResolutionContext = { resolved: {} };
@@ -67,6 +68,9 @@ export async function resolve(
         }
         if (partial.git_hooks) {
           result.git_hooks.push(...partial.git_hooks);
+        }
+        if (partial.setup_notes) {
+          result.setup_notes.push(...partial.setup_notes);
         }
       }
     }

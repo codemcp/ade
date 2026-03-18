@@ -125,7 +125,8 @@ describe("config", () => {
             }
           ],
           skills: [],
-          git_hooks: []
+          git_hooks: [],
+          setup_notes: []
         }
       };
 

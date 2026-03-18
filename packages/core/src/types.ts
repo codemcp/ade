@@ -42,7 +42,8 @@ export type ProvisionWriter =
   | "mcp-server"
   | "instruction"
   | "installable"
-  | "git-hooks";
+  | "git-hooks"
+  | "setup-note";
 
 // --- LogicalConfig types ---
 
@@ -71,6 +72,7 @@ export interface LogicalConfig {
   knowledge_sources: KnowledgeSource[];
   skills: SkillDefinition[];
   git_hooks: GitHook[];
+  setup_notes: string[];
 }
 
 export interface McpServerEntry {

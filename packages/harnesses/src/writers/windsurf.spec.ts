@@ -35,7 +35,8 @@ describe("windsurfWriter", () => {
       cli_actions: [],
       knowledge_sources: [],
       skills: [],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await windsurfWriter.install(config, dir);
@@ -57,7 +58,8 @@ describe("windsurfWriter", () => {
       cli_actions: [],
       knowledge_sources: [],
       skills: [],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await windsurfWriter.install(config, dir);

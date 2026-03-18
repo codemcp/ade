@@ -23,6 +23,16 @@ if [ $exit_code -eq 0 ]; then echo "✓"; else echo "$output"; exit $exit_code; 
 const WIP_COMMIT_INSTRUCTION =
   "Commit often using small WIP commits so pre-commit quality gates run frequently and catch issues early.";
 
+const NODEJS_LINT_BUILD_NOTE =
+  "Add lint and build scripts to package.json before committing:\n" +
+  '  "lint": "eslint .",\n' +
+  '  "build": "tsc --noEmit"';
+
+const JAVA_LINT_BUILD_NOTE =
+  "Apply the Checkstyle Gradle plugin before committing:\n" +
+  "  // build.gradle.kts\n" +
+  "  plugins { checkstyle }";
+
 export const backpressureFacet: Facet = {
   id: "backpressure",
   label: "Backpressure",
@@ -48,6 +58,10 @@ export const backpressureFacet: Facet = {
         {
           writer: "instruction",
           config: { text: WIP_COMMIT_INSTRUCTION }
+        },
+        {
+          writer: "setup-note",
+          config: { text: NODEJS_LINT_BUILD_NOTE }
         }
       ]
     },
@@ -67,6 +81,10 @@ export const backpressureFacet: Facet = {
         {
           writer: "instruction",
           config: { text: WIP_COMMIT_INSTRUCTION }
+        },
+        {
+          writer: "setup-note",
+          config: { text: NODEJS_LINT_BUILD_NOTE }
         }
       ]
     },
@@ -86,6 +104,10 @@ export const backpressureFacet: Facet = {
         {
           writer: "instruction",
           config: { text: WIP_COMMIT_INSTRUCTION }
+        },
+        {
+          writer: "setup-note",
+          config: { text: JAVA_LINT_BUILD_NOTE }
         }
       ]
     },

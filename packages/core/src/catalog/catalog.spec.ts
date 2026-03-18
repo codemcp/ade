@@ -335,6 +335,24 @@ describe("catalog", () => {
       }
     });
 
+    it("lint-build-precommit options have a setup-note provision", () => {
+      const catalog = getDefaultCatalog();
+      const backpressure = getFacet(catalog, "backpressure")!;
+
+      for (const archId of ["tanstack", "nodejs-backend", "java-backend"]) {
+        const option = getOption(
+          backpressure,
+          `lint-build-precommit-${archId}`
+        )!;
+        const note = option.recipe.find((p) => p.writer === "setup-note");
+        expect(
+          note,
+          `lint-build-precommit-${archId} missing setup-note`
+        ).toBeDefined();
+        expect((note!.config as { text: string }).text).toBeTruthy();
+      }
+    });
+
     it("has per-architecture unit-test-prepush options with git-hooks provisions", () => {
       const catalog = getDefaultCatalog();
       const backpressure = getFacet(catalog, "backpressure")!;

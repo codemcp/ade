@@ -35,7 +35,8 @@ describe("copilotWriter", () => {
       cli_actions: [],
       knowledge_sources: [],
       skills: [],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await copilotWriter.install(config, dir);
@@ -57,7 +58,8 @@ describe("copilotWriter", () => {
       cli_actions: [],
       knowledge_sources: [],
       skills: [],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await copilotWriter.install(config, dir);
@@ -81,7 +83,8 @@ describe("copilotWriter", () => {
       cli_actions: [],
       knowledge_sources: [],
       skills: [],
-      git_hooks: []
+      git_hooks: [],
+      setup_notes: []
     };
 
     await copilotWriter.install(config, dir);
