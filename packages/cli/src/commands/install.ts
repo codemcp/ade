@@ -3,7 +3,8 @@ import { readLockFile } from "@codemcp/ade-core";
 import {
   getHarnessWriter,
   getHarnessIds,
-  installSkills
+  installSkills,
+  writeInlineSkills
 } from "@codemcp/ade-harnesses";
 
 export async function runInstall(
@@ -39,6 +40,15 @@ export async function runInstall(
     if (writer) {
       await writer.install(logicalConfig, projectRoot);
     }
+  }
+
+  const modifiedSkills = await writeInlineSkills(logicalConfig, projectRoot);
+  if (modifiedSkills.length > 0) {
+    clack.log.warn(
+      `The following skills have been locally modified and will NOT be updated:\n` +
+        modifiedSkills.map((s) => `  - ${s}`).join("\n") +
+        `\n\nTo use the latest defaults, remove .ade/skills/ and re-run install.`
+    );
   }
 
   await installSkills(logicalConfig.skills, projectRoot);

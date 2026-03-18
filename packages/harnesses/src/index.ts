@@ -1,5 +1,6 @@
 export type { HarnessWriter } from "./types.js";
 export { installSkills } from "./skills-installer.js";
+export { writeInlineSkills } from "./util.js";
 
 export { universalWriter } from "./writers/universal.js";
 export { claudeCodeWriter } from "./writers/claude-code.js";

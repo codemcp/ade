@@ -185,12 +185,14 @@ export async function writeGitHooks(
 export async function writeInlineSkills(
   config: LogicalConfig,
   projectRoot: string
-): Promise<void> {
+): Promise<string[]> {
+  const modified: string[] = [];
+
   for (const skill of config.skills) {
     if (!("body" in skill)) continue;
 
     const skillDir = join(projectRoot, ".ade", "skills", skill.name);
-    await mkdir(skillDir, { recursive: true });
+    const skillPath = join(skillDir, "SKILL.md");
 
     const frontmatter = [
       "---",
@@ -199,10 +201,21 @@ export async function writeInlineSkills(
       "---"
     ].join("\n");
 
-    await writeFile(
-      join(skillDir, "SKILL.md"),
-      `${frontmatter}\n\n${skill.body}\n`,
-      "utf-8"
-    );
+    const expected = `${frontmatter}\n\n${skill.body}\n`;
+
+    try {
+      const existing = await readFile(skillPath, "utf-8");
+      if (existing !== expected) {
+        modified.push(skill.name);
+        continue;
+      }
+    } catch {
+      // File doesn't exist yet — fall through to write
+    }
+
+    await mkdir(skillDir, { recursive: true });
+    await writeFile(skillPath, expected, "utf-8");
   }
+
+  return modified;
 }
