@@ -70,8 +70,8 @@ export async function runSetup(
         clack.cancel("Setup cancelled.");
         return;
       }
-      if (selected !== "__skip__") {
-        choices[facet.id] = selected as string;
+      if (typeof selected === "string" && selected !== "__skip__") {
+        choices[facet.id] = selected;
       }
     }
   }
