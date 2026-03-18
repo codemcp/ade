@@ -49,7 +49,8 @@ vi.mock("@codemcp/ade-harnesses", () => ({
       "kiro",
       "opencode"
     ]),
-  installSkills: vi.fn().mockResolvedValue(undefined)
+  installSkills: vi.fn().mockResolvedValue(undefined),
+  writeInlineSkills: vi.fn().mockResolvedValue([])
 }));
 
 import * as clack from "@clack/prompts";

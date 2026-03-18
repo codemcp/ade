@@ -8,6 +8,7 @@ import type {
   PermissionPolicy
 } from "@codemcp/ade-core";
 import { claudeCodeWriter } from "./claude-code.js";
+import { writeInlineSkills } from "../util.js";
 
 function autonomyPolicy(profile: AutonomyProfile): PermissionPolicy {
   switch (profile) {
@@ -290,7 +291,7 @@ describe("claudeCodeWriter", () => {
     });
   });
 
-  it("writes inline SKILL.md files", async () => {
+  it("writes inline SKILL.md files via writeInlineSkills", async () => {
     const config: LogicalConfig = {
       mcp_servers: [],
       instructions: [],
@@ -307,7 +308,7 @@ describe("claudeCodeWriter", () => {
       setup_notes: []
     };
 
-    await claudeCodeWriter.install(config, dir);
+    await writeInlineSkills(config, dir);
 
     const skillMd = await readFile(
       join(dir, ".ade", "skills", "tanstack-architecture", "SKILL.md"),
