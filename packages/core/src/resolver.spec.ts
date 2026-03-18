@@ -5,6 +5,7 @@ import { createRegistry, registerProvisionWriter } from "./registry.js";
 import { instructionWriter } from "./writers/instruction.js";
 import { workflowsWriter } from "./writers/workflows.js";
 import { skillsWriter } from "./writers/skills.js";
+import { setupNoteWriter } from "./writers/setup-note.js";
 import type { UserConfig, WriterRegistry, Catalog } from "./types.js";
 
 function buildRegistry(): WriterRegistry {
@@ -12,6 +13,7 @@ function buildRegistry(): WriterRegistry {
   registerProvisionWriter(registry, instructionWriter);
   registerProvisionWriter(registry, workflowsWriter);
   registerProvisionWriter(registry, skillsWriter);
+  registerProvisionWriter(registry, setupNoteWriter);
   return registry;
 }
 
@@ -214,6 +216,41 @@ describe("resolve", () => {
         (s) => s.ref === "agentskills"
       );
       expect(agentskills).toBeUndefined();
+    });
+  });
+
+  describe("setup_notes merging", () => {
+    it("merges setup_notes from provision writers into the output", async () => {
+      const notesCatalog: Catalog = {
+        facets: [
+          {
+            id: "quality",
+            label: "Quality",
+            description: "Quality tools",
+            required: false,
+            options: [
+              {
+                id: "test-gate",
+                label: "Test Gate",
+                description: "A gate with a setup note",
+                recipe: [
+                  {
+                    writer: "setup-note",
+                    config: { text: "Run npm install before committing." }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = { choices: { quality: "test-gate" } };
+      const result = await resolve(userConfig, notesCatalog, registry);
+
+      expect(result.setup_notes).toEqual([
+        "Run npm install before committing."
+      ]);
     });
   });
 

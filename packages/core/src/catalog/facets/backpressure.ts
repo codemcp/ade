@@ -1,4 +1,4 @@
-import type { Facet } from "../../types.js";
+import type { Facet, Provision } from "../../types.js";
 
 const NODEJS_LINT_BUILD_SCRIPT = `#!/bin/sh
 output=$(npm run lint 2>&1 && npm run build 2>&1); exit_code=$?
@@ -33,6 +33,58 @@ const JAVA_LINT_BUILD_NOTE =
   "  // build.gradle.kts\n" +
   "  plugins { checkstyle }";
 
+const NODEJS_LINT_BUILD_RECIPE: Provision[] = [
+  {
+    writer: "git-hooks",
+    config: {
+      hooks: [{ phase: "pre-commit", script: NODEJS_LINT_BUILD_SCRIPT }]
+    }
+  },
+  {
+    writer: "instruction",
+    config: { text: WIP_COMMIT_INSTRUCTION }
+  },
+  {
+    writer: "setup-note",
+    config: { text: NODEJS_LINT_BUILD_NOTE }
+  }
+];
+
+const JAVA_LINT_BUILD_RECIPE: Provision[] = [
+  {
+    writer: "git-hooks",
+    config: {
+      hooks: [{ phase: "pre-commit", script: JAVA_LINT_BUILD_SCRIPT }]
+    }
+  },
+  {
+    writer: "instruction",
+    config: { text: WIP_COMMIT_INSTRUCTION }
+  },
+  {
+    writer: "setup-note",
+    config: { text: JAVA_LINT_BUILD_NOTE }
+  }
+];
+
+const NODEJS_UNIT_TEST_RECIPE: Provision[] = [
+  {
+    writer: "git-hooks",
+    config: {
+      hooks: [{ phase: "pre-push", script: NODEJS_UNIT_TEST_SCRIPT }]
+    }
+  }
+];
+
+const JAVA_UNIT_TEST_RECIPE: Provision[] = [
+  {
+    writer: "git-hooks",
+    config: {
+      hooks: [{ phase: "pre-push", script: JAVA_UNIT_TEST_SCRIPT }]
+    }
+  }
+];
+
 export const backpressureFacet: Facet = {
   id: "backpressure",
   label: "Backpressure",
@@ -48,22 +100,7 @@ export const backpressureFacet: Facet = {
       description:
         "Block commits if lint or build fails; emit only ✓ on success",
       available: (deps) => deps["architecture"]?.id === "tanstack",
-      recipe: [
-        {
-          writer: "git-hooks",
-          config: {
-            hooks: [{ phase: "pre-commit", script: NODEJS_LINT_BUILD_SCRIPT }]
-          }
-        },
-        {
-          writer: "instruction",
-          config: { text: WIP_COMMIT_INSTRUCTION }
-        },
-        {
-          writer: "setup-note",
-          config: { text: NODEJS_LINT_BUILD_NOTE }
-        }
-      ]
+      recipe: NODEJS_LINT_BUILD_RECIPE
     },
     {
       id: "lint-build-precommit-nodejs-backend",
@@ -71,22 +108,7 @@ export const backpressureFacet: Facet = {
       description:
         "Block commits if lint or build fails; emit only ✓ on success",
       available: (deps) => deps["architecture"]?.id === "nodejs-backend",
-      recipe: [
-        {
-          writer: "git-hooks",
-          config: {
-            hooks: [{ phase: "pre-commit", script: NODEJS_LINT_BUILD_SCRIPT }]
-          }
-        },
-        {
-          writer: "instruction",
-          config: { text: WIP_COMMIT_INSTRUCTION }
-        },
-        {
-          writer: "setup-note",
-          config: { text: NODEJS_LINT_BUILD_NOTE }
-        }
-      ]
+      recipe: NODEJS_LINT_BUILD_RECIPE
     },
     {
       id: "lint-build-precommit-java-backend",
@@ -94,64 +116,28 @@ export const backpressureFacet: Facet = {
       description:
         "Block commits if lint or build fails; emit only ✓ on success",
       available: (deps) => deps["architecture"]?.id === "java-backend",
-      recipe: [
-        {
-          writer: "git-hooks",
-          config: {
-            hooks: [{ phase: "pre-commit", script: JAVA_LINT_BUILD_SCRIPT }]
-          }
-        },
-        {
-          writer: "instruction",
-          config: { text: WIP_COMMIT_INSTRUCTION }
-        },
-        {
-          writer: "setup-note",
-          config: { text: JAVA_LINT_BUILD_NOTE }
-        }
-      ]
+      recipe: JAVA_LINT_BUILD_RECIPE
     },
     {
       id: "unit-test-prepush-tanstack",
       label: "Unit Tests (pre-push)",
       description: "Block pushes if unit tests fail; emit only ✓ on success",
       available: (deps) => deps["architecture"]?.id === "tanstack",
-      recipe: [
-        {
-          writer: "git-hooks",
-          config: {
-            hooks: [{ phase: "pre-push", script: NODEJS_UNIT_TEST_SCRIPT }]
-          }
-        }
-      ]
+      recipe: NODEJS_UNIT_TEST_RECIPE
     },
     {
       id: "unit-test-prepush-nodejs-backend",
       label: "Unit Tests (pre-push)",
       description: "Block pushes if unit tests fail; emit only ✓ on success",
       available: (deps) => deps["architecture"]?.id === "nodejs-backend",
-      recipe: [
-        {
-          writer: "git-hooks",
-          config: {
-            hooks: [{ phase: "pre-push", script: NODEJS_UNIT_TEST_SCRIPT }]
-          }
-        }
-      ]
+      recipe: NODEJS_UNIT_TEST_RECIPE
     },
     {
       id: "unit-test-prepush-java-backend",
       label: "Unit Tests (pre-push)",
       description: "Block pushes if unit tests fail; emit only ✓ on success",
       available: (deps) => deps["architecture"]?.id === "java-backend",
-      recipe: [
-        {
-          writer: "git-hooks",
-          config: {
-            hooks: [{ phase: "pre-push", script: JAVA_UNIT_TEST_SCRIPT }]
-          }
-        }
-      ]
+      recipe: JAVA_UNIT_TEST_RECIPE
     }
   ]
 };
