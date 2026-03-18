@@ -206,16 +206,17 @@ describe("kiroWriter", () => {
 
     expect(rigidAgent.tools).toContain("read");
     expect(rigidAgent.tools).toContain("spec");
+    expect(rigidAgent.tools).toContain("shell");
     expect(rigidAgent.tools).toContain("@workflows/*");
     expect(rigidAgent.allowedTools).toContain("@workflows/*");
     expect(rigidAgent.mcpServers.workflows.autoApprove).toEqual(["*"]);
     expect(rigidAgent.tools).not.toContain("write");
-    expect(rigidAgent.tools).not.toContain("shell");
+    expect(rigidAgent.tools).not.toContain("shell(*)");
     expect(rigidAgent.tools).not.toContain("web");
 
     expect(maxAgent.tools).toContain("read");
     expect(maxAgent.tools).toContain("write");
-    expect(maxAgent.tools).toContain("shell");
+    expect(maxAgent.tools).toContain("shell(*)");
     expect(maxAgent.tools).toContain("spec");
     expect(maxAgent.tools).toContain("@workflows/*");
     expect(maxAgent.allowedTools).toContain("@workflows/*");
