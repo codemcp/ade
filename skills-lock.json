@@ -4,12 +4,17 @@
     "adr-nygard": {
       "source": "/Users/oliverjaegle/projects/privat/codemcp/ade/.ade/skills/adr-nygard",
       "sourceType": "local",
-      "computedHash": "13cd33eb604e9e090057cce458469b2a1b609a6db3313a03df88d91776095b19"
+      "computedHash": "d62ee4c175a38f91d98a0536f863396ceb48c7de4275787520b07870705b4367"
     },
     "commit": {
       "source": "mrsimpson/skills-coding",
       "sourceType": "github",
       "computedHash": "fc628c7d577d2d9cf3cb0a917d3c5e2e35b460fdc62c353595b7472b6f1c6548"
+    },
+    "conventional-commits": {
+      "source": "/Users/oliverjaegle/projects/privat/codemcp/ade/.ade/skills/conventional-commits",
+      "sourceType": "local",
+      "computedHash": "49dd439dbd856412264fa345eaa9bbf2526095cb16457ffc7fb66a9d2f4d5f9d"
     },
     "tdd": {
       "source": "mrsimpson/skills-coding",
