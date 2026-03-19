@@ -31,7 +31,22 @@ if (command === "setup") {
   console.log(version);
 } else {
   const allIds = getHarnessIds();
-  console.log(`ade v${version}`);
+  console.log(`ade v${version} — Agentic Development Environment`);
+  console.log();
+  console.log(
+    "ADE organizes the information a coding agent needs into three layers:"
+  );
+  console.log(
+    "  Process      — structured workflows that enforce how the agent tackles tasks"
+  );
+  console.log(
+    "  Conventions  — architecture and practice skills that encode your team's decisions"
+  );
+  console.log(
+    "  Documentation — reference knowledge surfaced at the moment it is relevant"
+  );
+  console.log();
+  console.log("Run `ade setup` to configure these layers for your project.");
   console.log();
   console.log("Usage: ade <command> [options]");
   console.log();

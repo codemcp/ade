@@ -51,7 +51,11 @@ Improve user guidance in the ADE CLI — add contextual introductory text to hel
 *Tasks managed via `bd` CLI*
 
 ## Key Decisions
-*Important decisions will be documented here as they are made*
+- Used `clack.note()` for the ADE intro (boxed, titled) to make it stand out as orientation content vs. action prompts
+- Used `clack.log.info()` before each facet/section prompt — lightweight, doesn't interrupt the flow, provides context without being intrusive
+- Facet descriptions from the catalog data model are reused directly (they were already well-written) rather than duplicated elsewhere
+- Harness guidance explicitly calls out the 'universal' option since it's the most common default and its purpose isn't obvious from the name alone
+- Skill install context placed immediately before the confirm prompt so it reads naturally in sequence
 
 ## Notes
 *Additional context and observations*

@@ -28,6 +28,20 @@ export async function runSetup(
 ): Promise<void> {
   clack.intro("ade setup");
 
+  clack.note(
+    [
+      "ADE organizes the information your coding agent needs into three layers:",
+      "",
+      "  Process      — structured workflows that enforce how the agent tackles tasks",
+      "  Conventions  — architecture and practice skills encoding your team's decisions",
+      "  Documentation — reference knowledge surfaced when it is relevant",
+      "",
+      "This wizard selects the right building blocks for your project and generates",
+      "the configuration files your coding agent will read."
+    ].join("\n"),
+    "What is ADE?"
+  );
+
   const existingConfig = await readUserConfig(projectRoot);
   const existingChoices = existingConfig?.choices ?? {};
 
@@ -56,6 +70,8 @@ export async function runSetup(
 
     const visibleFacet = { ...facet, options: visibleOptions };
 
+    clack.log.info(facet.description);
+
     if (facet.multiSelect) {
       const selected = await promptMultiSelect(visibleFacet, existingChoices);
       if (typeof selected === "symbol") {
@@ -82,6 +98,10 @@ export async function runSetup(
   let excludedDocsets: string[] | undefined;
 
   if (impliedDocsets.length > 0) {
+    clack.log.info(
+      "Documentation — reference material committed to your repo and surfaced by skills when relevant.\n" +
+        "Deselect any libraries you are not using."
+    );
     const selected = await clack.multiselect({
       message: "Documentation — deselect any you don't need",
       options: impliedDocsets.map((d) => ({
@@ -117,6 +137,12 @@ export async function runSetup(
 
   const validExistingHarnesses = existingHarnesses?.filter((h) =>
     allHarnessWriters.some((w) => w.id === h)
+  );
+
+  clack.log.info(
+    "Harnesses — ADE generates configuration files for each coding agent you use.\n" +
+      "Select all agents that should receive the generated config.\n" +
+      "The 'universal' harness creates an AGENTS.md that works with any agent."
   );
 
   const selectedHarnesses = await clack.multiselect({
@@ -173,6 +199,10 @@ export async function runSetup(
   }
 
   if (logicalConfig.skills.length > 0) {
+    clack.log.info(
+      "Skills — reusable instruction modules the agent invokes on demand.\n" +
+        "They encode your conventions so the agent applies them at the right moment."
+    );
     const confirmInstall = await clack.confirm({
       message: `Install ${logicalConfig.skills.length} skill(s) now?`,
       initialValue: true
