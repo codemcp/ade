@@ -10,47 +10,7 @@ import type {
 import { rooCodeWriter } from "./roo-code.js";
 
 function autonomyPolicy(profile: AutonomyProfile): PermissionPolicy {
-  switch (profile) {
-    case "rigid":
-      return {
-        profile,
-        capabilities: {
-          read: "ask",
-          edit_write: "ask",
-          search_list: "ask",
-          bash_safe: "ask",
-          bash_unsafe: "ask",
-          web: "ask",
-          task_agent: "ask"
-        }
-      };
-    case "sensible-defaults":
-      return {
-        profile,
-        capabilities: {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          bash_unsafe: "ask",
-          web: "ask",
-          task_agent: "allow"
-        }
-      };
-    case "max-autonomy":
-      return {
-        profile,
-        capabilities: {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          bash_unsafe: "allow",
-          web: "ask",
-          task_agent: "allow"
-        }
-      };
-  }
+  return { profile };
 }
 
 describe("rooCodeWriter", () => {
@@ -174,7 +134,7 @@ describe("rooCodeWriter", () => {
       await readFile(join(rigidRoot, ".roo", "mcp.json"), "utf-8")
     );
 
-    expect(rigidModes.customModes.ade.groups).toEqual(["mcp"]);
+    expect(rigidModes.customModes.ade.groups).toEqual(["read", "mcp"]);
     expect(defaultsModes.customModes.ade.groups).toEqual([
       "read",
       "edit",

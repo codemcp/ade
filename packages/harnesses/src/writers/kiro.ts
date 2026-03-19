@@ -1,5 +1,9 @@
 import { join } from "node:path";
-import type { LogicalConfig, McpServerEntry } from "@codemcp/ade-core";
+import type {
+  AutonomyProfile,
+  LogicalConfig,
+  McpServerEntry
+} from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
 import {
   standardEntry,
@@ -7,11 +11,7 @@ import {
   writeJson,
   writeMcpServers
 } from "../util.js";
-import {
-  allowsCapability,
-  getCapabilityDecision,
-  hasPermissionPolicy
-} from "../permission-policy.js";
+import { getAutonomyProfile } from "../permission-policy.js";
 
 export const kiroWriter: HarnessWriter = {
   id: "kiro",
@@ -34,8 +34,11 @@ export const kiroWriter: HarnessWriter = {
         config.instructions.join("\n\n") ||
         "ADE — Agentic Development Environment agent.",
       mcpServers: getKiroAgentMcpServers(config.mcp_servers),
-      tools: getKiroTools(config),
-      allowedTools: getKiroAllowedTools(config),
+      tools: getKiroTools(getAutonomyProfile(config), config.mcp_servers),
+      allowedTools: getKiroTools(
+        getAutonomyProfile(config),
+        config.mcp_servers
+      ),
       useLegacyMcpJson: true
     });
 
@@ -43,24 +46,22 @@ export const kiroWriter: HarnessWriter = {
   }
 };
 
-function getKiroTools(config: LogicalConfig): string[] {
-  const mcpTools = getKiroForwardedMcpTools(config.mcp_servers);
+function getKiroTools(
+  profile: AutonomyProfile | undefined,
+  servers: McpServerEntry[]
+): string[] {
+  const mcpTools = getKiroForwardedMcpTools(servers);
 
-  if (!hasPermissionPolicy(config)) {
-    return ["read", "write", "shell", "spec", ...mcpTools];
+  switch (profile) {
+    case "rigid":
+      return ["read", "shell", "spec", ...mcpTools];
+    case "sensible-defaults":
+      return ["read", "write", "shell", "spec", ...mcpTools];
+    case "max-autonomy":
+      return ["read", "write", "shell(*)", "spec", ...mcpTools];
+    default:
+      return ["read", "write", "shell", "spec", ...mcpTools];
   }
-
-  return [
-    ...(getCapabilityDecision(config, "read") !== "deny" ? ["read"] : []),
-    ...(allowsCapability(config, "edit_write") ? ["write"] : []),
-    ...(allowsCapability(config, "bash_unsafe") ? ["shell(*)"] : ["shell"]),
-    "spec",
-    ...mcpTools
-  ];
-}
-
-function getKiroAllowedTools(config: LogicalConfig): string[] {
-  return getKiroTools(config);
 }
 
 function getKiroForwardedMcpTools(servers: McpServerEntry[]): string[] {

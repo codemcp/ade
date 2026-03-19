@@ -95,7 +95,10 @@ describe("windsurfWriter", () => {
     expect(rigidRules).toContain("Windsurf limitation:");
     expect(rigidRules).toContain("advisory only");
     expect(rigidRules).toContain(
-      "Ask before: read files, edit and write files, search and list files, safe local shell commands, unsafe local shell commands, web and network access, task or agent delegation."
+      "May proceed without extra approval: read files."
+    );
+    expect(rigidRules).toContain(
+      "Ask before: edit and write files, search and list files, safe local shell commands, unsafe local shell commands, web and network access, task or agent delegation."
     );
 
     expect(sensibleRules).toContain("Windsurf limitation:");
@@ -134,45 +137,5 @@ describe("windsurfWriter", () => {
 function autonomyPolicy(
   profile: "rigid" | "sensible-defaults" | "max-autonomy"
 ): LogicalConfig["permission_policy"] {
-  switch (profile) {
-    case "rigid":
-      return {
-        profile,
-        capabilities: {
-          read: "ask",
-          edit_write: "ask",
-          search_list: "ask",
-          bash_safe: "ask",
-          bash_unsafe: "ask",
-          web: "ask",
-          task_agent: "ask"
-        }
-      };
-    case "sensible-defaults":
-      return {
-        profile,
-        capabilities: {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          bash_unsafe: "ask",
-          web: "ask",
-          task_agent: "allow"
-        }
-      };
-    case "max-autonomy":
-      return {
-        profile,
-        capabilities: {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          bash_unsafe: "allow",
-          web: "ask",
-          task_agent: "allow"
-        }
-      };
-  }
+  return { profile };
 }

@@ -179,11 +179,7 @@ function mergePermissionPolicy(
 
   return {
     ...existing,
-    ...incoming,
-    capabilities: {
-      ...existing.capabilities,
-      ...incoming.capabilities
-    }
+    ...incoming
   };
 }
 

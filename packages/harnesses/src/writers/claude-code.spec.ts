@@ -11,47 +11,7 @@ import { claudeCodeWriter } from "./claude-code.js";
 import { writeInlineSkills } from "../util.js";
 
 function autonomyPolicy(profile: AutonomyProfile): PermissionPolicy {
-  switch (profile) {
-    case "rigid":
-      return {
-        profile,
-        capabilities: {
-          read: "ask",
-          edit_write: "ask",
-          search_list: "ask",
-          bash_safe: "ask",
-          bash_unsafe: "ask",
-          web: "ask",
-          task_agent: "ask"
-        }
-      };
-    case "sensible-defaults":
-      return {
-        profile,
-        capabilities: {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          bash_unsafe: "ask",
-          web: "ask",
-          task_agent: "allow"
-        }
-      };
-    case "max-autonomy":
-      return {
-        profile,
-        capabilities: {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          bash_unsafe: "allow",
-          web: "ask",
-          task_agent: "allow"
-        }
-      };
-  }
+  return { profile };
 }
 
 describe("claudeCodeWriter", () => {
@@ -160,7 +120,7 @@ describe("claudeCodeWriter", () => {
     );
   });
 
-  it("does not invent wildcard MCP permission rules", async () => {
+  it("forwards wildcard MCP permission rules for servers without explicit allowedTools", async () => {
     const config: LogicalConfig = {
       mcp_servers: [
         {
@@ -182,10 +142,10 @@ describe("claudeCodeWriter", () => {
 
     const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
     const settings = JSON.parse(raw);
-    expect(settings.permissions.allow ?? []).toEqual([]);
+    expect(settings.permissions.allow).toContain("mcp__workflows__*");
   });
 
-  it("keeps web on ask for rigid autonomy without broad built-in allows", async () => {
+  it("allows only Read for rigid autonomy while asking for everything else", async () => {
     const config: LogicalConfig = {
       mcp_servers: [],
       instructions: [],
@@ -201,9 +161,17 @@ describe("claudeCodeWriter", () => {
 
     const raw = await readFile(join(dir, ".claude", "settings.json"), "utf-8");
     const settings = JSON.parse(raw);
-    expect(settings.permissions.allow ?? []).toEqual([]);
+    expect(settings.permissions.allow).toEqual(["Read"]);
     expect(settings.permissions.ask).toEqual(
-      expect.arrayContaining(["WebFetch", "WebSearch"])
+      expect.arrayContaining([
+        "Edit",
+        "Glob",
+        "Grep",
+        "Bash",
+        "WebFetch",
+        "WebSearch",
+        "TodoWrite"
+      ])
     );
   });
 

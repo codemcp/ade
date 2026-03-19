@@ -1,39 +1,15 @@
 import { join } from "node:path";
 import { writeFile } from "node:fs/promises";
-import type {
-  AutonomyCapability,
-  LogicalConfig,
-  PermissionDecision
-} from "@codemcp/ade-core";
+import type { AutonomyProfile, LogicalConfig } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
 import { writeMcpServers, writeGitHooks } from "../util.js";
-
-const CAPABILITY_ORDER: AutonomyCapability[] = [
-  "read",
-  "edit_write",
-  "search_list",
-  "bash_safe",
-  "bash_unsafe",
-  "web",
-  "task_agent"
-];
-
-function formatCapabilityGuidance(
-  capability: AutonomyCapability,
-  decision: PermissionDecision
-): string {
-  return `- \`${capability}\`: ${decision}`;
-}
+import { getAutonomyProfile } from "../permission-policy.js";
 
 function renderAutonomyGuidance(config: LogicalConfig): string | undefined {
-  const policy = config.permission_policy;
-  if (!policy) {
+  const profile = getAutonomyProfile(config);
+  if (!profile) {
     return undefined;
   }
-
-  const capabilityLines = CAPABILITY_ORDER.map((capability) =>
-    formatCapabilityGuidance(capability, policy.capabilities[capability])
-  );
 
   return [
     "## Autonomy",
@@ -42,13 +18,50 @@ function renderAutonomyGuidance(config: LogicalConfig): string | undefined {
     "",
     "Treat this autonomy profile as documentation-only guidance for built-in/basic operations.",
     "",
-    `Profile: \`${policy.profile}\``,
+    `Profile: \`${profile}\``,
     "",
-    "Built-in/basic capability guidance:",
-    ...capabilityLines,
+    ...getUniversalProfileGuidance(profile),
     "",
     "MCP permissions are not re-modeled by autonomy here; any MCP approvals must come from provisioning-aware consuming harnesses rather than the Universal writer."
   ].join("\n");
+}
+
+function getUniversalProfileGuidance(profile: AutonomyProfile): string[] {
+  switch (profile) {
+    case "rigid":
+      return [
+        "Built-in/basic capability guidance:",
+        "- `read`: allow",
+        "- `edit_write`: ask",
+        "- `search_list`: ask",
+        "- `bash_safe`: ask",
+        "- `bash_unsafe`: ask",
+        "- `web`: ask",
+        "- `task_agent`: ask"
+      ];
+    case "sensible-defaults":
+      return [
+        "Built-in/basic capability guidance:",
+        "- `read`: allow",
+        "- `edit_write`: allow",
+        "- `search_list`: allow",
+        "- `bash_safe`: allow",
+        "- `bash_unsafe`: ask",
+        "- `web`: ask",
+        "- `task_agent`: allow"
+      ];
+    case "max-autonomy":
+      return [
+        "Built-in/basic capability guidance:",
+        "- `read`: allow",
+        "- `edit_write`: allow",
+        "- `search_list`: allow",
+        "- `bash_safe`: allow",
+        "- `bash_unsafe`: allow",
+        "- `web`: ask",
+        "- `task_agent`: allow"
+      ];
+  }
 }
 
 export const universalWriter: HarnessWriter = {

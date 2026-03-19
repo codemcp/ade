@@ -486,16 +486,7 @@ describe("catalog", () => {
 
       expect(provision).toBeDefined();
       expect(provision!.config).toEqual({
-        profile: "sensible-defaults",
-        capabilities: {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          bash_unsafe: "ask",
-          web: "ask",
-          task_agent: "allow"
-        }
+        profile: "sensible-defaults"
       });
     });
   });
