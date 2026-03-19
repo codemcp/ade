@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 // --- Catalog types ---
 
 export interface Catalog {
@@ -157,3 +159,72 @@ export interface WriterRegistry {
   provisions: Map<string, ProvisionWriterDef>;
   agents: Map<string, AgentWriterDef>;
 }
+
+// --- Extension types ---
+
+/**
+ * Runtime validation helpers for extension file loading.
+ *
+ * We use z.custom<T>() for Option, Facet, HarnessWriter and ProvisionWriterDef
+ * because their TypeScript interfaces contain function types that Zod cannot
+ * faithfully represent without losing the concrete signature. z.custom<T>
+ * gives us the correct TS type while still letting us write a runtime check.
+ */
+const OptionSchema = z.custom<Option>(
+  (val) =>
+    typeof val === "object" &&
+    val !== null &&
+    typeof (val as Record<string, unknown>).id === "string" &&
+    typeof (val as Record<string, unknown>).label === "string" &&
+    typeof (val as Record<string, unknown>).description === "string" &&
+    Array.isArray((val as Record<string, unknown>).recipe),
+  { message: "Option must have id, label, description and recipe fields" }
+);
+
+const FacetSchema = z.custom<Facet>(
+  (val) =>
+    typeof val === "object" &&
+    val !== null &&
+    typeof (val as Record<string, unknown>).id === "string" &&
+    typeof (val as Record<string, unknown>).label === "string" &&
+    typeof (val as Record<string, unknown>).description === "string" &&
+    typeof (val as Record<string, unknown>).required === "boolean" &&
+    Array.isArray((val as Record<string, unknown>).options),
+  { message: "Facet must have id, label, description, required and options" }
+);
+
+const HarnessWriterSchema = z.custom<
+  AgentWriterDef & { label: string; description: string }
+>(
+  (val) =>
+    typeof val === "object" &&
+    val !== null &&
+    typeof (val as Record<string, unknown>).id === "string" &&
+    typeof (val as Record<string, unknown>).label === "string" &&
+    typeof (val as Record<string, unknown>).description === "string" &&
+    typeof (val as Record<string, unknown>).install === "function",
+  { message: "HarnessWriter must have id, label, description and install()" }
+);
+
+const ProvisionWriterDefSchema = z.custom<ProvisionWriterDef>(
+  (val) =>
+    typeof val === "object" &&
+    val !== null &&
+    typeof (val as Record<string, unknown>).id === "string" &&
+    typeof (val as Record<string, unknown>).write === "function",
+  { message: "ProvisionWriterDef must have id and write()" }
+);
+
+export const AdeExtensionsSchema = z.object({
+  /** Add new options to existing facets, keyed by facet id */
+  facetContributions: z.record(z.string(), z.array(OptionSchema)).optional(),
+  /** Add entirely new facets */
+  facets: z.array(FacetSchema).optional(),
+  /** Add new provision writers */
+  provisionWriters: z.array(ProvisionWriterDefSchema).optional(),
+  /** Add new harness writers */
+  harnessWriters: z.array(HarnessWriterSchema).optional()
+});
+
+/** The shape of a consumer's `ade.extensions.mjs` default export. */
+export type AdeExtensions = z.infer<typeof AdeExtensionsSchema>;

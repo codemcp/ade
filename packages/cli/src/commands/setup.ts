@@ -16,6 +16,7 @@ import {
   getVisibleOptions
 } from "@codemcp/ade-core";
 import {
+  type HarnessWriter,
   allHarnessWriters,
   getHarnessWriter,
   installSkills,
@@ -24,7 +25,8 @@ import {
 
 export async function runSetup(
   projectRoot: string,
-  catalog: Catalog
+  catalog: Catalog,
+  harnessWriters: HarnessWriter[] = allHarnessWriters
 ): Promise<void> {
   let lineIndex = 0;
   const LOGO_LINES = [
@@ -138,14 +140,14 @@ export async function runSetup(
 
   // Harness selection — multi-select from all available harnesses
   const existingHarnesses = existingConfig?.harnesses;
-  const harnessOptions = allHarnessWriters.map((w) => ({
+  const harnessOptions = harnessWriters.map((w) => ({
     value: w.id,
     label: w.label,
     hint: w.description
   }));
 
   const validExistingHarnesses = existingHarnesses?.filter((h) =>
-    allHarnessWriters.some((w) => w.id === h)
+    harnessWriters.some((w) => w.id === h)
   );
 
   const selectedHarnesses = await clack.multiselect({
@@ -188,7 +190,9 @@ export async function runSetup(
 
   // Install to all selected harnesses
   for (const harnessId of harnesses) {
-    const writer = getHarnessWriter(harnessId);
+    const writer =
+      harnessWriters.find((w) => w.id === harnessId) ??
+      getHarnessWriter(harnessId);
     if (writer) {
       await writer.install(logicalConfig, projectRoot);
     }

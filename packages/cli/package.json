@@ -28,7 +28,9 @@
     "@clack/prompts": "^1.1.0",
     "@codemcp/ade-core": "workspace:*",
     "@codemcp/ade-harnesses": "workspace:*",
-    "yaml": "^2.8.2"
+    "jiti": "2.6.1",
+    "yaml": "^2.8.2",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@codemcp/knowledge": "2.1.0",

@@ -36,6 +36,9 @@ catalogs:
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
+    zod:
+      specifier: 4.3.6
+      version: 4.3.6
 
 importers:
   .:
@@ -107,6 +110,9 @@ importers:
       vitest:
         specifier: "catalog:"
         version: 3.2.4(@types/node@22.19.11)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)
+      zod:
+        specifier: "catalog:"
+        version: 4.3.6
 
   packages/cli:
     dependencies:
@@ -119,9 +125,15 @@ importers:
       "@codemcp/ade-harnesses":
         specifier: workspace:*
         version: link:../harnesses
+      jiti:
+        specifier: 2.6.1
+        version: 2.6.1
       yaml:
         specifier: ^2.8.2
         version: 2.8.2
+      zod:
+        specifier: "catalog:"
+        version: 4.3.6
     devDependencies:
       "@codemcp/knowledge":
         specifier: 2.1.0
@@ -150,6 +162,9 @@ importers:
       yaml:
         specifier: ^2.8.2
         version: 2.8.2
+      zod:
+        specifier: "catalog:"
+        version: 4.3.6
     devDependencies:
       oxlint:
         specifier: "catalog:"

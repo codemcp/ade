@@ -45,8 +45,10 @@ export {
   getFacet,
   getOption,
   sortFacets,
-  getVisibleOptions
+  getVisibleOptions,
+  mergeExtensions
 } from "./catalog/index.js";
+export { type AdeExtensions, AdeExtensionsSchema } from "./types.js";
 export { skillsWriter } from "./writers/skills.js";
 export { knowledgeWriter } from "./writers/knowledge.js";
 export { permissionPolicyWriter } from "./writers/permission-policy.js";

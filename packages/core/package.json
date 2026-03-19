@@ -28,7 +28,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "yaml": "^2.8.2"
+    "yaml": "^2.8.2",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "oxlint": "catalog:",

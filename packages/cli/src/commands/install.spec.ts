@@ -27,9 +27,29 @@ vi.mock("@codemcp/ade-core", async (importOriginal) => {
   };
 });
 
-const mockInstall = vi.fn().mockResolvedValue(undefined);
+const mockInstall = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 
 vi.mock("@codemcp/ade-harnesses", () => ({
+  allHarnessWriters: [
+    {
+      id: "universal",
+      label: "Universal",
+      description: "Universal",
+      install: mockInstall
+    },
+    {
+      id: "claude-code",
+      label: "Claude Code",
+      description: "Claude Code",
+      install: mockInstall
+    },
+    {
+      id: "cursor",
+      label: "Cursor",
+      description: "Cursor",
+      install: mockInstall
+    }
+  ],
   getHarnessWriter: vi.fn().mockImplementation((id: string) => {
     if (id === "universal" || id === "claude-code" || id === "cursor") {
       return { id, install: mockInstall };

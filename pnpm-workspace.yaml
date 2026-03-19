@@ -17,3 +17,5 @@ catalog:
   rimraf: "^6.1.3"
   tsx: "^4.19.0"
   tsup: "^8.3.0"
+  # Runtime
+  zod: "4.3.6"
