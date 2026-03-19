@@ -68,28 +68,8 @@ export interface GitHook {
 
 export type AutonomyProfile = "rigid" | "sensible-defaults" | "max-autonomy";
 
-export type PermissionDecision = "ask" | "allow" | "deny";
-
-export type AutonomyCapability =
-  | "read"
-  | "edit_write"
-  | "search_list"
-  | "bash_safe"
-  | "bash_unsafe"
-  | "web"
-  | "task_agent";
-
-/**
- * @deprecated Harness-specific tool-level rules are no longer produced by core.
- * Kept temporarily as a compatibility type for downstream packages.
- */
-export type PermissionRule =
-  | PermissionDecision
-  | Record<string, PermissionDecision>;
-
 export interface PermissionPolicy extends Record<string, unknown> {
   profile: AutonomyProfile;
-  capabilities: Record<AutonomyCapability, PermissionDecision>;
 }
 
 export interface LogicalConfig extends Record<string, unknown> {

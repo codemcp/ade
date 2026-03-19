@@ -219,3 +219,14 @@ export async function writeInlineSkills(
 
   return modified;
 }
+
+// ---------------------------------------------------------------------------
+// YAML helpers
+// ---------------------------------------------------------------------------
+
+/** Quote a YAML key only when it contains characters that require quoting. */
+export function formatYamlKey(value: string): string {
+  return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value)
+    ? value
+    : JSON.stringify(value);
+}

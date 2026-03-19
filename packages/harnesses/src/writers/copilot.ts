@@ -1,17 +1,18 @@
 import { join } from "node:path";
-import type { LogicalConfig, McpServerEntry } from "@codemcp/ade-core";
+import type {
+  AutonomyProfile,
+  LogicalConfig,
+  McpServerEntry
+} from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
 import {
   writeMcpServers,
   stdioEntry,
   writeAgentMd,
-  writeGitHooks
+  writeGitHooks,
+  formatYamlKey
 } from "../util.js";
-import {
-  allowsCapability,
-  hasPermissionPolicy,
-  keepsWebOnAsk
-} from "../permission-policy.js";
+import { getAutonomyProfile } from "../permission-policy.js";
 
 export const copilotWriter: HarnessWriter = {
   id: "copilot",
@@ -25,7 +26,7 @@ export const copilotWriter: HarnessWriter = {
     });
 
     const tools = [
-      ...getBuiltInTools(config),
+      ...getBuiltInTools(getAutonomyProfile(config)),
       ...getForwardedMcpTools(config.mcp_servers)
     ];
 
@@ -41,25 +42,17 @@ export const copilotWriter: HarnessWriter = {
   }
 };
 
-function getBuiltInTools(config: LogicalConfig): string[] {
-  if (!hasPermissionPolicy(config)) {
-    return ["read", "edit", "search", "execute", "agent", "web"];
+function getBuiltInTools(profile: AutonomyProfile | undefined): string[] {
+  switch (profile) {
+    case "rigid":
+      return ["read"];
+    case "sensible-defaults":
+      return ["read", "edit", "search", "agent"];
+    case "max-autonomy":
+      return ["read", "edit", "search", "execute", "agent", "todo"];
+    default:
+      return ["read", "edit", "search", "execute", "agent", "web"];
   }
-
-  return [
-    ...(allowsCapability(config, "read") ? ["read"] : []),
-    ...(allowsCapability(config, "edit_write") ? ["edit"] : []),
-    ...(allowsCapability(config, "search_list") ? ["search"] : []),
-    ...(allowsCapability(config, "bash_unsafe") ? ["execute"] : []),
-    ...(allowsCapability(config, "task_agent") ? ["agent"] : []),
-    ...(allowsCapability(config, "task_agent") &&
-    allowsCapability(config, "bash_unsafe")
-      ? ["todo"]
-      : []),
-    ...(!keepsWebOnAsk(config) && allowsCapability(config, "web")
-      ? ["web"]
-      : [])
-  ];
 }
 
 function getForwardedMcpTools(servers: McpServerEntry[]): string[] {
@@ -96,10 +89,4 @@ function renderCopilotAgentMcpServers(servers: McpServerEntry[]): string[] {
   }
 
   return lines;
-}
-
-function formatYamlKey(value: string): string {
-  return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value)
-    ? value
-    : JSON.stringify(value);
 }

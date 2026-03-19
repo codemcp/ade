@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import type { LogicalConfig } from "@codemcp/ade-core";
+import type { AutonomyProfile, LogicalConfig } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
 import {
   readJsonOrEmpty,
@@ -8,7 +8,7 @@ import {
   writeAgentMd,
   writeGitHooks
 } from "../util.js";
-import { allowsCapability, keepsWebOnAsk } from "../permission-policy.js";
+import { getAutonomyProfile } from "../permission-policy.js";
 
 export const claudeCodeWriter: HarnessWriter = {
   id: "claude-code",
@@ -40,7 +40,7 @@ async function writeClaudeSettings(
   const existingAllow = asStringArray(existingPerms.allow);
   const existingAsk = asStringArray(existingPerms.ask);
 
-  const autonomyRules = getClaudeAutonomyRules(config);
+  const autonomyRules = getClaudeAutonomyRules(getAutonomyProfile(config));
   const mcpRules = getClaudeMcpAllowRules(config);
   const allowRules = [
     ...new Set([...existingAllow, ...autonomyRules.allow, ...mcpRules])
@@ -77,6 +77,7 @@ function getClaudeMcpAllowRules(config: LogicalConfig): string[] {
   for (const server of config.mcp_servers) {
     const allowedTools = server.allowedTools;
     if (!allowedTools || allowedTools.includes("*")) {
+      allowRules.push(`mcp__${server.ref}__*`);
       continue;
     }
 
@@ -88,20 +89,36 @@ function getClaudeMcpAllowRules(config: LogicalConfig): string[] {
   return allowRules;
 }
 
-function getClaudeAutonomyRules(config: LogicalConfig): {
+function getClaudeAutonomyRules(profile: AutonomyProfile | undefined): {
   allow: string[];
   ask: string[];
 } {
-  const ask = keepsWebOnAsk(config) ? ["WebFetch", "WebSearch"] : [];
-
-  return {
-    allow: [
-      ...(allowsCapability(config, "read") ? ["Read"] : []),
-      ...(allowsCapability(config, "edit_write") ? ["Edit"] : []),
-      ...(allowsCapability(config, "search_list") ? ["Glob", "Grep"] : []),
-      ...(allowsCapability(config, "bash_unsafe") ? ["Bash"] : []),
-      ...(allowsCapability(config, "task_agent") ? ["TodoWrite"] : [])
-    ],
-    ask
-  };
+  switch (profile) {
+    case "rigid":
+      return {
+        allow: ["Read"],
+        ask: [
+          "Edit",
+          "Write",
+          "Glob",
+          "Grep",
+          "Bash",
+          "WebFetch",
+          "WebSearch",
+          "TodoWrite"
+        ]
+      };
+    case "sensible-defaults":
+      return {
+        allow: ["Read", "Edit", "Write", "Glob", "Grep", "TodoWrite"],
+        ask: ["WebFetch", "WebSearch"]
+      };
+    case "max-autonomy":
+      return {
+        allow: ["Read", "Edit", "Write", "Glob", "Grep", "Bash", "TodoWrite"],
+        ask: ["WebFetch", "WebSearch"]
+      };
+    default:
+      return { allow: [], ask: [] };
+  }
 }

@@ -10,47 +10,7 @@ import type {
 import { copilotWriter } from "./copilot.js";
 
 function autonomyPolicy(profile: AutonomyProfile): PermissionPolicy {
-  switch (profile) {
-    case "rigid":
-      return {
-        profile,
-        capabilities: {
-          read: "ask",
-          edit_write: "ask",
-          search_list: "ask",
-          bash_safe: "ask",
-          bash_unsafe: "ask",
-          web: "ask",
-          task_agent: "ask"
-        }
-      };
-    case "sensible-defaults":
-      return {
-        profile,
-        capabilities: {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          bash_unsafe: "ask",
-          web: "ask",
-          task_agent: "allow"
-        }
-      };
-    case "max-autonomy":
-      return {
-        profile,
-        capabilities: {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          bash_unsafe: "allow",
-          web: "ask",
-          task_agent: "allow"
-        }
-      };
-  }
+  return { profile };
 }
 
 describe("copilotWriter", () => {
@@ -224,7 +184,7 @@ describe("copilotWriter", () => {
 
     expect(rigidAgent).not.toContain("  - server/workflows/*");
     expect(rigidAgent).toContain("  - workflows/*");
-    expect(rigidAgent).not.toContain("  - read");
+    expect(rigidAgent).toContain("  - read");
     expect(rigidAgent).not.toContain("  - edit");
     expect(rigidAgent).not.toContain("  - search");
     expect(rigidAgent).not.toContain("  - execute");

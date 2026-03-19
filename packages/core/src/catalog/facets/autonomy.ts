@@ -1,62 +1,4 @@
-import type {
-  AutonomyCapability,
-  Facet,
-  PermissionDecision,
-  PermissionPolicy
-} from "../../types.js";
-
-const ALL_CAPABILITIES: AutonomyCapability[] = [
-  "read",
-  "edit_write",
-  "search_list",
-  "bash_safe",
-  "bash_unsafe",
-  "web",
-  "task_agent"
-];
-
-function capabilityMap(
-  defaultDecision: PermissionDecision,
-  overrides: Partial<Record<AutonomyCapability, PermissionDecision>> = {}
-): Record<AutonomyCapability, PermissionDecision> {
-  return Object.fromEntries(
-    ALL_CAPABILITIES.map((capability) => [
-      capability,
-      overrides[capability] ?? defaultDecision
-    ])
-  ) as Record<AutonomyCapability, PermissionDecision>;
-}
-
-function autonomyPolicy(
-  profile: PermissionPolicy["profile"]
-): PermissionPolicy {
-  switch (profile) {
-    case "rigid":
-      return {
-        profile,
-        capabilities: capabilityMap("ask")
-      };
-    case "sensible-defaults":
-      return {
-        profile,
-        capabilities: capabilityMap("ask", {
-          read: "allow",
-          edit_write: "allow",
-          search_list: "allow",
-          bash_safe: "allow",
-          task_agent: "allow",
-          web: "ask"
-        })
-      };
-    case "max-autonomy":
-      return {
-        profile,
-        capabilities: capabilityMap("allow", {
-          web: "ask"
-        })
-      };
-  }
-}
+import type { Facet } from "../../types.js";
 
 export const autonomyFacet: Facet = {
   id: "autonomy",
@@ -74,7 +16,7 @@ export const autonomyFacet: Facet = {
       recipe: [
         {
           writer: "permission-policy",
-          config: autonomyPolicy("rigid")
+          config: { profile: "rigid" }
         }
       ]
     },
@@ -86,7 +28,7 @@ export const autonomyFacet: Facet = {
       recipe: [
         {
           writer: "permission-policy",
-          config: autonomyPolicy("sensible-defaults")
+          config: { profile: "sensible-defaults" }
         }
       ]
     },
@@ -98,7 +40,7 @@ export const autonomyFacet: Facet = {
       recipe: [
         {
           writer: "permission-policy",
-          config: autonomyPolicy("max-autonomy")
+          config: { profile: "max-autonomy" }
         }
       ]
     }

@@ -15,10 +15,7 @@ export {
   type ExternalSkill,
   type GitHook,
   type PermissionPolicy,
-  type AutonomyProfile,
-  type AutonomyCapability,
-  type PermissionDecision,
-  type PermissionRule
+  type AutonomyProfile
 } from "./types.js";
 export { type ResolutionContext, type ResolvedFacet } from "./types.js";
 export { type UserConfig, type LockFile } from "./types.js";
