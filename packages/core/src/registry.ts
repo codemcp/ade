@@ -5,6 +5,7 @@ import type {
 } from "./types.js";
 import { instructionWriter } from "./writers/instruction.js";
 import { workflowsWriter } from "./writers/workflows.js";
+import { mcpServerWriter } from "./writers/mcp-server.js";
 import { skillsWriter } from "./writers/skills.js";
 import { knowledgeWriter } from "./writers/knowledge.js";
 import { gitHooksWriter } from "./writers/git-hooks.js";
@@ -51,15 +52,15 @@ export function createDefaultRegistry(): WriterRegistry {
 
   registerProvisionWriter(registry, instructionWriter);
   registerProvisionWriter(registry, workflowsWriter);
+  registerProvisionWriter(registry, mcpServerWriter);
   registerProvisionWriter(registry, skillsWriter);
-
   registerProvisionWriter(registry, knowledgeWriter);
   registerProvisionWriter(registry, gitHooksWriter);
   registerProvisionWriter(registry, setupNoteWriter);
   registerProvisionWriter(registry, permissionPolicyWriter);
 
   // Stub writers for types not yet implemented
-  for (const id of ["mcp-server", "installable"]) {
+  for (const id of ["installable"]) {
     registerProvisionWriter(registry, {
       id,
       write: async () => ({})

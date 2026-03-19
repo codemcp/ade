@@ -1,3 +1,4 @@
+import { env } from "process";
 import type { Facet } from "../../types.js";
 
 export const processFacet: Facet = {
@@ -16,7 +17,16 @@ export const processFacet: Facet = {
           writer: "workflows",
           config: {
             package: "@codemcp/workflows-server@latest",
-            ref: "workflows"
+            ref: "workflows",
+            env: {
+              VIBE_WORKFLOW_DOMAINS: "skilled"
+            },
+            allowedTools: [
+              "whats_next",
+              "conduct_review",
+              "list_workflows",
+              "get_tool_info"
+            ]
           }
         },
         {

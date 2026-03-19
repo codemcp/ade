@@ -148,6 +148,72 @@ describe("opencodeWriter", () => {
     expect(rigidAgent).not.toContain("tools:");
   });
 
+  it("writes allowed MCP tools into the permission block of the agent frontmatter", async () => {
+    const projectRoot = join(dir, "mcp-tools");
+    const config: LogicalConfig = {
+      mcp_servers: [
+        {
+          ref: "workflows",
+          command: "npx",
+          args: ["@codemcp/workflows-server@latest"],
+          env: {},
+          allowedTools: ["whats_next", "conduct_review"]
+        }
+      ],
+      instructions: ["Follow project rules."],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: []
+    };
+
+    await opencodeWriter.install(config, projectRoot);
+
+    const agent = await readFile(
+      join(projectRoot, ".opencode", "agents", "ade.md"),
+      "utf-8"
+    );
+    const frontmatter = parseFrontmatter(agent);
+    const permission = frontmatter.permission as Record<string, string>;
+
+    expect(permission["workflows*"]).toBe("ask");
+    expect(permission["workflows_whats_next"]).toBe("allow");
+    expect(permission["workflows_conduct_review"]).toBe("allow");
+    expect(agent).not.toContain("tools:");
+  });
+
+  it("writes wildcard MCP permission when allowedTools is not restricted", async () => {
+    const projectRoot = join(dir, "mcp-wildcard");
+    const config: LogicalConfig = {
+      mcp_servers: [
+        {
+          ref: "workflows",
+          command: "npx",
+          args: ["@codemcp/workflows-server@latest"],
+          env: {}
+        }
+      ],
+      instructions: ["Follow project rules."],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: []
+    };
+
+    await opencodeWriter.install(config, projectRoot);
+
+    const agent = await readFile(
+      join(projectRoot, ".opencode", "agents", "ade.md"),
+      "utf-8"
+    );
+    const frontmatter = parseFrontmatter(agent);
+    const permission = frontmatter.permission as Record<string, string>;
+
+    expect(permission["workflows*"]).toBe("allow");
+  });
+
   it("keeps MCP servers in project config and writes documented environment fields", async () => {
     const projectRoot = join(dir, "mcp");
     const config = {

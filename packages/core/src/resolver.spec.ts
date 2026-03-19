@@ -120,6 +120,35 @@ describe("resolve", () => {
       expect(result.mcp_servers.length).toBeGreaterThanOrEqual(1);
       expect(result.instructions).toContain("Extra instruction");
     });
+
+    it("env set in the catalog option config is forwarded to the resolved mcp_server entry", async () => {
+      const userConfig: UserConfig = {
+        choices: { process: "codemcp-workflows" }
+      };
+
+      // Patch the catalog option's provision config to include env
+      const processFacet = catalog.facets.find((f) => f.id === "process")!;
+      const option = processFacet.options.find(
+        (o) => o.id === "codemcp-workflows"
+      )!;
+      const workflowsProvision = option.recipe.find(
+        (p) => p.writer === "workflows"
+      )!;
+      workflowsProvision.config = {
+        ...workflowsProvision.config,
+        env: { VIBE_WORKFLOWS_DOMAIN: "skilled" }
+      };
+
+      const result = await resolve(userConfig, catalog, registry);
+
+      const workflowsServer = result.mcp_servers.find(
+        (s) => s.ref === "workflows"
+      );
+      expect(workflowsServer).toBeDefined();
+      expect(workflowsServer!.env).toEqual({
+        VIBE_WORKFLOWS_DOMAIN: "skilled"
+      });
+    });
   });
 
   describe("unknown facet in choices", () => {

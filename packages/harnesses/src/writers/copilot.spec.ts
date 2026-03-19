@@ -198,12 +198,8 @@ describe("copilotWriter", () => {
     expect(sensibleAgent).not.toContain("  - execute");
     expect(sensibleAgent).not.toContain("  - todo");
     expect(sensibleAgent).not.toContain("  - web");
-    expect(sensibleAgent).toContain("  - workflows/whats_next");
-    expect(sensibleAgent).toContain("  - workflows/proceed_to_phase");
-    expect(sensibleAgent).not.toContain("  - workflows/*");
-    expect(sensibleAgent).toContain(
-      '    tools: ["whats_next","proceed_to_phase"]'
-    );
+    expect(sensibleAgent).toContain("  - workflows/*");
+    expect(sensibleAgent).toContain('    tools: ["*"]');
 
     expect(maxAgent).toContain("  - read");
     expect(maxAgent).toContain("  - edit");
