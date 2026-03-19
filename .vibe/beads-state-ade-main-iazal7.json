@@ -1,0 +1,29 @@
+{
+  "conversationId": "ade-main-iazal7",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-6",
+  "phaseTasks": [
+    {
+      "phaseId": "explore",
+      "phaseName": "Explore",
+      "taskId": "ade-6.1"
+    },
+    {
+      "phaseId": "plan",
+      "phaseName": "Plan",
+      "taskId": "ade-6.2"
+    },
+    {
+      "phaseId": "code",
+      "phaseName": "Code",
+      "taskId": "ade-6.3"
+    },
+    {
+      "phaseId": "commit",
+      "phaseName": "Commit",
+      "taskId": "ade-6.4"
+    }
+  ],
+  "createdAt": "2026-03-19T15:48:55.317Z",
+  "updatedAt": "2026-03-19T15:48:55.317Z"
+}
