@@ -34,19 +34,11 @@ if (command === "setup") {
   console.log(`ade v${version} — Agentic Development Environment`);
   console.log();
   console.log(
-    "ADE organizes the information a coding agent needs into three layers:"
+    "Define how your team works with coding agents — pick your facets,"
   );
   console.log(
-    "  Process      — structured workflows that enforce how the agent tackles tasks"
+    "ADE translates them into a shared information hierarchy in your repo."
   );
-  console.log(
-    "  Conventions  — architecture and practice skills that encode your team's decisions"
-  );
-  console.log(
-    "  Documentation — reference knowledge surfaced at the moment it is relevant"
-  );
-  console.log();
-  console.log("Run `ade setup` to configure these layers for your project.");
   console.log();
   console.log("Usage: ade <command> [options]");
   console.log();

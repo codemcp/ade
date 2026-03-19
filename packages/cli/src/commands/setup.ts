@@ -26,20 +26,34 @@ export async function runSetup(
   projectRoot: string,
   catalog: Catalog
 ): Promise<void> {
-  clack.intro("ade setup");
-
+  let lineIndex = 0;
+  const LOGO_LINES = [
+    "\n",
+    " █████╗ ██████╗ ███████╗    ███████╗███████╗████████╗██╗   ██╗██████╗ ",
+    "██╔══██╗██╔══██╗██╔════╝    ██╔════╝██╔════╝╚══██╔══╝██║   ██║██╔══██╗",
+    "███████║██║  ██║█████╗      ███████╗█████╗     ██║   ██║   ██║██████╔╝",
+    "██╔══██║██║  ██║██╔══╝      ╚════██║██╔══╝     ██║   ██║   ██║██╔═══╝ ",
+    "██║  ██║██████╔╝███████╗    ███████║███████╗   ██║   ╚██████╔╝██║     ",
+    "╚═╝  ╚═╝╚═════╝ ╚══════╝    ╚══════╝╚══════╝   ╚═╝    ╚═════╝ ╚═╝     ",
+    "\n"
+  ];
+  for (const line of LOGO_LINES) {
+    lineIndex++;
+    if (lineIndex === 1) {
+      clack.intro(line);
+    } else {
+      console.log(`│  ${line}`);
+    }
+  }
   clack.note(
     [
-      "ADE organizes the information your coding agent needs into three layers:",
+      "You're about to define how your team works with coding agents.",
       "",
-      "  Process      — structured workflows that enforce how the agent tackles tasks",
-      "  Conventions  — architecture and practice skills encoding your team's decisions",
-      "  Documentation — reference knowledge surfaced when it is relevant",
-      "",
-      "This wizard selects the right building blocks for your project and generates",
-      "the configuration files your coding agent will read."
+      "Pick your facets — architecture, practices, process — and ADE",
+      "translates them into a shared information hierarchy your agents",
+      "read from the repo. One setup, consistent across the whole team."
     ].join("\n"),
-    "What is ADE?"
+    "ADE — Agentic Development Environment"
   );
 
   const existingConfig = await readUserConfig(projectRoot);
@@ -70,8 +84,6 @@ export async function runSetup(
 
     const visibleFacet = { ...facet, options: visibleOptions };
 
-    clack.log.info(facet.description);
-
     if (facet.multiSelect) {
       const selected = await promptMultiSelect(visibleFacet, existingChoices);
       if (typeof selected === "symbol") {
@@ -98,12 +110,9 @@ export async function runSetup(
   let excludedDocsets: string[] | undefined;
 
   if (impliedDocsets.length > 0) {
-    clack.log.info(
-      "Documentation — reference material committed to your repo and surfaced by skills when relevant.\n" +
-        "Deselect any libraries you are not using."
-    );
     const selected = await clack.multiselect({
-      message: "Documentation — deselect any you don't need",
+      message:
+        "Documentation sources — Those will be pulled to your local disk for browsing on demand",
       options: impliedDocsets.map((d) => ({
         value: d.id,
         label: d.label,
@@ -139,14 +148,10 @@ export async function runSetup(
     allHarnessWriters.some((w) => w.id === h)
   );
 
-  clack.log.info(
-    "Harnesses — ADE generates configuration files for each coding agent you use.\n" +
-      "Select all agents that should receive the generated config.\n" +
-      "The 'universal' harness creates an AGENTS.md that works with any agent."
-  );
-
   const selectedHarnesses = await clack.multiselect({
-    message: "Harnesses — which coding agents should receive config?",
+    message:
+      "Which coding agents should receive config?\n" +
+      "ADE generates config files for each agent you select.\n",
     options: harnessOptions,
     initialValues:
       validExistingHarnesses && validExistingHarnesses.length > 0
@@ -199,12 +204,14 @@ export async function runSetup(
   }
 
   if (logicalConfig.skills.length > 0) {
-    clack.log.info(
-      "Skills — reusable instruction modules the agent invokes on demand.\n" +
-        "They encode your conventions so the agent applies them at the right moment."
-    );
+    const skillNames = logicalConfig.skills
+      .map((s) => `  • ${s.name}`)
+      .join("\n");
     const confirmInstall = await clack.confirm({
-      message: `Install ${logicalConfig.skills.length} skill(s) now?`,
+      message:
+        `Install ${logicalConfig.skills.length} skill(s) now?\n` +
+        skillNames +
+        `\nYou can also install them later with:\n  npx @codemcp/skills experimental_install`,
       initialValue: true
     });
 
@@ -273,7 +280,7 @@ function promptSelect(
   const initialValue = getValidInitialValue(facet, existingChoices);
 
   return clack.select({
-    message: facet.label,
+    message: `${facet.label} — ${facet.description}`,
     options,
     ...(initialValue !== undefined && { initialValue })
   });
@@ -292,7 +299,7 @@ function promptMultiSelect(
   const initialValues = getValidInitialValues(facet, existingChoices);
 
   return clack.multiselect({
-    message: facet.label,
+    message: `${facet.label} — ${facet.description}`,
     options,
     required: false,
     ...(initialValues !== undefined && { initialValues })

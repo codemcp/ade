@@ -470,8 +470,8 @@ describe("catalog", () => {
       expect(autonomy!.required).toBe(false);
       expect(autonomy!.multiSelect).toBe(false);
       expect(autonomy!.options.map((option) => option.id)).toEqual([
-        "rigid",
         "sensible-defaults",
+        "rigid",
         "max-autonomy"
       ]);
     });

@@ -9,6 +9,18 @@ export const autonomyFacet: Facet = {
   multiSelect: false,
   options: [
     {
+      id: "sensible-defaults",
+      label: "Sensible defaults",
+      description:
+        "Allow a curated built-in capabilities set while keeping potentially risky actions approval-gated",
+      recipe: [
+        {
+          writer: "permission-policy",
+          config: { profile: "sensible-defaults" }
+        }
+      ]
+    },
+    {
       id: "rigid",
       label: "Rigid",
       description:
@@ -21,22 +33,10 @@ export const autonomyFacet: Facet = {
       ]
     },
     {
-      id: "sensible-defaults",
-      label: "Sensible defaults",
-      description:
-        "Allow a curated low-risk built-in capability set while keeping web access approval-gated",
-      recipe: [
-        {
-          writer: "permission-policy",
-          config: { profile: "sensible-defaults" }
-        }
-      ]
-    },
-    {
       id: "max-autonomy",
       label: "Max autonomy",
       description:
-        "Allow broad local built-in autonomy while keeping web access approval-gated",
+        "Allow broad local built-in autonomy. Recommended for sandboxed environments only",
       recipe: [
         {
           writer: "permission-policy",
