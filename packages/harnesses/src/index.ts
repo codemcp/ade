@@ -45,3 +45,13 @@ export function getHarnessWriter(id: string): HarnessWriter | undefined {
 export function getHarnessIds(): string[] {
   return allHarnessWriters.map((w) => w.id);
 }
+
+/**
+ * Returns the full list of harness writers: built-ins first, then any
+ * additional writers contributed via extensions. Does not mutate allHarnessWriters.
+ */
+export function buildHarnessWriters(extensions: {
+  harnessWriters?: HarnessWriter[];
+}): HarnessWriter[] {
+  return [...allHarnessWriters, ...(extensions.harnessWriters ?? [])];
+}

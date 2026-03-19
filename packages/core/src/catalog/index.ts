@@ -1,4 +1,4 @@
-import type { Catalog, Facet, Option } from "../types.js";
+import type { Catalog, Facet, Option, AdeExtensions } from "../types.js";
 import { processFacet } from "./facets/process.js";
 import { architectureFacet } from "./facets/architecture.js";
 import { practicesFacet } from "./facets/practices.js";
@@ -90,4 +90,41 @@ export function getVisibleOptions(
     }
     return option.available(deps);
   });
+}
+
+/**
+ * Merges extension contributions into a catalog, returning a new catalog
+ * without mutating the original.
+ *
+ * - `extensions.facetContributions`: appends new options to existing facets
+ *   (silently ignores contributions for unknown facet ids)
+ * - `extensions.facets`: appends entirely new facets
+ */
+export function mergeExtensions(
+  catalog: Catalog,
+  extensions: AdeExtensions
+): Catalog {
+  // Deep-clone the facets array (shallow-clone each facet with a new options array)
+  let facets: Facet[] = catalog.facets.map((f) => ({
+    ...f,
+    options: [...f.options]
+  }));
+
+  // Append contributed options to existing facets
+  for (const [facetId, newOptions] of Object.entries(
+    extensions.facetContributions ?? {}
+  )) {
+    const facet = facets.find((f) => f.id === facetId);
+    if (facet) {
+      facet.options = [...facet.options, ...newOptions];
+    }
+    // Unknown facet ids are silently ignored
+  }
+
+  // Append entirely new facets
+  if (extensions.facets && extensions.facets.length > 0) {
+    facets = [...facets, ...extensions.facets];
+  }
+
+  return { facets };
 }

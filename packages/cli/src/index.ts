@@ -3,18 +3,23 @@
 import { version } from "./version.js";
 import { runSetup } from "./commands/setup.js";
 import { runInstall } from "./commands/install.js";
-import { getDefaultCatalog } from "@codemcp/ade-core";
-import { getHarnessIds } from "@codemcp/ade-harnesses";
+import { getDefaultCatalog, mergeExtensions } from "@codemcp/ade-core";
+import { getHarnessIds, buildHarnessWriters } from "@codemcp/ade-harnesses";
+import { loadExtensions } from "./extensions.js";
 
 const args = process.argv.slice(2);
 const command = args[0];
 
 if (command === "setup") {
   const projectRoot = args[1] ?? process.cwd();
-  const catalog = getDefaultCatalog();
-  await runSetup(projectRoot, catalog);
+  const extensions = await loadExtensions(projectRoot);
+  const catalog = mergeExtensions(getDefaultCatalog(), extensions);
+  const harnessWriters = buildHarnessWriters(extensions);
+  await runSetup(projectRoot, catalog, harnessWriters);
 } else if (command === "install") {
   const projectRoot = args[1] ?? process.cwd();
+  const extensions = await loadExtensions(projectRoot);
+  const harnessWriters = buildHarnessWriters(extensions);
 
   let harnessIds: string[] | undefined;
 
@@ -26,7 +31,7 @@ if (command === "setup") {
     }
   }
 
-  await runInstall(projectRoot, harnessIds);
+  await runInstall(projectRoot, harnessIds, harnessWriters);
 } else if (command === "--version" || command === "-v") {
   console.log(version);
 } else {

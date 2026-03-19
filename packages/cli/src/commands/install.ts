@@ -1,6 +1,8 @@
 import * as clack from "@clack/prompts";
 import { readLockFile } from "@codemcp/ade-core";
 import {
+  type HarnessWriter,
+  allHarnessWriters,
   getHarnessWriter,
   getHarnessIds,
   installSkills,
@@ -9,7 +11,8 @@ import {
 
 export async function runInstall(
   projectRoot: string,
-  harnessIds?: string[]
+  harnessIds?: string[],
+  harnessWriters: HarnessWriter[] = allHarnessWriters
 ): Promise<void> {
   clack.intro("ade install");
 
@@ -24,11 +27,12 @@ export async function runInstall(
   // 3. default: universal
   const ids = harnessIds ?? lockFile.harnesses ?? ["universal"];
 
-  const validIds = getHarnessIds();
+  const validIds = [...getHarnessIds(), ...harnessWriters.map((w) => w.id)];
+  const uniqueValidIds = [...new Set(validIds)];
   for (const id of ids) {
-    if (!validIds.includes(id)) {
+    if (!uniqueValidIds.includes(id)) {
       throw new Error(
-        `Unknown harness "${id}". Available: ${validIds.join(", ")}`
+        `Unknown harness "${id}". Available: ${uniqueValidIds.join(", ")}`
       );
     }
   }
@@ -36,7 +40,8 @@ export async function runInstall(
   const logicalConfig = lockFile.logical_config;
 
   for (const id of ids) {
-    const writer = getHarnessWriter(id);
+    const writer =
+      harnessWriters.find((w) => w.id === id) ?? getHarnessWriter(id);
     if (writer) {
       await writer.install(logicalConfig, projectRoot);
     }
