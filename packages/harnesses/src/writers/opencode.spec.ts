@@ -102,17 +102,16 @@ describe("opencodeWriter", () => {
     expect(defaultsAgent).toContain('grep: "allow"');
     expect(defaultsAgent).toContain('list: "allow"');
     expect(defaultsAgent).toContain('lsp: "allow"');
-    expect(defaultsAgent).toContain('task: "allow"');
+    expect(defaultsAgent).toContain('task: "deny"');
     expect(defaultsAgent).toContain('skill: "deny"');
     expect(defaultsAgent).toContain('todoread: "deny"');
     expect(defaultsAgent).toContain('todowrite: "deny"');
     expect(defaultsAgent).toContain('webfetch: "ask"');
     expect(defaultsAgent).toContain('websearch: "ask"');
     expect(defaultsAgent).toContain('codesearch: "ask"');
-    expect(defaultsAgent).toContain('external_directory: "deny"');
+    expect(defaultsAgent).toContain('external_directory: "ask"');
     expect(defaultsAgent).toContain('doom_loop: "deny"');
     expect(defaultsAgent).toContain('"grep *": "allow"');
-    expect(defaultsAgent).toContain('"cp *": "ask"');
     expect(defaultsAgent).toContain('"rm *": "deny"');
     expect(defaultsFrontmatter.permission).toMatchObject({
       edit: "allow",
@@ -120,21 +119,20 @@ describe("opencodeWriter", () => {
       grep: "allow",
       list: "allow",
       lsp: "allow",
-      task: "allow",
+      task: "deny",
       skill: "deny",
       todoread: "deny",
       todowrite: "deny",
       webfetch: "ask",
       websearch: "ask",
       codesearch: "ask",
-      external_directory: "deny",
+      external_directory: "ask",
       doom_loop: "deny"
     });
     const defaultsPermission = defaultsFrontmatter.permission as {
       bash: Record<string, string>;
     };
     expect(defaultsPermission.bash["grep *"]).toBe("allow");
-    expect(defaultsPermission.bash["cp *"]).toBe("ask");
     expect(defaultsPermission.bash["rm *"]).toBe("deny");
 
     expect(maxAgent).toContain('"*": "allow"');
