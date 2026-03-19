@@ -12,7 +12,26 @@ import { getAutonomyProfile } from "../permission-policy.js";
 type PermissionDecision = "ask" | "allow" | "deny";
 type PermissionRule = PermissionDecision | Record<string, PermissionDecision>;
 
+const APPLICABLE_TO_ALL: Record<string, PermissionRule> = {
+  read: {
+    "*": "allow",
+    "*.env": "deny",
+    "*.env.*": "deny",
+    "*.env.example": "allow"
+  },
+  skill: "deny", //we're using an own skills-mcp
+  todoread: "deny", //no agent-proprieatry todo tools
+  todowrite: "deny",
+  task: "deny",
+  lsp: "allow",
+  glob: "allow",
+  grep: "allow",
+  list: "allow",
+  external_directory: "ask"
+};
+
 const RIGID_RULES: Record<string, PermissionRule> = {
+  ...APPLICABLE_TO_ALL,
   "*": "ask",
   webfetch: "ask",
   websearch: "ask",
@@ -22,31 +41,17 @@ const RIGID_RULES: Record<string, PermissionRule> = {
 };
 
 const SENSIBLE_DEFAULTS_RULES: Record<string, PermissionRule> = {
-  read: {
-    "*": "allow",
-    "*.env": "deny",
-    "*.env.*": "deny",
-    "*.env.example": "allow"
-  },
+  ...APPLICABLE_TO_ALL,
   edit: "allow",
-  glob: "allow",
-  grep: "allow",
-  list: "allow",
-  lsp: "allow",
-  task: "allow",
-  todoread: "deny",
-  todowrite: "deny",
-  skill: "deny",
   webfetch: "ask",
   websearch: "ask",
   codesearch: "ask",
   bash: {
-    "*": "deny",
+    "*": "ask",
     "grep *": "allow",
     "rg *": "allow",
     "find *": "allow",
     "fd *": "allow",
-    ls: "allow",
     "ls *": "allow",
     "cat *": "allow",
     "head *": "allow",
@@ -81,14 +86,7 @@ const SENSIBLE_DEFAULTS_RULES: Record<string, PermissionRule> = {
     "yq *": "allow",
     "mkdir *": "allow",
     "touch *": "allow",
-    "cp *": "ask",
-    "mv *": "ask",
-    "ln *": "ask",
-    "npm *": "ask",
-    "node *": "ask",
-    "pip *": "ask",
-    "python *": "ask",
-    "python3 *": "ask",
+    "kill *": "ask",
     "rm *": "deny",
     "rmdir *": "deny",
     "curl *": "deny",
@@ -109,7 +107,6 @@ const SENSIBLE_DEFAULTS_RULES: Record<string, PermissionRule> = {
     "mkfs *": "deny",
     "mount *": "deny",
     "umount *": "deny",
-    "kill *": "deny",
     "killall *": "deny",
     "pkill *": "deny",
     "nc *": "deny",
@@ -129,16 +126,15 @@ const SENSIBLE_DEFAULTS_RULES: Record<string, PermissionRule> = {
     "userdel *": "deny",
     "iptables *": "deny"
   },
-  external_directory: "deny",
   doom_loop: "deny"
 };
 
 const MAX_AUTONOMY_RULES: Record<string, PermissionRule> = {
+  ...APPLICABLE_TO_ALL,
   "*": "allow",
   webfetch: "ask",
   websearch: "ask",
   codesearch: "ask",
-  external_directory: "deny",
   doom_loop: "deny"
 };
 
