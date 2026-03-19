@@ -9,7 +9,8 @@ import {
   writeMcpServers,
   stdioEntry,
   writeAgentMd,
-  writeGitHooks
+  writeGitHooks,
+  formatYamlKey
 } from "../util.js";
 import { getAutonomyProfile } from "../permission-policy.js";
 
@@ -88,10 +89,4 @@ function renderCopilotAgentMcpServers(servers: McpServerEntry[]): string[] {
   }
 
   return lines;
-}
-
-function formatYamlKey(value: string): string {
-  return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value)
-    ? value
-    : JSON.stringify(value);
 }

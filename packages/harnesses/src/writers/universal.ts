@@ -27,10 +27,11 @@ function renderAutonomyGuidance(config: LogicalConfig): string | undefined {
 }
 
 function getUniversalProfileGuidance(profile: AutonomyProfile): string[] {
+  const header = "Built-in/basic capability guidance:";
   switch (profile) {
     case "rigid":
       return [
-        "Built-in/basic capability guidance:",
+        header,
         "- `read`: allow",
         "- `edit_write`: ask",
         "- `search_list`: ask",
@@ -41,7 +42,7 @@ function getUniversalProfileGuidance(profile: AutonomyProfile): string[] {
       ];
     case "sensible-defaults":
       return [
-        "Built-in/basic capability guidance:",
+        header,
         "- `read`: allow",
         "- `edit_write`: allow",
         "- `search_list`: allow",
@@ -52,7 +53,7 @@ function getUniversalProfileGuidance(profile: AutonomyProfile): string[] {
       ];
     case "max-autonomy":
       return [
-        "Built-in/basic capability guidance:",
+        header,
         "- `read`: allow",
         "- `edit_write`: allow",
         "- `search_list`: allow",

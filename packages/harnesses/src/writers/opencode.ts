@@ -1,10 +1,16 @@
 import { join } from "node:path";
 import type { AutonomyProfile, LogicalConfig } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
-import { writeAgentMd, writeGitHooks, writeMcpServers } from "../util.js";
+import {
+  writeAgentMd,
+  writeGitHooks,
+  writeMcpServers,
+  formatYamlKey
+} from "../util.js";
 import { getAutonomyProfile } from "../permission-policy.js";
 
-type PermissionRule = string | Record<string, string>;
+type PermissionDecision = "ask" | "allow" | "deny";
+type PermissionRule = PermissionDecision | Record<string, PermissionDecision>;
 
 const RIGID_RULES: Record<string, PermissionRule> = {
   "*": "ask",
@@ -205,10 +211,4 @@ function renderYamlMapping(
   }
 
   return lines;
-}
-
-function formatYamlKey(value: string): string {
-  return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value)
-    ? value
-    : JSON.stringify(value);
 }

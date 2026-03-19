@@ -26,6 +26,7 @@ export const kiroWriter: HarnessWriter = {
       })
     });
 
+    const tools = getKiroTools(getAutonomyProfile(config), config.mcp_servers);
     await writeJson(join(projectRoot, ".kiro", "agents", "ade.json"), {
       name: "ade",
       description:
@@ -34,11 +35,8 @@ export const kiroWriter: HarnessWriter = {
         config.instructions.join("\n\n") ||
         "ADE — Agentic Development Environment agent.",
       mcpServers: getKiroAgentMcpServers(config.mcp_servers),
-      tools: getKiroTools(getAutonomyProfile(config), config.mcp_servers),
-      allowedTools: getKiroTools(
-        getAutonomyProfile(config),
-        config.mcp_servers
-      ),
+      tools,
+      allowedTools: tools,
       useLegacyMcpJson: true
     });
 

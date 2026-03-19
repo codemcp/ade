@@ -46,26 +46,27 @@ function getWindsurfRules(config: LogicalConfig): string[] {
 function getWindsurfProfileGuidance(
   profile: AutonomyProfile | undefined
 ): string {
+  const header = "Autonomy guidance for Windsurf built-in capabilities:";
   switch (profile) {
     case "rigid":
       return [
-        "Autonomy guidance for Windsurf built-in capabilities:",
+        header,
         "- May proceed without extra approval: read files.",
         "- Ask before: edit and write files, search and list files, safe local shell commands, unsafe local shell commands, web and network access, task or agent delegation."
       ].join("\n");
     case "sensible-defaults":
       return [
-        "Autonomy guidance for Windsurf built-in capabilities:",
+        header,
         "- May proceed without extra approval: read files, edit and write files, search and list files, safe local shell commands, task or agent delegation.",
         "- Ask before: unsafe local shell commands, web and network access."
       ].join("\n");
     case "max-autonomy":
       return [
-        "Autonomy guidance for Windsurf built-in capabilities:",
+        header,
         "- May proceed without extra approval: read files, edit and write files, search and list files, safe local shell commands, unsafe local shell commands, task or agent delegation.",
         "- Ask before: web and network access."
       ].join("\n");
     default:
-      return "Autonomy guidance for Windsurf built-in capabilities: follow project conventions.";
+      return `${header} follow project conventions.`;
   }
 }
