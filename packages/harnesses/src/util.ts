@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import * as clack from "@clack/prompts";
 import type { GitHook, LogicalConfig, McpServerEntry } from "@codemcp/ade-core";
 
 // ---------------------------------------------------------------------------
@@ -169,15 +170,31 @@ export async function writeAgentMd(
 /**
  * Write git hook scripts to `.git/hooks/<phase>`.
  * Files are created with executable permissions (0o755).
- * No-op when the hooks array is empty.
+ * No-op when the hooks array is empty or undefined.
+ * Emits a warning and skips gracefully when the project root is not a git repository.
  */
 export async function writeGitHooks(
   hooks: GitHook[] | undefined,
   projectRoot: string
 ): Promise<void> {
-  if (!hooks) return;
+  if (!hooks || hooks.length === 0) return;
+
+  const gitDir = join(projectRoot, ".git");
+  try {
+    await access(gitDir);
+  } catch {
+    clack.log.warn(
+      "Git hooks were configured but could not be installed: the project is not a git repository.\n" +
+        "Run `git init` and re-run setup to install the hooks."
+    );
+    return;
+  }
+
+  const hooksDir = join(gitDir, "hooks");
+  await mkdir(hooksDir, { recursive: true });
+
   for (const hook of hooks) {
-    const hookPath = join(projectRoot, ".git", "hooks", hook.phase);
+    const hookPath = join(hooksDir, hook.phase);
     await writeFile(hookPath, hook.script, { mode: 0o755 });
   }
 }

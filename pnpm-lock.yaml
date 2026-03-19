@@ -172,6 +172,9 @@ importers:
 
   packages/harnesses:
     dependencies:
+      "@clack/prompts":
+        specifier: ^1.1.0
+        version: 1.1.0
       "@codemcp/ade-core":
         specifier: workspace:*
         version: link:../core
