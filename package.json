@@ -70,7 +70,8 @@
     "typescript": "catalog:",
     "vitepress": "1.6.2",
     "vitepress-plugin-mermaid": "2.0.17",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "zod": "catalog:"
   },
   "packageManager": "pnpm@10.32.1",
   "pnpm": {

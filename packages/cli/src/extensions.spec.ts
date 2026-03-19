@@ -54,12 +54,46 @@ describe("loadExtensions", () => {
     }
   });
 
-  it("prefers ade.extensions.ts over ade.extensions.mjs", async () => {
-    // This test documents search order — .ts wins over .mjs
-    // In a real TS-only test env we'd need jiti; we just verify the .mjs
-    // fallback works when only .mjs exists (covered above) and the ordering
-    // is documented here.
-    // The actual .ts loading is validated via the search-order unit test below.
-    expect(true).toBe(true); // placeholder — search order tested via mjs fallback
+  it("loads a .js file when only .js exists", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "ade-ext-test-"));
+    try {
+      await writeFile(
+        join(dir, "ade.extensions.js"),
+        `export default {
+          facets: [
+            {
+              id: "js-only-facet",
+              label: "JS Only",
+              description: "From .js fallback",
+              required: false,
+              options: []
+            }
+          ]
+        };`
+      );
+      const result = await loadExtensions(dir);
+      expect(result.facets).toHaveLength(1);
+      expect(result.facets?.[0].id).toBe("js-only-facet");
+    } finally {
+      await rm(dir, { recursive: true });
+    }
+  });
+
+  it("prefers .mjs over .js when both exist", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "ade-ext-test-"));
+    try {
+      await writeFile(
+        join(dir, "ade.extensions.mjs"),
+        `export default { facets: [{ id: "from-mjs", label: "MJS", description: "MJS wins", required: false, options: [] }] };`
+      );
+      await writeFile(
+        join(dir, "ade.extensions.js"),
+        `export default { facets: [{ id: "from-js", label: "JS", description: "JS loses", required: false, options: [] }] };`
+      );
+      const result = await loadExtensions(dir);
+      expect(result.facets?.[0].id).toBe("from-mjs");
+    } finally {
+      await rm(dir, { recursive: true });
+    }
   });
 });
