@@ -1,25 +1,21 @@
 import type { ProvisionWriterDef } from "../types.js";
 
-export const workflowsWriter: ProvisionWriterDef = {
-  id: "workflows",
+export const mcpServerWriter: ProvisionWriterDef = {
+  id: "mcp-server",
   async write(config) {
-    const {
-      package: pkg,
-      ref,
-      env,
-      allowedTools
-    } = config as {
-      package: string;
-      ref?: string;
+    const { ref, command, args, env, allowedTools } = config as {
+      ref: string;
+      command: string;
+      args: string[];
       env?: Record<string, string>;
       allowedTools?: string[];
     };
     return {
       mcp_servers: [
         {
-          ref: ref ?? pkg,
-          command: "npx",
-          args: [pkg],
+          ref,
+          command,
+          args,
           env: env ?? {},
           ...(allowedTools !== undefined ? { allowedTools } : {})
         }

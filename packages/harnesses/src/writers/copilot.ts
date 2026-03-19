@@ -56,14 +56,7 @@ function getBuiltInTools(profile: AutonomyProfile | undefined): string[] {
 }
 
 function getForwardedMcpTools(servers: McpServerEntry[]): string[] {
-  return servers.flatMap((server) => {
-    const allowedTools = server.allowedTools ?? ["*"];
-    if (allowedTools.includes("*")) {
-      return [`${server.ref}/*`];
-    }
-
-    return allowedTools.map((tool) => `${server.ref}/${tool}`);
-  });
+  return servers.map((server) => `${server.ref}/*`);
 }
 
 function renderCopilotAgentMcpServers(servers: McpServerEntry[]): string[] {
@@ -78,7 +71,7 @@ function renderCopilotAgentMcpServers(servers: McpServerEntry[]): string[] {
     lines.push("    type: stdio");
     lines.push(`    command: ${JSON.stringify(server.command)}`);
     lines.push(`    args: ${JSON.stringify(server.args)}`);
-    lines.push(`    tools: ${JSON.stringify(server.allowedTools ?? ["*"])}`);
+    lines.push(`    tools: ${JSON.stringify(["*"])}`);
 
     if (Object.keys(server.env).length > 0) {
       lines.push("    env:");

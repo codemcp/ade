@@ -59,6 +59,28 @@ describe("workflowsWriter", () => {
     expect(result.mcp_servers![0].env).toEqual({});
   });
 
+  it("includes allowedTools in the entry when specified", async () => {
+    const result = await workflowsWriter.write(
+      {
+        package: "@codemcp/workflows-server",
+        allowedTools: ["whats_next", "conduct_review"]
+      },
+      context
+    );
+    expect(result.mcp_servers![0].allowedTools).toEqual([
+      "whats_next",
+      "conduct_review"
+    ]);
+  });
+
+  it("omits allowedTools from entry when not specified", async () => {
+    const result = await workflowsWriter.write(
+      { package: "@codemcp/workflows-server" },
+      context
+    );
+    expect(result.mcp_servers![0]).not.toHaveProperty("allowedTools");
+  });
+
   it("only returns mcp_servers, not other LogicalConfig keys", async () => {
     const result = await workflowsWriter.write(
       { package: "@codemcp/workflows-server" },

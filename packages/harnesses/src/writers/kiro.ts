@@ -27,6 +27,10 @@ export const kiroWriter: HarnessWriter = {
     });
 
     const tools = getKiroTools(getAutonomyProfile(config), config.mcp_servers);
+    const allowedTools = getKiroAllowedTools(
+      getAutonomyProfile(config),
+      config.mcp_servers
+    );
     await writeJson(join(projectRoot, ".kiro", "agents", "ade.json"), {
       name: "ade",
       description:
@@ -36,7 +40,7 @@ export const kiroWriter: HarnessWriter = {
         "ADE — Agentic Development Environment agent.",
       mcpServers: getKiroAgentMcpServers(config.mcp_servers),
       tools,
-      allowedTools: tools,
+      allowedTools,
       useLegacyMcpJson: true
     });
 
@@ -48,7 +52,7 @@ function getKiroTools(
   profile: AutonomyProfile | undefined,
   servers: McpServerEntry[]
 ): string[] {
-  const mcpTools = getKiroForwardedMcpTools(servers);
+  const mcpTools = servers.map((server) => `@${server.ref}/*`);
 
   switch (profile) {
     case "rigid":
@@ -62,15 +66,28 @@ function getKiroTools(
   }
 }
 
-function getKiroForwardedMcpTools(servers: McpServerEntry[]): string[] {
-  return servers.flatMap((server) => {
+function getKiroAllowedTools(
+  profile: AutonomyProfile | undefined,
+  servers: McpServerEntry[]
+): string[] {
+  const mcpAllowedTools = servers.flatMap((server) => {
     const allowedTools = server.allowedTools ?? ["*"];
     if (allowedTools.includes("*")) {
       return [`@${server.ref}/*`];
     }
-
     return allowedTools.map((tool) => `@${server.ref}/${tool}`);
   });
+
+  switch (profile) {
+    case "rigid":
+      return ["read", "shell", "spec", ...mcpAllowedTools];
+    case "sensible-defaults":
+      return ["read", "write", "shell", "spec", ...mcpAllowedTools];
+    case "max-autonomy":
+      return ["read", "write", "shell(*)", "spec", ...mcpAllowedTools];
+    default:
+      return ["read", "write", "shell", "spec", ...mcpAllowedTools];
+  }
 }
 
 function getKiroAgentMcpServers(

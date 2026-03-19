@@ -186,4 +186,36 @@ describe("kiroWriter", () => {
     expect(rigidMcp.mcpServers.workflows.autoApprove).toEqual(["*"]);
     expect(maxMcp.mcpServers.workflows.autoApprove).toEqual(["*"]);
   });
+
+  it("uses wildcard in tools but restricted names in allowedTools when allowedTools is set", async () => {
+    const config: LogicalConfig = {
+      mcp_servers: [
+        {
+          ref: "workflows",
+          command: "npx",
+          args: ["-y", "@codemcp/workflows"],
+          env: {},
+          allowedTools: ["whats_next", "conduct_review"]
+        }
+      ],
+      instructions: [],
+      cli_actions: [],
+      knowledge_sources: [],
+      skills: [],
+      git_hooks: [],
+      setup_notes: []
+    };
+
+    await kiroWriter.install(config, dir);
+
+    const agent = JSON.parse(
+      await readFile(join(dir, ".kiro", "agents", "ade.json"), "utf-8")
+    );
+
+    expect(agent.tools).toContain("@workflows/*");
+    expect(agent.tools).not.toContain("@workflows/whats_next");
+    expect(agent.allowedTools).toContain("@workflows/whats_next");
+    expect(agent.allowedTools).toContain("@workflows/conduct_review");
+    expect(agent.allowedTools).not.toContain("@workflows/*");
+  });
 });

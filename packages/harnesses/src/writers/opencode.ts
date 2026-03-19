@@ -1,5 +1,9 @@
 import { join } from "node:path";
-import type { AutonomyProfile, LogicalConfig } from "@codemcp/ade-core";
+import type {
+  AutonomyProfile,
+  LogicalConfig,
+  McpServerEntry
+} from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
 import {
   writeAgentMd,
@@ -138,6 +142,24 @@ const MAX_AUTONOMY_RULES: Record<string, PermissionRule> = {
   doom_loop: "deny"
 };
 
+function getMcpPermissions(
+  servers: McpServerEntry[]
+): Record<string, PermissionRule> | undefined {
+  const entries: [string, PermissionRule][] = servers.flatMap((server) => {
+    const allowedTools = server.allowedTools ?? ["*"];
+    if (allowedTools.includes("*")) {
+      return [[`${server.ref}*`, "allow"]] as [string, PermissionRule][];
+    }
+    return [
+      [`${server.ref}*`, "ask"] as [string, PermissionRule],
+      ...allowedTools.map(
+        (tool) => [`${server.ref}_${tool}`, "allow"] as [string, PermissionRule]
+      )
+    ];
+  });
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+}
+
 function getPermissionRules(
   profile: AutonomyProfile | undefined
 ): Record<string, PermissionRule> | undefined {
@@ -170,11 +192,16 @@ export const opencodeWriter: HarnessWriter = {
     });
 
     const permission = getPermissionRules(getAutonomyProfile(config));
+    const mcpPermissions = getMcpPermissions(config.mcp_servers);
+    const mergedPermission =
+      permission || mcpPermissions
+        ? { ...(mcpPermissions ?? {}), ...(permission ?? {}) }
+        : undefined;
 
     await writeAgentMd(config, {
       path: join(projectRoot, ".opencode", "agents", "ade.md"),
-      extraFrontmatter: permission
-        ? renderYamlMapping("permission", permission)
+      extraFrontmatter: mergedPermission
+        ? renderYamlMapping("permission", mergedPermission)
         : undefined,
       fallbackBody:
         "ADE — Agentic Development Environment agent with project conventions and tools."
