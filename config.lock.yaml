@@ -1,9 +1,10 @@
 version: 1
-generated_at: 2026-03-18T11:52:51.718Z
+generated_at: 2026-03-19T09:28:46.177Z
 choices:
   process: codemcp-workflows
   practices:
     - adr-nygard
+    - conventional-commits
   autonomy: sensible-defaults
 harnesses:
   - universal
@@ -104,15 +105,38 @@ logical_config:
 
         - Title should be a short noun phrase (e.g. "Use PostgreSQL for
         persistence")
+    - name: conventional-commits
+      description: Conventional Commits specification for structured commit messages
+      body: |-
+        # Conventional Commits
+
+        ## Format
+        ```
+        <type>[optional scope]: <description>
+
+        [optional body]
+
+        [optional footer(s)]
+        ```
+
+        ## Types
+        - `feat`: A new feature (correlates with MINOR in SemVer)
+        - `fix`: A bug fix (correlates with PATCH in SemVer)
+        - `docs`: Documentation only changes
+        - `style`: Changes that do not affect the meaning of the code
+        - `refactor`: A code change that neither fixes a bug nor adds a feature
+        - `perf`: A code change that improves performance
+        - `test`: Adding missing tests or correcting existing tests
+        - `chore`: Changes to the build process or auxiliary tools
+
+        ## Rules
+        - Subject line must not exceed 72 characters
+        - Use imperative mood in the subject line ("add" not "added")
+        - Do not end the subject line with a period
+        - Separate subject from body with a blank line
+        - Use the body to explain what and why, not how
+        - `BREAKING CHANGE:` footer or `!` after type/scope for breaking changes
   git_hooks: []
   setup_notes: []
   permission_policy:
     profile: sensible-defaults
-    capabilities:
-      read: allow
-      edit_write: allow
-      search_list: allow
-      bash_safe: allow
-      bash_unsafe: ask
-      web: ask
-      task_agent: allow

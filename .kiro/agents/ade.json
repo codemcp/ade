@@ -14,7 +14,14 @@
       "autoApprove": ["*"]
     }
   },
-  "tools": ["read", "write", "spec", "@workflows/*", "@agentskills/*", "shell"],
-  "allowedTools": ["read", "write", "spec", "@workflows/*", "@agentskills/*"],
+  "tools": ["read", "write", "shell", "spec", "@workflows/*", "@agentskills/*"],
+  "allowedTools": [
+    "read",
+    "write",
+    "shell",
+    "spec",
+    "@workflows/*",
+    "@agentskills/*"
+  ],
   "useLegacyMcpJson": true
 }
