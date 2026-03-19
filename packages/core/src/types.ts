@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 // --- Catalog types ---
 
 export interface Catalog {
@@ -157,3 +159,55 @@ export interface WriterRegistry {
   provisions: Map<string, ProvisionWriterDef>;
   agents: Map<string, AgentWriterDef>;
 }
+
+// --- Extension types ---
+
+/**
+ * Zod schema for an Option (used in extension validation).
+ * We use z.any() for the recipe to avoid re-specifying the full Provision
+ * shape here — structural validation is done at resolve time.
+ */
+const OptionSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  description: z.string(),
+  recipe: z.array(z.any()),
+  docsets: z.array(z.any()).optional(),
+  available: z.function().optional()
+});
+
+const FacetSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  description: z.string(),
+  required: z.boolean(),
+  multiSelect: z.boolean().optional(),
+  dependsOn: z.array(z.string()).optional(),
+  options: z.array(OptionSchema)
+});
+
+const HarnessWriterSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  description: z.string(),
+  install: z.function()
+});
+
+const ProvisionWriterDefSchema = z.object({
+  id: z.string(),
+  write: z.function()
+});
+
+export const AdeExtensionsSchema = z.object({
+  /** Add new options to existing facets, keyed by facet id */
+  facetContributions: z.record(z.string(), z.array(OptionSchema)).optional(),
+  /** Add entirely new facets */
+  facets: z.array(FacetSchema).optional(),
+  /** Add new provision writers */
+  provisionWriters: z.array(ProvisionWriterDefSchema).optional(),
+  /** Add new harness writers */
+  harnessWriters: z.array(HarnessWriterSchema).optional()
+});
+
+/** The shape of a consumer's `ade.extensions.mjs` default export. */
+export type AdeExtensions = z.infer<typeof AdeExtensionsSchema>;
