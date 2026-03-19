@@ -1,4 +1,3 @@
-import { env } from "process";
 import type { Facet } from "../../types.js";
 
 export const processFacet: Facet = {
