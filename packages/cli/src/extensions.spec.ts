@@ -96,4 +96,33 @@ describe("loadExtensions", () => {
       await rm(dir, { recursive: true });
     }
   });
+
+  it("loads from an absolute path — simulating npx run from a different cwd", async () => {
+    // This is the published-package scenario:
+    // The CLI binary lives in ~/.npm/_npx/... but projectRoot is the user's cwd.
+    // loadExtensions(projectRoot) must look in projectRoot, not in the CLI package dir.
+    const userProjectDir = await mkdtemp(join(tmpdir(), "ade-user-project-"));
+    const cliPackageDir = await mkdtemp(join(tmpdir(), "ade-cli-package-"));
+    try {
+      // Simulate: user project has ade.extensions.mjs
+      await writeFile(
+        join(userProjectDir, "ade.extensions.mjs"),
+        `export default {
+          facets: [{ id: "user-project-facet", label: "User", description: "From user project", required: false, options: [] }]
+        };`
+      );
+      // CLI package dir has no extension file (it shouldn't be used)
+
+      // loadExtensions is called with the user's project dir as projectRoot
+      const result = await loadExtensions(userProjectDir);
+      expect(result.facets?.[0].id).toBe("user-project-facet");
+
+      // CLI package dir produces empty extensions — it is never consulted
+      const cliResult = await loadExtensions(cliPackageDir);
+      expect(cliResult).toEqual({});
+    } finally {
+      await rm(userProjectDir, { recursive: true });
+      await rm(cliPackageDir, { recursive: true });
+    }
+  });
 });
