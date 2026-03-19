@@ -5,6 +5,8 @@
  * without modifying any upstream source files.
  *
  * This file serves as both documentation and an integration example.
+ * It is by no means functional! It's about providing options with dependent
+ * skills and documentation sources.
  * TypeScript consumers can use ade.extensions.ts with full IDE type-checking.
  *
  * @type {import('@codemcp/ade-core').AdeExtensions}
@@ -43,8 +45,7 @@ export default {
               sources: [
                 {
                   name: "sap-abap-docs",
-                  origin:
-                    "https://help.sap.com/docs/abap-cloud/abap-development-tools-user-guide",
+                  origin: "https://your-serialized-version-of-abap-docs.git",
                   description: "Official SAP ABAP Cloud development guide"
                 }
               ]
@@ -53,16 +54,9 @@ export default {
         ],
         docsets: [
           {
-            id: "sap-abap-cloud-docs",
-            label: "SAP ABAP Cloud",
-            origin:
-              "https://help.sap.com/docs/abap-cloud/abap-development-tools-user-guide",
-            description: "SAP ABAP Cloud development documentation"
-          },
-          {
             id: "sap-btp-docs",
             label: "SAP BTP",
-            origin: "https://help.sap.com/docs/btp",
+            origin: "https://your-serialized-version-of-btp-docs.git",
             description: "SAP Business Technology Platform documentation"
           }
         ]
