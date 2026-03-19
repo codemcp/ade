@@ -1,0 +1,34 @@
+{
+  "conversationId": "ade-fix-no-git-k396xs",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-4",
+  "phaseTasks": [
+    {
+      "phaseId": "reproduce",
+      "phaseName": "Reproduce",
+      "taskId": "ade-4.1"
+    },
+    {
+      "phaseId": "analyze",
+      "phaseName": "Analyze",
+      "taskId": "ade-4.2"
+    },
+    {
+      "phaseId": "fix",
+      "phaseName": "Fix",
+      "taskId": "ade-4.3"
+    },
+    {
+      "phaseId": "verify",
+      "phaseName": "Verify",
+      "taskId": "ade-4.4"
+    },
+    {
+      "phaseId": "finalize",
+      "phaseName": "Finalize",
+      "taskId": "ade-4.5"
+    }
+  ],
+  "createdAt": "2026-03-19T09:33:07.866Z",
+  "updatedAt": "2026-03-19T09:33:07.866Z"
+}
