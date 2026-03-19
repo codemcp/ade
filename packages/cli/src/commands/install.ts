@@ -51,7 +51,25 @@ export async function runInstall(
     );
   }
 
-  await installSkills(logicalConfig.skills, projectRoot);
+  if (logicalConfig.skills.length > 0) {
+    const confirmInstall = await clack.confirm({
+      message: `Install ${logicalConfig.skills.length} skill(s) now?`,
+      initialValue: true
+    });
+
+    if (typeof confirmInstall === "symbol") {
+      clack.cancel("Install cancelled.");
+      return;
+    }
+
+    if (confirmInstall) {
+      await installSkills(logicalConfig.skills, projectRoot);
+    } else {
+      clack.log.info(
+        "Skills not installed. Run manually when ready:\n  npx @codemcp/skills experimental_install"
+      );
+    }
+  }
 
   if (logicalConfig.knowledge_sources.length > 0) {
     clack.log.info(

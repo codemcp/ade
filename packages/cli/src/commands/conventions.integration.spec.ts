@@ -8,9 +8,15 @@ vi.mock("@clack/prompts", () => ({
   outro: vi.fn(),
   select: vi.fn(),
   multiselect: vi.fn(),
-  confirm: vi.fn(),
+  confirm: vi.fn().mockResolvedValue(true),
   isCancel: vi.fn().mockReturnValue(false),
   cancel: vi.fn(),
+  log: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    success: vi.fn()
+  },
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
 }));
 
