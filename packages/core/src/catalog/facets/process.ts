@@ -3,7 +3,7 @@ import type { Facet } from "../../types.js";
 export const processFacet: Facet = {
   id: "process",
   label: "Process",
-  description: "How your AI agent receives and executes tasks",
+  description: "How will you guide your agent",
   required: true,
   options: [
     {

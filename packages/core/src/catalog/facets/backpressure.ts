@@ -89,7 +89,7 @@ export const backpressureFacet: Facet = {
   id: "backpressure",
   label: "Backpressure",
   description:
-    "Install git hooks that enforce quality gates — silent on success, surface only relevant failures",
+    "Which automated quality gates to put in place. Translates to git hooks",
   required: false,
   multiSelect: true,
   dependsOn: ["architecture"],

@@ -1,0 +1,24 @@
+{
+  "conversationId": "ade-better-in-cli-explanation-b8jcv3",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-5",
+  "phaseTasks": [
+    {
+      "phaseId": "explore",
+      "phaseName": "Explore",
+      "taskId": "ade-5.1"
+    },
+    {
+      "phaseId": "implement",
+      "phaseName": "Implement",
+      "taskId": "ade-5.2"
+    },
+    {
+      "phaseId": "finalize",
+      "phaseName": "Finalize",
+      "taskId": "ade-5.3"
+    }
+  ],
+  "createdAt": "2026-03-19T10:33:13.963Z",
+  "updatedAt": "2026-03-19T10:33:13.963Z"
+}

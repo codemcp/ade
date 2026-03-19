@@ -31,7 +31,14 @@ if (command === "setup") {
   console.log(version);
 } else {
   const allIds = getHarnessIds();
-  console.log(`ade v${version}`);
+  console.log(`ade v${version} — Agentic Development Environment`);
+  console.log();
+  console.log(
+    "Define how your team works with coding agents — pick your facets,"
+  );
+  console.log(
+    "ADE translates them into a shared information hierarchy in your repo."
+  );
   console.log();
   console.log("Usage: ade <command> [options]");
   console.log();

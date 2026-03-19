@@ -3,8 +3,7 @@ import type { Facet } from "../../types.js";
 export const practicesFacet: Facet = {
   id: "practices",
   label: "Practices",
-  description:
-    "Composable development practices — mix and match regardless of stack",
+  description: "Development practices — mix and match regardless of stack",
   required: false,
   multiSelect: true,
   options: [

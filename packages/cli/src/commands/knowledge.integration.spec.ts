@@ -6,6 +6,7 @@ import { join } from "node:path";
 vi.mock("@clack/prompts", () => ({
   intro: vi.fn(),
   outro: vi.fn(),
+  note: vi.fn(),
   select: vi.fn(),
   multiselect: vi.fn(),
   confirm: vi.fn(),

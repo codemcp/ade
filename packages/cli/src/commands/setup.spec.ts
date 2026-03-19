@@ -6,6 +6,7 @@ import type { Catalog, LogicalConfig } from "@codemcp/ade-core";
 vi.mock("@clack/prompts", () => ({
   intro: vi.fn(),
   outro: vi.fn(),
+  note: vi.fn(),
   select: vi.fn(),
   multiselect: vi.fn(),
   confirm: vi.fn(),
@@ -298,7 +299,7 @@ describe("runSetup", () => {
       expect(clack.multiselect).toHaveBeenCalledTimes(1);
       expect(clack.multiselect).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining("Harnesses")
+          message: expect.stringContaining("coding agents")
         })
       );
     });
