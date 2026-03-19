@@ -28,6 +28,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@clack/prompts": "^1.1.0",
     "@codemcp/ade-core": "workspace:*",
     "@codemcp/skills": "^2.3.0"
   },
