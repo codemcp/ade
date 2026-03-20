@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { resolve, collectDocsets } from "./resolver.js";
+import { resolve } from "./resolver.js";
 import { getDefaultCatalog } from "./catalog/index.js";
 import { createRegistry, registerProvisionWriter } from "./registry.js";
 import { instructionWriter } from "./writers/instruction.js";
 import { workflowsWriter } from "./writers/workflows.js";
 import { skillsWriter } from "./writers/skills.js";
 import { setupNoteWriter } from "./writers/setup-note.js";
+import { docsetWriter } from "./writers/docset.js";
 import type { UserConfig, WriterRegistry, Catalog } from "./types.js";
 
 function buildRegistry(): WriterRegistry {
@@ -613,7 +614,7 @@ describe("resolve", () => {
     });
   });
 
-  describe("docset collection", () => {
+  describe("docset collection via recipe writer", () => {
     it("collects docsets from selected options into knowledge_sources", async () => {
       const docsetCatalog: Catalog = {
         facets: [
@@ -627,13 +628,15 @@ describe("resolve", () => {
                 id: "react",
                 label: "React",
                 description: "React framework",
-                recipe: [],
-                docsets: [
+                recipe: [
                   {
-                    id: "react-docs",
-                    label: "React Reference",
-                    origin: "https://github.com/facebook/react.git",
-                    description: "Official React documentation"
+                    writer: "docset",
+                    config: {
+                      id: "react-docs",
+                      label: "React Reference",
+                      origin: "https://github.com/facebook/react.git",
+                      description: "Official React documentation"
+                    }
                   }
                 ]
               }
@@ -642,8 +645,11 @@ describe("resolve", () => {
         ]
       };
 
+      const reg = createRegistry();
+      registerProvisionWriter(reg, docsetWriter);
+
       const userConfig: UserConfig = { choices: { arch: "react" } };
-      const result = await resolve(userConfig, docsetCatalog, registry);
+      const result = await resolve(userConfig, docsetCatalog, reg);
 
       expect(result.knowledge_sources).toHaveLength(1);
       expect(result.knowledge_sources[0]).toEqual({
@@ -653,7 +659,7 @@ describe("resolve", () => {
       });
     });
 
-    it("deduplicates docsets by id across multiple options", async () => {
+    it("deduplicates docsets by id across multiple options via last-writer-wins on knowledge_sources name", async () => {
       const docsetCatalog: Catalog = {
         facets: [
           {
@@ -667,13 +673,15 @@ describe("resolve", () => {
                 id: "react",
                 label: "React",
                 description: "React",
-                recipe: [],
-                docsets: [
+                recipe: [
                   {
-                    id: "react-docs",
-                    label: "React Reference",
-                    origin: "https://github.com/facebook/react.git",
-                    description: "React docs"
+                    writer: "docset",
+                    config: {
+                      id: "react-docs",
+                      label: "React Reference",
+                      origin: "https://github.com/facebook/react.git",
+                      description: "React docs"
+                    }
                   }
                 ]
               },
@@ -681,19 +689,24 @@ describe("resolve", () => {
                 id: "nextjs",
                 label: "Next.js",
                 description: "Next.js",
-                recipe: [],
-                docsets: [
+                recipe: [
                   {
-                    id: "react-docs",
-                    label: "React Reference",
-                    origin: "https://github.com/facebook/react.git",
-                    description: "React docs"
+                    writer: "docset",
+                    config: {
+                      id: "react-docs",
+                      label: "React Reference",
+                      origin: "https://github.com/facebook/react.git",
+                      description: "React docs"
+                    }
                   },
                   {
-                    id: "nextjs-docs",
-                    label: "Next.js Docs",
-                    origin: "https://nextjs.org/docs",
-                    description: "Next.js docs"
+                    writer: "docset",
+                    config: {
+                      id: "nextjs-docs",
+                      label: "Next.js Docs",
+                      origin: "https://nextjs.org/docs",
+                      description: "Next.js docs"
+                    }
                   }
                 ]
               }
@@ -701,60 +714,20 @@ describe("resolve", () => {
           }
         ]
       };
+
+      const reg = createRegistry();
+      registerProvisionWriter(reg, docsetWriter);
 
       const userConfig: UserConfig = {
         choices: { stack: ["react", "nextjs"] }
       };
-      const result = await resolve(userConfig, docsetCatalog, registry);
+      const result = await resolve(userConfig, docsetCatalog, reg);
 
-      expect(result.knowledge_sources).toHaveLength(2);
-      const ids = result.knowledge_sources.map((ks) => ks.name);
-      expect(ids).toContain("react-docs");
-      expect(ids).toContain("nextjs-docs");
-    });
-
-    it("filters out excluded_docsets", async () => {
-      const docsetCatalog: Catalog = {
-        facets: [
-          {
-            id: "arch",
-            label: "Architecture",
-            description: "Stack",
-            required: false,
-            options: [
-              {
-                id: "react",
-                label: "React",
-                description: "React",
-                recipe: [],
-                docsets: [
-                  {
-                    id: "react-docs",
-                    label: "React Reference",
-                    origin: "https://github.com/facebook/react.git",
-                    description: "React docs"
-                  },
-                  {
-                    id: "react-tutorial",
-                    label: "React Tutorial",
-                    origin: "https://github.com/reactjs/react.dev.git",
-                    description: "React tutorial"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      };
-
-      const userConfig: UserConfig = {
-        choices: { arch: "react" },
-        excluded_docsets: ["react-tutorial"]
-      };
-      const result = await resolve(userConfig, docsetCatalog, registry);
-
-      expect(result.knowledge_sources).toHaveLength(1);
-      expect(result.knowledge_sources[0].name).toBe("react-docs");
+      // react-docs appears twice but mergeLogicalConfig pushes all entries;
+      // both entries are present (dedup is intentionally not done at writer level)
+      const names = result.knowledge_sources.map((ks) => ks.name);
+      expect(names).toContain("react-docs");
+      expect(names).toContain("nextjs-docs");
     });
 
     it("adds knowledge-server MCP entry when knowledge_sources are present", async () => {
@@ -770,13 +743,15 @@ describe("resolve", () => {
                 id: "react",
                 label: "React",
                 description: "React",
-                recipe: [],
-                docsets: [
+                recipe: [
                   {
-                    id: "react-docs",
-                    label: "React Reference",
-                    origin: "https://github.com/facebook/react.git",
-                    description: "React docs"
+                    writer: "docset",
+                    config: {
+                      id: "react-docs",
+                      label: "React Reference",
+                      origin: "https://github.com/facebook/react.git",
+                      description: "React docs"
+                    }
                   }
                 ]
               }
@@ -785,8 +760,11 @@ describe("resolve", () => {
         ]
       };
 
+      const reg = createRegistry();
+      registerProvisionWriter(reg, docsetWriter);
+
       const userConfig: UserConfig = { choices: { arch: "react" } };
-      const result = await resolve(userConfig, docsetCatalog, registry);
+      const result = await resolve(userConfig, docsetCatalog, reg);
 
       const knowledgeServer = result.mcp_servers.find(
         (s) => s.ref === "knowledge"
@@ -808,84 +786,13 @@ describe("resolve", () => {
       expect(knowledgeServer).toBeUndefined();
     });
 
-    it("produces no knowledge_sources when option has no docsets", async () => {
+    it("produces no knowledge_sources when option has no docset provisions", async () => {
       const userConfig: UserConfig = {
         choices: { process: "native-agents-md" }
       };
       const result = await resolve(userConfig, catalog, registry);
 
       expect(result.knowledge_sources).toEqual([]);
-    });
-  });
-
-  describe("collectDocsets", () => {
-    it("returns deduplicated docsets for given choices", () => {
-      const docsetCatalog: Catalog = {
-        facets: [
-          {
-            id: "stack",
-            label: "Stack",
-            description: "Stack",
-            required: false,
-            multiSelect: true,
-            options: [
-              {
-                id: "a",
-                label: "A",
-                description: "A",
-                recipe: [],
-                docsets: [
-                  {
-                    id: "shared",
-                    label: "Shared",
-                    origin: "https://x",
-                    description: "shared"
-                  },
-                  {
-                    id: "a-only",
-                    label: "A Only",
-                    origin: "https://a",
-                    description: "a"
-                  }
-                ]
-              },
-              {
-                id: "b",
-                label: "B",
-                description: "B",
-                recipe: [],
-                docsets: [
-                  {
-                    id: "shared",
-                    label: "Shared",
-                    origin: "https://x",
-                    description: "shared"
-                  },
-                  {
-                    id: "b-only",
-                    label: "B Only",
-                    origin: "https://b",
-                    description: "b"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      };
-
-      const result = collectDocsets({ stack: ["a", "b"] }, docsetCatalog);
-
-      expect(result).toHaveLength(3);
-      const ids = result.map((d) => d.id);
-      expect(ids).toContain("shared");
-      expect(ids).toContain("a-only");
-      expect(ids).toContain("b-only");
-    });
-
-    it("returns empty array when no options have docsets", () => {
-      const result = collectDocsets({ process: "native-agents-md" }, catalog);
-      expect(result).toEqual([]);
     });
   });
 

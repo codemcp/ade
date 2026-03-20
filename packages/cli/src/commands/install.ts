@@ -8,6 +8,7 @@ import {
   installSkills,
   writeInlineSkills
 } from "@codemcp/ade-harnesses";
+import { installKnowledge } from "../knowledge-installer.js";
 
 export async function runInstall(
   projectRoot: string,
@@ -77,6 +78,7 @@ export async function runInstall(
   }
 
   if (logicalConfig.knowledge_sources.length > 0) {
+    await installKnowledge(logicalConfig.knowledge_sources, projectRoot);
     clack.log.info(
       "Knowledge sources configured. Initialize them separately:\n  npx @codemcp/knowledge init"
     );

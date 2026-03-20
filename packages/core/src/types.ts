@@ -21,15 +21,7 @@ export interface Option {
   label: string;
   description: string;
   recipe: Provision[];
-  docsets?: DocsetDef[];
   available?: (deps: Record<string, Option | undefined>) => boolean;
-}
-
-export interface DocsetDef {
-  id: string;
-  label: string;
-  origin: string;
-  description: string;
 }
 
 export interface Provision {
@@ -40,7 +32,7 @@ export interface Provision {
 export type ProvisionWriter =
   | "workflows"
   | "skills"
-  | "knowledge"
+  | "docset"
   | "mcp-server"
   | "instruction"
   | "installable"
@@ -138,7 +130,6 @@ export interface ResolvedFacet {
 
 export interface UserConfig {
   choices: Record<string, string | string[]>;
-  excluded_docsets?: string[];
   harnesses?: string[];
   custom?: {
     mcp_servers?: McpServerEntry[];

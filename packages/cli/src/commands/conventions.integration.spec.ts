@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { mkdtemp, rm, readFile, access } from "node:fs/promises";
+import {
+  mkdtemp,
+  rm,
+  readFile,
+  access,
+  writeFile,
+  mkdir
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -19,6 +26,27 @@ vi.mock("@clack/prompts", () => ({
     success: vi.fn()
   },
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
+}));
+
+// Mock the knowledge package to avoid real network I/O
+vi.mock("@codemcp/knowledge/packages/cli/dist/exports.js", () => ({
+  createDocset: vi.fn(
+    async (
+      params: { id: string; name: string; url?: string },
+      options: { cwd?: string }
+    ) => {
+      const dir = join(options?.cwd ?? process.cwd(), ".knowledge");
+      await mkdir(dir, { recursive: true });
+      const configPath = join(dir, "config.yaml");
+      await writeFile(
+        configPath,
+        `version: "1.0"\ndocsets:\n  - id: ${params.id}\n`,
+        { flag: "w" }
+      );
+      return { docset: {}, configPath, configCreated: true };
+    }
+  ),
+  initDocset: vi.fn().mockResolvedValue({ alreadyInitialized: false })
 }));
 
 import * as clack from "@clack/prompts";
@@ -51,7 +79,6 @@ describe("architecture and practices facets integration", () => {
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
         .mockResolvedValueOnce([]) // backpressure: none
-        .mockResolvedValueOnce([]) // docsets: deselect all
         .mockResolvedValueOnce(["claude-code"]); // harnesses
 
       await runSetup(dir, catalog);
@@ -110,7 +137,6 @@ describe("architecture and practices facets integration", () => {
       .mockResolvedValueOnce("__skip__"); // architecture: skip
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce(["conventional-commits", "tdd-london"]) // practices
-      .mockResolvedValueOnce([]) // docsets: deselect all (conventional-commits has docset)
       .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);
@@ -237,7 +263,6 @@ describe("architecture and practices facets integration", () => {
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce(["tdd-london", "conventional-commits"]) // practices
         .mockResolvedValueOnce([]) // backpressure: none
-        .mockResolvedValueOnce([]) // docsets: deselect all
         .mockResolvedValueOnce(["claude-code"]); // harnesses
 
       await runSetup(dir, catalog);

@@ -115,32 +115,42 @@ export const architectureFacet: Facet = {
               }
             ]
           }
-        }
-      ],
-      docsets: [
-        {
-          id: "tanstack-router-docs",
-          label: "TanStack Router",
-          origin: "https://github.com/TanStack/router.git",
-          description: "File-based routing, loaders, and search params"
         },
         {
-          id: "tanstack-query-docs",
-          label: "TanStack Query",
-          origin: "https://github.com/TanStack/query.git",
-          description: "Server state management, caching, and mutations"
+          writer: "docset",
+          config: {
+            id: "tanstack-router-docs",
+            label: "TanStack Router",
+            origin: "https://github.com/TanStack/router.git",
+            description: "File-based routing, loaders, and search params"
+          }
         },
         {
-          id: "tanstack-form-docs",
-          label: "TanStack Form",
-          origin: "https://github.com/TanStack/form.git",
-          description: "Type-safe form state and validation"
+          writer: "docset",
+          config: {
+            id: "tanstack-query-docs",
+            label: "TanStack Query",
+            origin: "https://github.com/TanStack/query.git",
+            description: "Server state management, caching, and mutations"
+          }
         },
         {
-          id: "tanstack-table-docs",
-          label: "TanStack Table",
-          origin: "https://github.com/TanStack/table.git",
-          description: "Headless table and datagrid utilities"
+          writer: "docset",
+          config: {
+            id: "tanstack-form-docs",
+            label: "TanStack Form",
+            origin: "https://github.com/TanStack/form.git",
+            description: "Type-safe form state and validation"
+          }
+        },
+        {
+          writer: "docset",
+          config: {
+            id: "tanstack-table-docs",
+            label: "TanStack Table",
+            origin: "https://github.com/TanStack/table.git",
+            description: "Headless table and datagrid utilities"
+          }
         }
       ]
     },
@@ -256,32 +266,42 @@ export const architectureFacet: Facet = {
               }
             ]
           }
-        }
-      ],
-      docsets: [
-        {
-          id: "trpc-docs",
-          label: "tRPC",
-          origin: "https://github.com/trpc/trpc.git",
-          description: "End-to-end type-safe APIs, routers, and procedures"
         },
         {
-          id: "drizzle-orm-docs",
-          label: "Drizzle ORM",
-          origin: "https://github.com/drizzle-team/drizzle-orm.git",
-          description: "Type-safe SQL schema, queries, and migrations"
+          writer: "docset",
+          config: {
+            id: "trpc-docs",
+            label: "tRPC",
+            origin: "https://github.com/trpc/trpc.git",
+            description: "End-to-end type-safe APIs, routers, and procedures"
+          }
         },
         {
-          id: "express-docs",
-          label: "Express",
-          origin: "https://github.com/expressjs/express.git",
-          description: "HTTP server, routing, and middleware"
+          writer: "docset",
+          config: {
+            id: "drizzle-orm-docs",
+            label: "Drizzle ORM",
+            origin: "https://github.com/drizzle-team/drizzle-orm.git",
+            description: "Type-safe SQL schema, queries, and migrations"
+          }
         },
         {
-          id: "zod-docs",
-          label: "Zod",
-          origin: "https://github.com/colinhacks/zod.git",
-          description: "TypeScript-first schema validation"
+          writer: "docset",
+          config: {
+            id: "express-docs",
+            label: "Express",
+            origin: "https://github.com/expressjs/express.git",
+            description: "HTTP server, routing, and middleware"
+          }
+        },
+        {
+          writer: "docset",
+          config: {
+            id: "zod-docs",
+            label: "Zod",
+            origin: "https://github.com/colinhacks/zod.git",
+            description: "TypeScript-first schema validation"
+          }
         }
       ]
     },
@@ -404,33 +424,44 @@ export const architectureFacet: Facet = {
               }
             ]
           }
-        }
-      ],
-      docsets: [
-        {
-          id: "spring-boot-docs",
-          label: "Spring Boot",
-          origin: "https://github.com/spring-projects/spring-boot.git",
-          description: "Spring Boot framework, auto-configuration, and actuator"
         },
         {
-          id: "spring-data-jpa-docs",
-          label: "Spring Data JPA",
-          origin: "https://github.com/spring-projects/spring-data-jpa.git",
-          description: "JPA repositories, derived queries, and specifications"
+          writer: "docset",
+          config: {
+            id: "spring-boot-docs",
+            label: "Spring Boot",
+            origin: "https://github.com/spring-projects/spring-boot.git",
+            description:
+              "Spring Boot framework, auto-configuration, and actuator"
+          }
         },
         {
-          id: "spring-security-docs",
-          label: "Spring Security",
-          origin: "https://github.com/spring-projects/spring-security.git",
-          description: "Authentication, authorization, and security filters"
+          writer: "docset",
+          config: {
+            id: "spring-data-jpa-docs",
+            label: "Spring Data JPA",
+            origin: "https://github.com/spring-projects/spring-data-jpa.git",
+            description: "JPA repositories, derived queries, and specifications"
+          }
         },
         {
-          id: "lombok-docs",
-          label: "Lombok",
-          origin: "https://github.com/projectlombok/lombok.git",
-          description:
-            "Boilerplate reduction with annotations for getters, builders, and constructors"
+          writer: "docset",
+          config: {
+            id: "spring-security-docs",
+            label: "Spring Security",
+            origin: "https://github.com/spring-projects/spring-security.git",
+            description: "Authentication, authorization, and security filters"
+          }
+        },
+        {
+          writer: "docset",
+          config: {
+            id: "lombok-docs",
+            label: "Lombok",
+            origin: "https://github.com/projectlombok/lombok.git",
+            description:
+              "Boilerplate reduction with annotations for getters, builders, and constructors"
+          }
         }
       ]
     }

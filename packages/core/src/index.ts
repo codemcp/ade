@@ -2,8 +2,7 @@ export {
   type Catalog,
   type Facet,
   type Option,
-  type Provision,
-  type DocsetDef
+  type Provision
 } from "./types.js";
 export {
   type LogicalConfig,
@@ -39,7 +38,7 @@ export {
   getAgentWriter,
   createDefaultRegistry
 } from "./registry.js";
-export { resolve, collectDocsets } from "./resolver.js";
+export { resolve } from "./resolver.js";
 export {
   getDefaultCatalog,
   getFacet,
@@ -50,5 +49,5 @@ export {
 } from "./catalog/index.js";
 export { type AdeExtensions, AdeExtensionsSchema } from "./types.js";
 export { skillsWriter } from "./writers/skills.js";
-export { knowledgeWriter } from "./writers/knowledge.js";
+export { docsetWriter } from "./writers/docset.js";
 export { permissionPolicyWriter } from "./writers/permission-policy.js";

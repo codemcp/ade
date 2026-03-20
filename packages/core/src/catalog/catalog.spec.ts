@@ -118,29 +118,39 @@ describe("catalog", () => {
       expect(names).toContain("nodejs-backend-testing");
     });
 
-    it("nodejs-backend option declares docsets for tRPC, Drizzle, Express, and Zod", () => {
+    it("nodejs-backend option declares docset recipe entries for tRPC, Drizzle, Express, and Zod", () => {
       const catalog = getDefaultCatalog();
       const architecture = getFacet(catalog, "architecture")!;
       const nodejsBackend = getOption(architecture, "nodejs-backend")!;
 
-      expect(nodejsBackend.docsets).toBeDefined();
-      const ids = nodejsBackend.docsets!.map((d) => d.id);
-      expect(ids).toContain("trpc-docs");
-      expect(ids).toContain("drizzle-orm-docs");
-      expect(ids).toContain("express-docs");
-      expect(ids).toContain("zod-docs");
+      const docsetIds = nodejsBackend.recipe
+        .filter((p) => p.writer === "docset")
+        .map((p) => (p.config as { id: string }).id);
+      expect(docsetIds).toContain("trpc-docs");
+      expect(docsetIds).toContain("drizzle-orm-docs");
+      expect(docsetIds).toContain("express-docs");
+      expect(docsetIds).toContain("zod-docs");
     });
 
-    it("each nodejs-backend docset has required fields", () => {
+    it("each nodejs-backend docset recipe entry has required fields", () => {
       const catalog = getDefaultCatalog();
       const architecture = getFacet(catalog, "architecture")!;
       const nodejsBackend = getOption(architecture, "nodejs-backend")!;
 
-      for (const docset of nodejsBackend.docsets!) {
-        expect(docset.id).toBeTruthy();
-        expect(docset.label).toBeTruthy();
-        expect(docset.origin).toMatch(/^https:\/\//);
-        expect(docset.description).toBeTruthy();
+      const docsetProvisions = nodejsBackend.recipe.filter(
+        (p) => p.writer === "docset"
+      );
+      for (const provision of docsetProvisions) {
+        const config = provision.config as {
+          id: string;
+          label: string;
+          origin: string;
+          description: string;
+        };
+        expect(config.id).toBeTruthy();
+        expect(config.label).toBeTruthy();
+        expect(config.origin).toMatch(/^https:\/\//);
+        expect(config.description).toBeTruthy();
       }
     });
   });
@@ -167,57 +177,77 @@ describe("catalog", () => {
       expect(names).toContain("java-backend-testing");
     });
 
-    it("java-backend option declares docsets for Spring Boot, Spring Data JPA, Spring Security, and Lombok", () => {
+    it("java-backend option declares docset recipe entries for Spring Boot, Spring Data JPA, Spring Security, and Lombok", () => {
       const catalog = getDefaultCatalog();
       const architecture = getFacet(catalog, "architecture")!;
       const javaBackend = getOption(architecture, "java-backend")!;
 
-      expect(javaBackend.docsets).toBeDefined();
-      const ids = javaBackend.docsets!.map((d) => d.id);
-      expect(ids).toContain("spring-boot-docs");
-      expect(ids).toContain("spring-data-jpa-docs");
-      expect(ids).toContain("spring-security-docs");
-      expect(ids).toContain("lombok-docs");
+      const docsetIds = javaBackend.recipe
+        .filter((p) => p.writer === "docset")
+        .map((p) => (p.config as { id: string }).id);
+      expect(docsetIds).toContain("spring-boot-docs");
+      expect(docsetIds).toContain("spring-data-jpa-docs");
+      expect(docsetIds).toContain("spring-security-docs");
+      expect(docsetIds).toContain("lombok-docs");
     });
 
-    it("each java-backend docset has required fields", () => {
+    it("each java-backend docset recipe entry has required fields", () => {
       const catalog = getDefaultCatalog();
       const architecture = getFacet(catalog, "architecture")!;
       const javaBackend = getOption(architecture, "java-backend")!;
 
-      for (const docset of javaBackend.docsets!) {
-        expect(docset.id).toBeTruthy();
-        expect(docset.label).toBeTruthy();
-        expect(docset.origin).toMatch(/^https:\/\//);
-        expect(docset.description).toBeTruthy();
+      const docsetProvisions = javaBackend.recipe.filter(
+        (p) => p.writer === "docset"
+      );
+      for (const provision of docsetProvisions) {
+        const config = provision.config as {
+          id: string;
+          label: string;
+          origin: string;
+          description: string;
+        };
+        expect(config.id).toBeTruthy();
+        expect(config.label).toBeTruthy();
+        expect(config.origin).toMatch(/^https:\/\//);
+        expect(config.description).toBeTruthy();
       }
     });
   });
 
   describe("architecture facet docsets", () => {
-    it("tanstack option declares docsets for Router, Query, Form, and Table", () => {
+    it("tanstack option declares docset recipe entries for Router, Query, Form, and Table", () => {
       const catalog = getDefaultCatalog();
       const architecture = getFacet(catalog, "architecture")!;
       const tanstack = getOption(architecture, "tanstack")!;
 
-      expect(tanstack.docsets).toBeDefined();
-      const ids = tanstack.docsets!.map((d) => d.id);
-      expect(ids).toContain("tanstack-router-docs");
-      expect(ids).toContain("tanstack-query-docs");
-      expect(ids).toContain("tanstack-form-docs");
-      expect(ids).toContain("tanstack-table-docs");
+      const docsetIds = tanstack.recipe
+        .filter((p) => p.writer === "docset")
+        .map((p) => (p.config as { id: string }).id);
+      expect(docsetIds).toContain("tanstack-router-docs");
+      expect(docsetIds).toContain("tanstack-query-docs");
+      expect(docsetIds).toContain("tanstack-form-docs");
+      expect(docsetIds).toContain("tanstack-table-docs");
     });
 
-    it("each docset has required fields", () => {
+    it("each tanstack docset recipe entry has required fields", () => {
       const catalog = getDefaultCatalog();
       const architecture = getFacet(catalog, "architecture")!;
       const tanstack = getOption(architecture, "tanstack")!;
 
-      for (const docset of tanstack.docsets!) {
-        expect(docset.id).toBeTruthy();
-        expect(docset.label).toBeTruthy();
-        expect(docset.origin).toMatch(/^https:\/\//);
-        expect(docset.description).toBeTruthy();
+      const docsetProvisions = tanstack.recipe.filter(
+        (p) => p.writer === "docset"
+      );
+      for (const provision of docsetProvisions) {
+        const config = provision.config as {
+          id: string;
+          label: string;
+          origin: string;
+          description: string;
+        };
+        expect(config.id).toBeTruthy();
+        expect(config.label).toBeTruthy();
+        expect(config.origin).toMatch(/^https:\/\//);
+        expect(config.description).toBeTruthy();
       }
     });
   });
@@ -251,14 +281,16 @@ describe("catalog", () => {
       expect(skills[0].name).toBe("conventional-commits");
     });
 
-    it("conventional-commits option declares the spec docset", () => {
+    it("conventional-commits option declares the spec docset via a recipe entry", () => {
       const catalog = getDefaultCatalog();
       const practices = getFacet(catalog, "practices")!;
       const option = getOption(practices, "conventional-commits")!;
 
-      expect(option.docsets).toBeDefined();
-      expect(option.docsets).toHaveLength(1);
-      expect(option.docsets![0].id).toBe("conventional-commits-spec");
+      const docsetIds = option.recipe
+        .filter((p) => p.writer === "docset")
+        .map((p) => (p.config as { id: string }).id);
+      expect(docsetIds).toHaveLength(1);
+      expect(docsetIds[0]).toBe("conventional-commits-spec");
     });
 
     it("has tdd-london option with a single skill", () => {
