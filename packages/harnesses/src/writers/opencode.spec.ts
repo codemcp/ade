@@ -110,7 +110,6 @@ describe("opencodeWriter", () => {
     expect(defaultsAgent).toContain('websearch: "ask"');
     expect(defaultsAgent).toContain('codesearch: "ask"');
     expect(defaultsAgent).toContain('external_directory: "ask"');
-    expect(defaultsAgent).toContain('doom_loop: "deny"');
     expect(defaultsAgent).toContain('"grep *": "allow"');
     expect(defaultsAgent).toContain('"rm *": "deny"');
     expect(defaultsFrontmatter.permission).toMatchObject({
@@ -119,15 +118,14 @@ describe("opencodeWriter", () => {
       grep: "allow",
       list: "allow",
       lsp: "allow",
-      task: "deny",
+      task: "allow",
       skill: "deny",
       todoread: "deny",
       todowrite: "deny",
       webfetch: "ask",
       websearch: "ask",
       codesearch: "ask",
-      external_directory: "ask",
-      doom_loop: "deny"
+      external_directory: "ask"
     });
     const defaultsPermission = defaultsFrontmatter.permission as {
       bash: Record<string, string>;

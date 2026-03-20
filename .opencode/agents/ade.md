@@ -2,6 +2,12 @@
 name: ade
 description: ADE — Agentic Development Environment agent with project conventions and tools
 permission:
+  "workflows*": "ask"
+  workflows_whats_next: "allow"
+  workflows_conduct_review: "allow"
+  workflows_list_workflows: "allow"
+  workflows_get_tool_info: "allow"
+  "agentskills*": "allow"
   read:
     "*": "allow"
     "*.env": "deny"
@@ -10,7 +16,7 @@ permission:
   skill: "deny"
   todoread: "deny"
   todowrite: "deny"
-  task: "deny"
+  task: "allow"
   lsp: "allow"
   glob: "allow"
   grep: "allow"
@@ -99,7 +105,6 @@ permission:
     "useradd *": "deny"
     "userdel *": "deny"
     "iptables *": "deny"
-  doom_loop: "deny"
 ---
 
 You are an AI assistant that helps users develop software features using the workflows server.

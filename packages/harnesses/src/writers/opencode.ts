@@ -24,9 +24,9 @@ const APPLICABLE_TO_ALL: Record<string, PermissionRule> = {
     "*.env.example": "allow"
   },
   skill: "deny", //we're using an own skills-mcp
-  todoread: "deny", //no agent-proprieatry todo tools
+  todoread: "deny", //no agent-proprietary todo tools
   todowrite: "deny",
-  task: "deny",
+  task: "allow", //starts subagents
   lsp: "allow",
   glob: "allow",
   grep: "allow",
@@ -129,8 +129,7 @@ const SENSIBLE_DEFAULTS_RULES: Record<string, PermissionRule> = {
     "useradd *": "deny",
     "userdel *": "deny",
     "iptables *": "deny"
-  },
-  doom_loop: "deny"
+  }
 };
 
 const MAX_AUTONOMY_RULES: Record<string, PermissionRule> = {

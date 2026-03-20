@@ -3,7 +3,12 @@
     "workflows": {
       "command": "npx",
       "args": ["@codemcp/workflows-server@latest"],
-      "autoApprove": ["*"]
+      "autoApprove": [
+        "whats_next",
+        "conduct_review",
+        "list_workflows",
+        "get_tool_info"
+      ]
     },
     "agentskills": {
       "command": "npx",

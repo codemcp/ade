@@ -6,7 +6,12 @@
     "workflows": {
       "command": "npx",
       "args": ["@codemcp/workflows-server@latest"],
-      "autoApprove": ["*"]
+      "autoApprove": [
+        "whats_next",
+        "conduct_review",
+        "list_workflows",
+        "get_tool_info"
+      ]
     },
     "agentskills": {
       "command": "npx",
@@ -20,7 +25,10 @@
     "write",
     "shell",
     "spec",
-    "@workflows/*",
+    "@workflows/whats_next",
+    "@workflows/conduct_review",
+    "@workflows/list_workflows",
+    "@workflows/get_tool_info",
     "@agentskills/*"
   ],
   "useLegacyMcpJson": true

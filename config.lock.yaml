@@ -1,5 +1,5 @@
 version: 1
-generated_at: 2026-03-19T09:28:46.177Z
+generated_at: 2026-03-20T08:32:04.912Z
 choices:
   process: codemcp-workflows
   practices:
@@ -18,6 +18,11 @@ logical_config:
       args:
         - "@codemcp/workflows-server@latest"
       env: {}
+      allowedTools:
+        - whats_next
+        - conduct_review
+        - list_workflows
+        - get_tool_info
     - ref: agentskills
       command: npx
       args:
