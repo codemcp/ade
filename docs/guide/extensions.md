@@ -89,20 +89,13 @@ export default {
             }
           },
           {
-            writer: "knowledge",
+            writer: "docset",
             config: {
-              name: "sap-abap-docs",
-              origin: "https://help.sap.com/docs/abap-cloud",
-              description: "SAP ABAP Cloud documentation"
+              id: "sap-abap-cloud-docs",
+              label: "SAP ABAP Cloud",
+              origin: "https://your-serialized-version-of-abap-docs.git",
+              description: "SAP ABAP Cloud development documentation"
             }
-          }
-        ],
-        docsets: [
-          {
-            id: "sap-abap-cloud-docs",
-            label: "SAP ABAP Cloud",
-            origin: "https://help.sap.com/docs/abap-cloud",
-            description: "SAP ABAP Cloud development documentation"
           }
         ]
       }
@@ -117,8 +110,7 @@ After running `ade setup` and selecting `SAP BTP / ABAP`:
   to `.agentskills/skills/<name>/` for agent consumption
 - Knowledge sources appear in `config.lock.yaml` under
   `logical_config.knowledge_sources` and can be initialised with
-  `npx @codemcp/knowledge init`
-- Docsets appear in the setup wizard's documentation sources step
+  `npx @codemcp/knowledge init <id>`
 
 ## Adding a new facet
 
