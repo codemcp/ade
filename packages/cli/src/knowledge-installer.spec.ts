@@ -56,6 +56,24 @@ describe("installKnowledge", () => {
     );
   });
 
+  it("uses source.preset when provided instead of defaulting to git-repo", async () => {
+    const sources: KnowledgeSource[] = [
+      {
+        name: "my-archive",
+        origin: "https://example.com/docs.tar.gz",
+        description: "Archive docs",
+        preset: "archive"
+      }
+    ];
+
+    await installKnowledge(sources, "/tmp/project");
+
+    expect(createDocset).toHaveBeenCalledWith(
+      expect.objectContaining({ preset: "archive" }),
+      expect.anything()
+    );
+  });
+
   it("calls initDocset for each knowledge source after creation", async () => {
     const sources: KnowledgeSource[] = [
       {
@@ -76,9 +94,9 @@ describe("installKnowledge", () => {
     );
   });
 
-  it("continues with remaining sources when one fails", async () => {
+  it("continues with remaining sources when createDocset fails with a real error", async () => {
     vi.mocked(createDocset)
-      .mockRejectedValueOnce(new Error("already exists"))
+      .mockRejectedValueOnce(new Error("network error"))
       .mockResolvedValueOnce({
         docset: {},
         configPath: ".knowledge/config.yaml",
@@ -102,10 +120,32 @@ describe("installKnowledge", () => {
 
     // Should have attempted both
     expect(createDocset).toHaveBeenCalledTimes(2);
-    // initDocset only called for the successful one
+    // initDocset only called for the successful one (real error skips it)
     expect(initDocset).toHaveBeenCalledTimes(1);
     expect(initDocset).toHaveBeenCalledWith(
       expect.objectContaining({ docsetId: "succeeding" })
+    );
+  });
+
+  it("proceeds to initDocset when createDocset reports docset already exists", async () => {
+    vi.mocked(createDocset).mockRejectedValueOnce(
+      new Error("Docset with ID 'react-docs' already exists")
+    );
+
+    const sources: KnowledgeSource[] = [
+      {
+        name: "react-docs",
+        origin: "https://github.com/facebook/react.git",
+        description: "React documentation"
+      }
+    ];
+
+    await installKnowledge(sources, "/tmp/project");
+
+    // createDocset failed with "already exists" — initDocset must still be called
+    expect(initDocset).toHaveBeenCalledTimes(1);
+    expect(initDocset).toHaveBeenCalledWith(
+      expect.objectContaining({ docsetId: "react-docs" })
     );
   });
 });

@@ -109,10 +109,14 @@ export interface CliAction {
   phase: "setup" | "install";
 }
 
+export type DocsetPreset = "git-repo" | "local-folder" | "archive";
+
 export interface KnowledgeSource {
   name: string;
   origin: string;
   description: string;
+  /** Preset type controlling how the source is fetched. Defaults to "git-repo". */
+  preset?: DocsetPreset;
 }
 
 // --- Resolution context ---
