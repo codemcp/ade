@@ -1,0 +1,29 @@
+{
+  "conversationId": "ade-fix-docset-writing-37fuoj",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-11",
+  "phaseTasks": [
+    {
+      "phaseId": "explore",
+      "phaseName": "Explore",
+      "taskId": "ade-11.1"
+    },
+    {
+      "phaseId": "plan",
+      "phaseName": "Plan",
+      "taskId": "ade-11.2"
+    },
+    {
+      "phaseId": "code",
+      "phaseName": "Code",
+      "taskId": "ade-11.3"
+    },
+    {
+      "phaseId": "commit",
+      "phaseName": "Commit",
+      "taskId": "ade-11.4"
+    }
+  ],
+  "createdAt": "2026-03-20T14:24:53.678Z",
+  "updatedAt": "2026-03-20T14:24:53.678Z"
+}

@@ -202,17 +202,11 @@ export async function runSetup(
   }
 
   if (logicalConfig.knowledge_sources.length > 0) {
-    const sourceNames = logicalConfig.knowledge_sources
-      .map((s) => `  • ${s.name}`)
-      .join("\n");
     const initCommands = logicalConfig.knowledge_sources
       .map((s) => `  npx @codemcp/knowledge init ${s.name}`)
       .join("\n");
     const confirmInit = await clack.confirm({
-      message:
-        `Initialize ${logicalConfig.knowledge_sources.length} knowledge source(s) now?\n` +
-        sourceNames +
-        `\nYou can also initialize them later with:\n${initCommands}`,
+      message: `Initialize ${logicalConfig.knowledge_sources.length} knowledge source(s) now?`,
       initialValue: false
     });
 
