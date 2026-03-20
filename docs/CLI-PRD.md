@@ -40,8 +40,9 @@ from that facet).
 
 ### Option
 
-One possible answer to a facet. Each option carries a recipe and optionally
-a list of recommended docsets.
+One possible answer to a facet. Each option carries a recipe list of
+provisions. Documentation sources (docsets) are declared as `docset`
+provisions in the recipe alongside skills and other provisions.
 
 ### Recipe
 
@@ -57,15 +58,13 @@ runtime config and agent instructions.
 
 ### Docset
 
-Documentation sources recommended by an option. Docsets are a **weak entity
-on Option** — they are always implied by an upstream selection (e.g. picking
-"TanStack" implies TanStack Router/Query/Form/Table docs). The TUI presents
-all implied docsets as pre-selected defaults and allows the user to deselect
-(opt-out, not opt-in). The resolver collects docsets from all selected
-options, deduplicates by id, filters by `excluded_docsets`, and maps them to
-`knowledge_sources` in LogicalConfig. When any knowledge sources are present,
-the resolver automatically adds a `@codemcp/knowledge-server` MCP server
-entry.
+Documentation sources declared as a `docset` provision in an option's
+recipe. Docsets are always implied by an upstream selection (e.g. picking
+"TanStack" implies TanStack Router/Query/Form/Table docs declared as
+`docset` provisions in the `tanstack` option's recipe). The `docsetWriter`
+maps each provision to a `KnowledgeSource` in LogicalConfig. When any
+knowledge sources are present, the resolver automatically adds a
+`@codemcp/knowledge-server` MCP server entry.
 
 ### Provision
 
@@ -76,15 +75,17 @@ carries writer-specific config. Provision types:
 | ------------- | ------------------------------------------------------------ |
 | `workflows`   | MCP server entry for `@codemcp/workflows-server`             |
 | `skills`      | Skill definitions (inline or external) for `@codemcp/skills` |
-| `knowledge`   | Knowledge source entry for `@codemcp/knowledge`              |
+| `docset`      | Knowledge source entry for `@codemcp/knowledge`              |
 | `instruction` | Raw instruction text for the agent                           |
 
 ### KnowledgeSource
 
-Describes the origin of documentation content (a git repository URL ending
-in `.git`). The `@codemcp/knowledge` package manages the physical docset
-artifacts via its programmatic API (`createDocset` + `initDocset`); ADE
-tracks the sources in LogicalConfig.
+Describes the origin of documentation content. The `preset` field controls
+how the source is fetched: `"git-repo"` (default) for git repositories,
+`"archive"` for remote `.tar.gz` archives, `"local-folder"` for local paths.
+The `@codemcp/knowledge` package manages the physical docset artifacts via
+its programmatic API (`createDocset` + `initDocset`); ADE tracks the sources
+in LogicalConfig.
 
 ### LogicalConfig (intermediate representation)
 
@@ -95,7 +96,7 @@ resolution step and the agent writers:
 mcp_servers:        [{ref, command, args, env}]
 instructions:       [string]
 skills:             [SkillDefinition]
-knowledge_sources:  [{name, origin, description}]
+knowledge_sources:  [{name, origin, description, preset?}]
 ```
 
 ### Agent Writer
@@ -124,8 +125,6 @@ choices:
   practices: # multi-select facet
     - conventional-commits
     - tdd-london
-excluded_docsets: # docsets the user opted out of
-  - tanstack-table-docs
 custom: # user-managed section (not touched by CLI)
   mcp_servers:
     - ref: custom-server
@@ -148,16 +147,12 @@ when a facet selection or catalog version is updated.
 ## CLI Commands
 
 ```
-ade setup          Interactive TUI: walk through facets, confirm docsets,
-                   write config.yaml + config.lock.yaml + agent files,
-                   install skills and knowledge sources.
+ade setup          Interactive TUI: walk through facets, write
+                   config.yaml + config.lock.yaml + agent files,
+                   install skills, prompt to initialize knowledge sources.
                    Re-running setup on an existing project pre-selects
                    previous choices as defaults. Warns if a previous
                    selection references an option no longer in the catalog.
-
-ade install        Apply config.lock.yaml → agent files + skills + knowledge.
-                   Non-interactive. Idempotent. Does not re-resolve — uses
-                   the lock file as-is.
 ```
 
 ## Catalog
@@ -190,8 +185,8 @@ Stack and framework conventions that shape the project structure.
 | `tanstack` | Full-stack conventions for TanStack (Router, Query, Form, Table) |
 
 Each architecture option carries inline skills (conventions, design patterns,
-code style, testing) and recommended docsets (git repos for each library's
-documentation).
+code style, testing) and docset provisions (one `docset` recipe entry per
+documentation source).
 
 ### 3. Practices (`practices`) — multi-select
 
@@ -204,18 +199,20 @@ Composable development practices. Multiple selections allowed.
 | `adr-nygard`           | Architecture Decision Records following Nygard's template          |
 
 Practices with associated documentation (e.g. Conventional Commits) carry
-docsets that are collected alongside architecture docsets.
+`docset` provisions that resolve to knowledge sources alongside architecture
+docsets.
 
 ### Documentation Layer (derived)
 
 Documentation is **not** a standalone facet. Instead, each option in
-architecture and practices declares recommended `docsets[]`. The setup TUI
-collects all implied docsets and presents them as an opt-out confirmation
-step. Accepted docsets become `knowledge_sources` in LogicalConfig, which
-triggers:
+architecture and practices declares documentation sources as `docset`
+provisions in its recipe — the same mechanism used for skills. The resolver
+processes these like any other provision: `docsetWriter` maps each to a
+`KnowledgeSource`. Accepted docsets become `knowledge_sources` in
+LogicalConfig, which triggers:
 
 1. Automatic addition of the `@codemcp/knowledge-server` MCP server entry
-2. Installation via `@codemcp/knowledge` API (`createDocset` + `initDocset`)
+2. A confirmation prompt in `ade setup` — default is to defer initialization
 
 ## Non-Goals (initial release)
 
@@ -243,9 +240,10 @@ triggers:
 5. **User edits are confined to `custom`.** The rest of `config.yaml` is
    CLI-managed, eliminating merge conflicts in the structured sections.
 
-6. **Docsets are a weak entity on Option, not a separate facet.** Documentation
-   sources are always implied by an upstream selection. Making documentation a
-   standalone facet would create a hollow indirection whose options just mirror
-   upstream choices 1:1. Config stores `excluded_docsets` (what the user opted
-   out of) rather than selected docsets, keeping the common case (accept all
-   recommendations) zero-config.
+6. **Docsets are `docset` provisions in the recipe, not a separate field.**
+   Documentation sources are always implied by an upstream selection. They are
+   declared as `{ writer: "docset", config: {...} }` recipe entries —
+   consistent with how skills are declared. This eliminates the separate
+   `Option.docsets[]` field, the `excluded_docsets` opt-out mechanism, and the
+   per-item confirmation multiselect. Users can still defer or skip
+   initialization via the single confirm prompt in `ade setup`.

@@ -31,7 +31,7 @@ core/src/
   writers/              # built-in provision writers
     workflows.ts
     skills.ts
-    knowledge.ts
+    docset.ts
     instruction.ts
   agents/               # built-in agent writers
     claude-code.ts      # AGENTS.md, .claude/settings.json, skill files
@@ -91,21 +91,18 @@ read existing config.yaml (if any) for default selections
       → pre-select previous choice as default (if still valid)
       → warn if previous choice references a stale option
       → collect new user choices
-  → collect docsets from all selected options
-  → present docset confirmation (opt-out multiselect)
   → resolve choices + catalog → LogicalConfig
   → write config.yaml (user choices)
   → write config.lock.yaml (resolved LogicalConfig snapshot)
   → run agent writer (generate AGENTS.md, settings.json, etc.)
   → install skills via @codemcp/skills API
-  → install knowledge via @codemcp/knowledge API
+  → prompt to initialize knowledge sources via @codemcp/knowledge API
 ```
 
 Resolution expands each selected option's recipe provisions into
-LogicalConfig fragments, deduplicates docsets by id, filters by
-`excluded_docsets`, maps enabled docsets to `knowledge_sources`, adds the
-`@codemcp/knowledge-server` MCP entry if knowledge sources are present,
-merges the custom section, and deduplicates MCP servers by ref.
+LogicalConfig fragments, maps `docset` provisions to `knowledge_sources`,
+adds the `@codemcp/knowledge-server` MCP entry if knowledge sources are
+present, merges the custom section, and deduplicates MCP servers by ref.
 
 For **multi-select facets**, each selected option's recipe is resolved
 independently and their LogicalConfig fragments are merged.
@@ -180,23 +177,6 @@ interface Option {
   label: string; // e.g. "CodeMCP Workflows"
   description: string;
   recipe: Provision[]; // multiple provisions per option is common
-  docsets?: DocsetDef[]; // recommended documentation for this option
-}
-
-// Documentation as a weak entity on Option. Docsets are derived from
-// upstream selections — picking "TanStack" in architecture implies
-// TanStack docs, picking "GitHub Actions CI/CD" in practices implies
-// GH Actions docs. The TUI presents all implied docsets as pre-selected
-// defaults and allows the user to deselect. This is opt-out, not opt-in.
-//
-// The resolver collects docsets from all selected options, deduplicates
-// by id, filters by excluded_docsets from UserConfig, and maps enabled
-// docsets directly to knowledge_sources in LogicalConfig.
-interface DocsetDef {
-  id: string; // unique key for dedup, e.g. "tanstack-query-docs"
-  label: string; // display name, e.g. "TanStack Query Reference"
-  origin: string; // URL, path, or package ref
-  description: string; // shown in TUI
 }
 
 // A recipe typically contains multiple provisions for different writers.
@@ -238,6 +218,7 @@ interface KnowledgeSource {
   name: string; // e.g. "tanstack"
   origin: string; // URL, path, or package ref
   description: string;
+  preset?: "git-repo" | "local-folder" | "archive"; // defaults to "git-repo"
 }
 ```
 
@@ -247,7 +228,6 @@ interface KnowledgeSource {
 // config.yaml — mostly CLI-managed, agent-agnostic
 interface UserConfig {
   choices: Record<string, string | string[]>; // single-select: string, multi-select: string[]
-  excluded_docsets?: string[]; // docset IDs the user opted out of
   custom?: {
     // user-managed section
     mcp_servers?: McpServerEntry[];
@@ -355,7 +335,7 @@ function createDefaultRegistry(): WriterRegistry {
   registerProvisionWriter(registry, instructionWriter);
   registerProvisionWriter(registry, workflowsWriter);
   registerProvisionWriter(registry, skillsWriter);
-  registerProvisionWriter(registry, knowledgeWriter);
+  registerProvisionWriter(registry, docsetWriter);
 
   registerAgentWriter(registry, claudeCodeWriter);
 
@@ -390,10 +370,12 @@ interface SkillsConfig {
   skills: SkillDefinition[];
 }
 
-interface KnowledgeConfig {
-  name: string;
-  origin: string; // must be a valid .git URL
+interface DocsetConfig {
+  id: string;
+  label: string;
+  origin: string;
   description: string;
+  preset?: "git-repo" | "local-folder" | "archive"; // defaults to "git-repo"
 }
 
 interface InstructionConfig {
@@ -474,16 +456,23 @@ Inline skills include a `body` field; external skills reference a `source`.
 The actual installation (writing SKILL.md files and calling `@codemcp/skills`
 API) is handled by the agent writer and CLI's `skills-installer`.
 
-### `knowledge` writer
+### `docset` writer
 
 ```typescript
-{ name: "tanstack-query-docs", origin: "https://github.com/TanStack/query.git", description: "Server state management" }
+{
+  id: "tanstack-query-docs",
+  label: "TanStack Query",
+  origin: "https://github.com/TanStack/query.git",
+  description: "Server state management",
+  preset: "git-repo" // optional, defaults to "git-repo"
+}
 ```
 
-Produces a `KnowledgeSource` entry in LogicalConfig. The actual installation
-(calling `@codemcp/knowledge` API) is handled by the CLI's
-`knowledge-installer`. Origins must be valid `.git` URLs for the `git-repo`
-preset.
+Produces a `KnowledgeSource` entry in LogicalConfig. The `preset` field
+controls how the source is fetched: `"git-repo"` (default) for git
+repositories, `"archive"` for remote `.tar.gz` archives, `"local-folder"`
+for local paths. The actual installation (calling `@codemcp/knowledge` API)
+is handled by the CLI's `knowledge-installer`.
 
 ### `mcp-server` writer
 
@@ -545,7 +534,7 @@ export const processFacet: Facet = {
   ]
 };
 
-// catalog/facets/architecture.ts — options carry skills + docsets
+// catalog/facets/architecture.ts — options carry skills + docset provisions
 export const architectureFacet: Facet = {
   id: "architecture",
   label: "Architecture",
@@ -578,20 +567,24 @@ export const architectureFacet: Facet = {
         {
           writer: "instruction",
           config: { text: "This project follows TanStack conventions..." }
-        }
-      ],
-      docsets: [
-        {
-          id: "tanstack-router-docs",
-          label: "TanStack Router",
-          origin: "https://github.com/TanStack/router.git",
-          description: "File-based routing, loaders, and search params"
         },
         {
-          id: "tanstack-query-docs",
-          label: "TanStack Query",
-          origin: "https://github.com/TanStack/query.git",
-          description: "Server state management, caching, and mutations"
+          writer: "docset",
+          config: {
+            id: "tanstack-router-docs",
+            label: "TanStack Router",
+            origin: "https://github.com/TanStack/router.git",
+            description: "File-based routing, loaders, and search params"
+          }
+        },
+        {
+          writer: "docset",
+          config: {
+            id: "tanstack-query-docs",
+            label: "TanStack Query",
+            origin: "https://github.com/TanStack/query.git",
+            description: "Server state management, caching, and mutations"
+          }
         }
         // ... form, table
       ]
@@ -634,13 +627,10 @@ export const architectureFacet: Facet = {
    merge conflicts: the CLI never touches `custom`, and users never touch
    the rest. Agent writers merge both sections when generating output.
 
-7. **Docsets are a weak entity on Option, not a separate facet.** Documentation
-   sources are always implied by an upstream selection (architecture or
-   practices). Making documentation a standalone facet would create a hollow
-   indirection whose options just mirror upstream choices 1:1. Instead, each
-   `Option` declares its recommended `docsets[]`. The resolver collects and
-   deduplicates them; the TUI presents them as a confirmation step (opt-out,
-   not opt-in). Config stores `excluded_docsets` (what the user opted out of)
-   rather than selected docsets, keeping the common case (accept all
-   recommendations) zero-config. When knowledge sources are present, the
+7. **Docsets are `docset` provisions in the recipe, not a separate field on Option.**
+   Documentation sources are always implied by an upstream selection (architecture
+   or practices). Each option declares docsets as `{ writer: "docset", config: {...} }`
+   recipe entries — consistent with how skills are declared. The resolver processes
+   `docset` provisions like any other: the `docsetWriter` maps each one to a
+   `KnowledgeSource` in LogicalConfig. When knowledge sources are present, the
    resolver automatically adds a `@codemcp/knowledge-server` MCP server entry.
