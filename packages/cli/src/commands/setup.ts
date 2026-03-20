@@ -202,10 +202,29 @@ export async function runSetup(
   }
 
   if (logicalConfig.knowledge_sources.length > 0) {
-    await installKnowledge(logicalConfig.knowledge_sources, projectRoot);
-    clack.log.info(
-      "Knowledge sources configured. Initialize them separately:\n  npx @codemcp/knowledge init"
-    );
+    const sourceNames = logicalConfig.knowledge_sources
+      .map((s) => `  • ${s.name}`)
+      .join("\n");
+    const confirmInit = await clack.confirm({
+      message:
+        `Initialize ${logicalConfig.knowledge_sources.length} knowledge source(s) now?\n` +
+        sourceNames +
+        `\nYou can also initialize them later with:\n  npx @codemcp/knowledge init`,
+      initialValue: false
+    });
+
+    if (typeof confirmInit === "symbol") {
+      clack.cancel("Setup cancelled.");
+      return;
+    }
+
+    if (confirmInit) {
+      await installKnowledge(logicalConfig.knowledge_sources, projectRoot);
+    } else {
+      clack.log.info(
+        "Knowledge sources configured. Initialize them when ready:\n  npx @codemcp/knowledge init"
+      );
+    }
   }
 
   for (const note of logicalConfig.setup_notes) {
