@@ -54,15 +54,16 @@ export const practicesFacet: Facet = {
               }
             ]
           }
-        }
-      ],
-      docsets: [
+        },
         {
-          id: "conventional-commits-spec",
-          label: "Conventional Commits Spec",
-          origin:
-            "https://github.com/conventional-commits/conventionalcommits.org.git",
-          description: "The Conventional Commits specification"
+          writer: "docset",
+          config: {
+            id: "conventional-commits-spec",
+            label: "Conventional Commits Spec",
+            origin:
+              "https://github.com/conventional-commits/conventionalcommits.org.git",
+            description: "The Conventional Commits specification"
+          }
         }
       ]
     },

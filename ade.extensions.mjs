@@ -40,24 +40,22 @@ export default {
             }
           },
           {
-            writer: "knowledge",
+            writer: "docset",
             config: {
-              sources: [
-                {
-                  name: "sap-abap-docs",
-                  origin: "https://your-serialized-version-of-abap-docs.git",
-                  description: "Official SAP ABAP Cloud development guide"
-                }
-              ]
+              id: "sap-btp-docs",
+              label: "SAP BTP",
+              origin: "https://your-serialized-version-of-btp-docs.git",
+              description: "SAP Business Technology Platform documentation"
             }
-          }
-        ],
-        docsets: [
+          },
           {
-            id: "sap-btp-docs",
-            label: "SAP BTP",
-            origin: "https://your-serialized-version-of-btp-docs.git",
-            description: "SAP Business Technology Platform documentation"
+            writer: "docset",
+            config: {
+              id: "sap-abap-docs",
+              label: "SAP ABAP Cloud",
+              origin: "https://your-serialized-version-of-abap-docs.git",
+              description: "Official SAP ABAP Cloud development guide"
+            }
           }
         ]
       }

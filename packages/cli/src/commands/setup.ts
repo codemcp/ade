@@ -8,7 +8,6 @@ import {
   writeUserConfig,
   writeLockFile,
   resolve,
-  collectDocsets,
   createDefaultRegistry,
   getFacet,
   getOption,
@@ -22,6 +21,7 @@ import {
   installSkills,
   writeInlineSkills
 } from "@codemcp/ade-harnesses";
+import { installKnowledge } from "../knowledge-installer.js";
 
 export async function runSetup(
   projectRoot: string,
@@ -107,37 +107,6 @@ export async function runSetup(
     }
   }
 
-  // Docset confirmation step: collect implied docsets, let user deselect
-  const impliedDocsets = collectDocsets(choices, catalog);
-  let excludedDocsets: string[] | undefined;
-
-  if (impliedDocsets.length > 0) {
-    const selected = await clack.multiselect({
-      message:
-        "Documentation sources — Those will be pulled to your local disk for browsing on demand",
-      options: impliedDocsets.map((d) => ({
-        value: d.id,
-        label: d.label,
-        hint: d.description
-      })),
-      initialValues: impliedDocsets.map((d) => d.id),
-      required: false
-    });
-
-    if (typeof selected === "symbol") {
-      clack.cancel("Setup cancelled.");
-      return;
-    }
-
-    const selectedSet = new Set(selected as string[]);
-    const excluded = impliedDocsets
-      .filter((d) => !selectedSet.has(d.id))
-      .map((d) => d.id);
-    if (excluded.length > 0) {
-      excludedDocsets = excluded;
-    }
-  }
-
   // Harness selection — multi-select from all available harnesses
   const existingHarnesses = existingConfig?.harnesses;
   const harnessOptions = harnessWriters.map((w) => ({
@@ -171,7 +140,6 @@ export async function runSetup(
 
   const userConfig: UserConfig = {
     choices,
-    ...(excludedDocsets && { excluded_docsets: excludedDocsets }),
     ...(harnesses.length > 0 && { harnesses })
   };
   const registry = createDefaultRegistry();
@@ -234,8 +202,9 @@ export async function runSetup(
   }
 
   if (logicalConfig.knowledge_sources.length > 0) {
+    await installKnowledge(logicalConfig.knowledge_sources, projectRoot);
     clack.log.info(
-      "Knowledge sources selected. Initialize them separately:\n  npx @codemcp/knowledge init"
+      "Knowledge sources configured. Initialize them separately:\n  npx @codemcp/knowledge init"
     );
   }
 

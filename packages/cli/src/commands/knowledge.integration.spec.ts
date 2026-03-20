@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { mkdtemp, rm, readFile } from "node:fs/promises";
+import { mkdtemp, rm, readFile, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -14,6 +14,27 @@ vi.mock("@clack/prompts", () => ({
   cancel: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn() },
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
+}));
+
+// Mock the knowledge package to avoid real network I/O
+vi.mock("@codemcp/knowledge/packages/cli/dist/exports.js", () => ({
+  createDocset: vi.fn(
+    async (
+      params: { id: string; name: string; url?: string },
+      options: { cwd?: string }
+    ) => {
+      const dir = join(options?.cwd ?? process.cwd(), ".knowledge");
+      await mkdir(dir, { recursive: true });
+      const configPath = join(dir, "config.yaml");
+      await writeFile(
+        configPath,
+        `version: "1.0"\ndocsets:\n  - id: ${params.id}\n`,
+        { flag: "w" }
+      );
+      return { docset: {}, configPath, configCreated: true };
+    }
+  ),
+  initDocset: vi.fn().mockResolvedValue({ alreadyInitialized: false })
 }));
 
 import * as clack from "@clack/prompts";
@@ -46,17 +67,11 @@ describe("knowledge integration", () => {
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
         .mockResolvedValueOnce([]) // backpressure: none
-        .mockResolvedValueOnce([
-          "tanstack-router-docs",
-          "tanstack-query-docs",
-          "tanstack-form-docs",
-          "tanstack-table-docs"
-        ])
         .mockResolvedValueOnce(["claude-code"]); // harnesses
 
       await runSetup(dir, catalog);
 
-      // Lock file should contain knowledge_sources
+      // Lock file should contain all 4 knowledge_sources from tanstack docset entries
       const lock = await readLockFile(dir);
       expect(lock!.logical_config.knowledge_sources).toHaveLength(4);
       expect(lock!.logical_config.knowledge_sources.map((s) => s.name)).toEqual(
@@ -84,33 +99,6 @@ describe("knowledge integration", () => {
     }
   );
 
-  it(
-    "excludes deselected docsets from lock file",
-    { timeout: 60_000 },
-    async () => {
-      const catalog = getDefaultCatalog();
-
-      vi.mocked(clack.select)
-        .mockResolvedValueOnce("codemcp-workflows") // process
-        .mockResolvedValueOnce("tanstack"); // architecture
-
-      vi.mocked(clack.multiselect)
-        .mockResolvedValueOnce([]) // practices: none
-        .mockResolvedValueOnce([]) // backpressure: none
-        .mockResolvedValueOnce(["tanstack-router-docs", "tanstack-query-docs"])
-        .mockResolvedValueOnce(["claude-code"]); // harnesses
-
-      await runSetup(dir, catalog);
-
-      // Lock file should only have the 2 selected sources
-      const lock = await readLockFile(dir);
-      expect(lock!.logical_config.knowledge_sources).toHaveLength(2);
-      expect(lock!.logical_config.knowledge_sources.map((s) => s.name)).toEqual(
-        expect.arrayContaining(["tanstack-router-docs", "tanstack-query-docs"])
-      );
-    }
-  );
-
   it("does not show knowledge hint when no docsets are implied", async () => {
     const catalog = getDefaultCatalog();
 
@@ -118,7 +106,7 @@ describe("knowledge integration", () => {
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture: skip
     vi.mocked(clack.multiselect)
-      .mockResolvedValueOnce(["tdd-london"]) // practices: no docsets
+      .mockResolvedValueOnce(["tdd-london"]) // practices: tdd-london has no docsets
       .mockResolvedValueOnce(["claude-code"]); // harnesses
 
     await runSetup(dir, catalog);

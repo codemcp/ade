@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { mkdtemp, rm, readFile } from "node:fs/promises";
+import { mkdtemp, rm, readFile, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -15,6 +15,27 @@ vi.mock("@clack/prompts", () => ({
   cancel: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), success: vi.fn() },
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
+}));
+
+// Mock the knowledge package to avoid real network I/O
+vi.mock("@codemcp/knowledge/packages/cli/dist/exports.js", () => ({
+  createDocset: vi.fn(
+    async (
+      params: { id: string; name: string; url?: string },
+      options: { cwd?: string }
+    ) => {
+      const dir = join(options?.cwd ?? process.cwd(), ".knowledge");
+      await mkdir(dir, { recursive: true });
+      const configPath = join(dir, "config.yaml");
+      await writeFile(
+        configPath,
+        `version: "1.0"\ndocsets:\n  - id: ${params.id}\n`,
+        { flag: "w" }
+      );
+      return { docset: {}, configPath, configCreated: true };
+    }
+  ),
+  initDocset: vi.fn().mockResolvedValue({ alreadyInitialized: false })
 }));
 
 import * as clack from "@clack/prompts";
@@ -43,7 +64,7 @@ describe("extension e2e — option contributes skills and knowledge to setup out
     "extension-contributed architecture option writes inline skill and knowledge source",
     { timeout: 60_000 },
     async () => {
-      // Build an extension with a SAP option that has an inline skill + knowledge
+      // Build an extension with a SAP option that has an inline skill + a docset
       const extensions: AdeExtensions = {
         facetContributions: {
           architecture: [
@@ -65,9 +86,10 @@ describe("extension e2e — option contributes skills and knowledge to setup out
                   }
                 },
                 {
-                  writer: "knowledge",
+                  writer: "docset",
                   config: {
-                    name: "sap-abap-docs",
+                    id: "sap-abap-docs",
+                    label: "SAP ABAP Cloud",
                     origin: "https://help.sap.com/docs/abap-cloud",
                     description: "SAP ABAP Cloud documentation"
                   }

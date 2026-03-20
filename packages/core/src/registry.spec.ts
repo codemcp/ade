@@ -120,7 +120,7 @@ describe("registry", () => {
       const expectedIds = [
         "workflows",
         "skills",
-        "knowledge",
+        "docset",
         "mcp-server",
         "instruction",
         "installable",

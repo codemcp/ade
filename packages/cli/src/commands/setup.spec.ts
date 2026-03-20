@@ -31,8 +31,7 @@ vi.mock("@codemcp/ade-core", async (importOriginal) => {
       skills: [],
       git_hooks: [],
       setup_notes: []
-    } satisfies LogicalConfig),
-    collectDocsets: actual.collectDocsets
+    } satisfies LogicalConfig)
   };
 });
 
@@ -106,39 +105,6 @@ const testCatalog: Catalog = {
           label: "Jest",
           description: "Use jest",
           recipe: []
-        }
-      ]
-    }
-  ]
-};
-
-const docsetCatalog: Catalog = {
-  facets: [
-    {
-      id: "arch",
-      label: "Architecture",
-      description: "Stack",
-      required: true,
-      options: [
-        {
-          id: "react",
-          label: "React",
-          description: "React framework",
-          recipe: [],
-          docsets: [
-            {
-              id: "react-docs",
-              label: "React Reference",
-              origin: "https://github.com/facebook/react.git",
-              description: "Official React docs"
-            },
-            {
-              id: "react-tutorial",
-              label: "React Tutorial",
-              origin: "https://github.com/reactjs/react.dev.git",
-              description: "React learn guide"
-            }
-          ]
         }
       ]
     }
@@ -237,72 +203,6 @@ describe("runSetup", () => {
     expect(writeUserConfig).not.toHaveBeenCalled();
     expect(writeLockFile).not.toHaveBeenCalled();
     expect(clack.cancel).toHaveBeenCalled();
-  });
-
-  describe("docset confirmation step", () => {
-    it("presents implied docsets as a multiselect after facet selection", async () => {
-      vi.mocked(clack.select).mockResolvedValueOnce("react");
-      // User accepts all docsets (returns all ids), then harness selection
-      vi.mocked(clack.multiselect)
-        .mockResolvedValueOnce(["react-docs", "react-tutorial"])
-        .mockResolvedValueOnce(["claude-code"]);
-
-      await runSetup("/tmp/test-project", docsetCatalog);
-
-      // multiselect should have been called for docsets
-      expect(clack.multiselect).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: expect.stringContaining("Documentation")
-        })
-      );
-    });
-
-    it("stores deselected docsets as excluded_docsets in user config", async () => {
-      vi.mocked(clack.select).mockResolvedValueOnce("react");
-      // User deselects react-tutorial, keeps only react-docs; then harness
-      vi.mocked(clack.multiselect)
-        .mockResolvedValueOnce(["react-docs"])
-        .mockResolvedValueOnce(["claude-code"]);
-
-      await runSetup("/tmp/test-project", docsetCatalog);
-
-      expect(writeUserConfig).toHaveBeenCalledWith(
-        "/tmp/test-project",
-        expect.objectContaining({
-          excluded_docsets: ["react-tutorial"]
-        })
-      );
-    });
-
-    it("does not set excluded_docsets when all docsets are accepted", async () => {
-      vi.mocked(clack.select).mockResolvedValueOnce("react");
-      vi.mocked(clack.multiselect)
-        .mockResolvedValueOnce(["react-docs", "react-tutorial"])
-        .mockResolvedValueOnce(["claude-code"]);
-
-      await runSetup("/tmp/test-project", docsetCatalog);
-
-      const configArg = vi.mocked(writeUserConfig).mock.calls[0][1];
-      expect(configArg.excluded_docsets).toBeUndefined();
-    });
-
-    it("skips docset prompt when no options have docsets", async () => {
-      vi.mocked(clack.select)
-        .mockResolvedValueOnce("workflow-a")
-        .mockResolvedValueOnce("vitest");
-      // Only the harness multiselect should be called (no docsets in testCatalog)
-      vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
-
-      await runSetup("/tmp/test-project", testCatalog);
-
-      // multiselect should have been called exactly once (for harnesses only)
-      expect(clack.multiselect).toHaveBeenCalledTimes(1);
-      expect(clack.multiselect).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: expect.stringContaining("coding agents")
-        })
-      );
-    });
   });
 
   it("calls intro and outro from @clack/prompts", async () => {
