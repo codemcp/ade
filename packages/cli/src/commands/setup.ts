@@ -205,11 +205,14 @@ export async function runSetup(
     const sourceNames = logicalConfig.knowledge_sources
       .map((s) => `  • ${s.name}`)
       .join("\n");
+    const initCommands = logicalConfig.knowledge_sources
+      .map((s) => `  npx @codemcp/knowledge init ${s.name}`)
+      .join("\n");
     const confirmInit = await clack.confirm({
       message:
         `Initialize ${logicalConfig.knowledge_sources.length} knowledge source(s) now?\n` +
         sourceNames +
-        `\nYou can also initialize them later with:\n  npx @codemcp/knowledge init`,
+        `\nYou can also initialize them later with:\n${initCommands}`,
       initialValue: false
     });
 
@@ -219,10 +222,12 @@ export async function runSetup(
     }
 
     if (confirmInit) {
-      await installKnowledge(logicalConfig.knowledge_sources, projectRoot);
+      await installKnowledge(logicalConfig.knowledge_sources, projectRoot, {
+        force: true
+      });
     } else {
       clack.log.info(
-        "Knowledge sources configured. Initialize them when ready:\n  npx @codemcp/knowledge init"
+        `Knowledge sources configured. Initialize them when ready:\n${initCommands}`
       );
     }
   }

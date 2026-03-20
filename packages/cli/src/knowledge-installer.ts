@@ -16,7 +16,8 @@ import {
  */
 export async function installKnowledge(
   sources: KnowledgeSource[],
-  projectRoot: string
+  projectRoot: string,
+  options: { force?: boolean } = {}
 ): Promise<void> {
   if (sources.length === 0) return;
 
@@ -42,7 +43,8 @@ export async function installKnowledge(
     try {
       await initDocset({
         docsetId: source.name,
-        cwd: projectRoot
+        cwd: projectRoot,
+        ...(options.force && { force: true })
       });
     } catch (err) {
       console.warn(
