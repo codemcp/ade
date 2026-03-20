@@ -9,6 +9,7 @@ export {
   type McpServerEntry,
   type CliAction,
   type KnowledgeSource,
+  type DocsetPreset,
   type SkillDefinition,
   type InlineSkill,
   type ExternalSkill,

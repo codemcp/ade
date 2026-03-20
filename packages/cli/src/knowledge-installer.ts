@@ -8,7 +8,7 @@ import {
  * Install knowledge sources using the @codemcp/knowledge programmatic API.
  *
  * For each knowledge source:
- * 1. Creates a docset config entry via `createDocset`
+ * 1. Creates a docset config entry via `createDocset` (skips if already exists)
  * 2. Initializes (downloads) the docset via `initDocset`
  *
  * Errors on individual sources are logged and skipped so that one failure
@@ -27,17 +27,18 @@ export async function installKnowledge(
         {
           id: source.name,
           name: source.description,
-          preset: "git-repo" as const,
+          preset: source.preset ?? "git-repo",
           url: source.origin
         },
         { cwd: projectRoot }
       );
     } catch (err) {
-      console.warn(
-        `Warning: failed to create docset "${source.name}":`,
-        err instanceof Error ? err.message : err
-      );
-      continue;
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes("already exists")) {
+        console.warn(`Warning: failed to create docset "${source.name}":`, msg);
+        continue;
+      }
+      // Docset already registered in config — proceed to (re-)initialize it
     }
 
     try {
