@@ -1,6 +1,6 @@
 {
   "name": "@codemcp/ade",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "ADE CLI — Agentic Development Environment setup and configuration tool",
   "license": "MIT",
   "keywords": [
