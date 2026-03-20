@@ -93,6 +93,9 @@ describe("knowledge docset regression tests", () => {
         .mockResolvedValueOnce([]) // practices: none
         .mockResolvedValueOnce([]) // backpressure: none
         .mockResolvedValueOnce(["claude-code"]); // harnesses
+      vi.mocked(clack.confirm)
+        .mockResolvedValueOnce(false) // skills: skip
+        .mockResolvedValueOnce(true); // knowledge: initialize now
 
       await runSetup(dir, catalog);
 
@@ -130,6 +133,10 @@ describe("knowledge docset regression tests", () => {
         .mockResolvedValueOnce([]) // practices: none
         .mockResolvedValueOnce([]) // backpressure: none
         .mockResolvedValueOnce(["claude-code"]); // harnesses
+      // skills: skip, knowledge: skip (install command will handle it)
+      vi.mocked(clack.confirm)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(false);
 
       await runSetup(dir, catalog);
       vi.clearAllMocks();
