@@ -85,6 +85,52 @@ describe("skillsWriter", () => {
     });
   });
 
+  it("passes through replaces field on inline skills", async () => {
+    const result = await skillsWriter.write(
+      {
+        skills: [
+          {
+            name: "ext-architecture",
+            description: "Extension architecture",
+            body: "Extension body.",
+            replaces: ["architecture"]
+          }
+        ]
+      },
+      emptyContext
+    );
+
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills![0]).toEqual({
+      name: "ext-architecture",
+      description: "Extension architecture",
+      body: "Extension body.",
+      replaces: ["architecture"]
+    });
+  });
+
+  it("passes through replaces field on external skills", async () => {
+    const result = await skillsWriter.write(
+      {
+        skills: [
+          {
+            name: "ext-tdd",
+            source: "org/repo/skills/ext-tdd",
+            replaces: ["tdd"]
+          }
+        ]
+      },
+      emptyContext
+    );
+
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills![0]).toEqual({
+      name: "ext-tdd",
+      source: "org/repo/skills/ext-tdd",
+      replaces: ["tdd"]
+    });
+  });
+
   it("handles mixed inline and external skills", async () => {
     const result = await skillsWriter.write(
       {

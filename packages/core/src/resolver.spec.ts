@@ -246,6 +246,336 @@ describe("resolve", () => {
       );
       expect(agentskills).toBeUndefined();
     });
+
+    it("removes a skill when another skill declares it in replaces", async () => {
+      const skillsCatalog: Catalog = {
+        facets: [
+          {
+            id: "process",
+            label: "Process",
+            description: "Process",
+            required: true,
+            options: [
+              {
+                id: "base",
+                label: "Base",
+                description: "Base process",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        {
+                          name: "architecture",
+                          description: "Generic architecture skill",
+                          body: "Generic architecture content."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: "architecture",
+            label: "Architecture",
+            description: "Stack",
+            required: false,
+            options: [
+              {
+                id: "sabdx",
+                label: "SABDX",
+                description: "SABDX frontend",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        {
+                          name: "sabdx-architecture",
+                          description: "SABDX architecture skill",
+                          body: "SABDX architecture content.",
+                          replaces: ["architecture"]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = {
+        choices: { process: "base", architecture: "sabdx" }
+      };
+
+      const result = await resolve(userConfig, skillsCatalog, registry);
+
+      expect(result.skills).toHaveLength(1);
+      expect(result.skills[0].name).toBe("sabdx-architecture");
+      expect(
+        result.skills.find((s) => s.name === "architecture")
+      ).toBeUndefined();
+    });
+
+    it("removes multiple skills when a single skill declares several replaces entries", async () => {
+      const skillsCatalog: Catalog = {
+        facets: [
+          {
+            id: "process",
+            label: "Process",
+            description: "Process",
+            required: true,
+            options: [
+              {
+                id: "base",
+                label: "Base",
+                description: "Base",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        {
+                          name: "coding",
+                          description: "Generic coding",
+                          body: "Generic coding."
+                        },
+                        {
+                          name: "testing",
+                          description: "Generic testing",
+                          body: "Generic testing."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: "architecture",
+            label: "Architecture",
+            description: "Stack",
+            required: false,
+            options: [
+              {
+                id: "ext",
+                label: "Extension",
+                description: "Extension",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        {
+                          name: "ext-all",
+                          description: "Replaces both",
+                          body: "Extension content.",
+                          replaces: ["coding", "testing"]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = {
+        choices: { process: "base", architecture: "ext" }
+      };
+
+      const result = await resolve(userConfig, skillsCatalog, registry);
+
+      expect(result.skills).toHaveLength(1);
+      expect(result.skills[0].name).toBe("ext-all");
+    });
+
+    it("keeps all skills when no replaces are declared", async () => {
+      const skillsCatalog: Catalog = {
+        facets: [
+          {
+            id: "process",
+            label: "Process",
+            description: "Process",
+            required: true,
+            options: [
+              {
+                id: "base",
+                label: "Base",
+                description: "Base",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        { name: "skill-a", description: "A", body: "Body A." },
+                        { name: "skill-b", description: "B", body: "Body B." }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = { choices: { process: "base" } };
+      const result = await resolve(userConfig, skillsCatalog, registry);
+
+      expect(result.skills).toHaveLength(2);
+      expect(result.skills.map((s) => s.name)).toEqual(["skill-a", "skill-b"]);
+    });
+
+    it("deduplicates skills by name — last writer wins", async () => {
+      const skillsCatalog: Catalog = {
+        facets: [
+          {
+            id: "process",
+            label: "Process",
+            description: "Process",
+            required: true,
+            options: [
+              {
+                id: "base",
+                label: "Base",
+                description: "Base",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        {
+                          name: "shared-skill",
+                          description: "First",
+                          body: "First body."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: "architecture",
+            label: "Architecture",
+            description: "Stack",
+            required: false,
+            options: [
+              {
+                id: "ext",
+                label: "Extension",
+                description: "Extension",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        {
+                          name: "shared-skill",
+                          description: "Second",
+                          body: "Second body."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = {
+        choices: { process: "base", architecture: "ext" }
+      };
+
+      const result = await resolve(userConfig, skillsCatalog, registry);
+
+      expect(result.skills).toHaveLength(1);
+      expect(result.skills[0]).toMatchObject({
+        name: "shared-skill",
+        body: "Second body."
+      });
+    });
+
+    it("works with external skills that declare replaces", async () => {
+      const skillsCatalog: Catalog = {
+        facets: [
+          {
+            id: "process",
+            label: "Process",
+            description: "Process",
+            required: true,
+            options: [
+              {
+                id: "base",
+                label: "Base",
+                description: "Base",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        {
+                          name: "tdd",
+                          description: "Generic TDD",
+                          body: "Generic TDD."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: "architecture",
+            label: "Architecture",
+            description: "Stack",
+            required: false,
+            options: [
+              {
+                id: "ext",
+                label: "Extension",
+                description: "Extension",
+                recipe: [
+                  {
+                    writer: "skills",
+                    config: {
+                      skills: [
+                        {
+                          name: "ext-tdd",
+                          source: "org/repo/skills/ext-tdd",
+                          replaces: ["tdd"]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const userConfig: UserConfig = {
+        choices: { process: "base", architecture: "ext" }
+      };
+
+      const result = await resolve(userConfig, skillsCatalog, registry);
+
+      expect(result.skills).toHaveLength(1);
+      expect(result.skills[0].name).toBe("ext-tdd");
+    });
   });
 
   describe("setup_notes merging", () => {

@@ -54,11 +54,25 @@ export interface InlineSkill {
   name: string;
   description: string;
   body: string;
+  /**
+   * Names of other skills that this skill supersedes.
+   * Any skill whose `name` appears here will be removed from the final
+   * resolved skills list. Used by extension-contributed skills to suppress
+   * the generic baseline skills registered by the process option.
+   */
+  replaces?: string[];
 }
 
 export interface ExternalSkill {
   name: string;
   source: string;
+  /**
+   * Names of other skills that this skill supersedes.
+   * Any skill whose `name` appears here will be removed from the final
+   * resolved skills list. Used by extension-contributed skills to suppress
+   * the generic baseline skills registered by the process option.
+   */
+  replaces?: string[];
 }
 
 export type SkillDefinition = InlineSkill | ExternalSkill;
