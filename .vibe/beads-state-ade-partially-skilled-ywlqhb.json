@@ -1,0 +1,24 @@
+{
+  "conversationId": "ade-partially-skilled-ywlqhb",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-7",
+  "phaseTasks": [
+    {
+      "phaseId": "explore",
+      "phaseName": "Explore",
+      "taskId": "ade-7.1"
+    },
+    {
+      "phaseId": "implement",
+      "phaseName": "Implement",
+      "taskId": "ade-7.2"
+    },
+    {
+      "phaseId": "finalize",
+      "phaseName": "Finalize",
+      "taskId": "ade-7.3"
+    }
+  ],
+  "createdAt": "2026-03-20T07:36:48.277Z",
+  "updatedAt": "2026-03-20T07:36:48.277Z"
+}

@@ -1,0 +1,34 @@
+{
+  "conversationId": "ade-fix-zod-7eypxn",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-8",
+  "phaseTasks": [
+    {
+      "phaseId": "reproduce",
+      "phaseName": "Reproduce",
+      "taskId": "ade-8.1"
+    },
+    {
+      "phaseId": "analyze",
+      "phaseName": "Analyze",
+      "taskId": "ade-8.2"
+    },
+    {
+      "phaseId": "fix",
+      "phaseName": "Fix",
+      "taskId": "ade-8.3"
+    },
+    {
+      "phaseId": "verify",
+      "phaseName": "Verify",
+      "taskId": "ade-8.4"
+    },
+    {
+      "phaseId": "finalize",
+      "phaseName": "Finalize",
+      "taskId": "ade-8.5"
+    }
+  ],
+  "createdAt": "2026-03-20T07:52:51.502Z",
+  "updatedAt": "2026-03-20T07:52:51.502Z"
+}
