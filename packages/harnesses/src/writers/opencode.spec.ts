@@ -102,7 +102,7 @@ describe("opencodeWriter", () => {
     expect(defaultsAgent).toContain('grep: "allow"');
     expect(defaultsAgent).toContain('list: "allow"');
     expect(defaultsAgent).toContain('lsp: "allow"');
-    expect(defaultsAgent).toContain('task: "deny"');
+    expect(defaultsAgent).toContain('task: "allow"');
     expect(defaultsAgent).toContain('skill: "deny"');
     expect(defaultsAgent).toContain('todoread: "deny"');
     expect(defaultsAgent).toContain('todowrite: "deny"');

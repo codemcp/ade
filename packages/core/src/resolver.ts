@@ -125,6 +125,22 @@ export async function resolve(
   }
   result.mcp_servers = Array.from(serversByRef.values());
 
+  // Dedup skills: collect all names declared as replaced, dedup by name
+  // (last-writer-wins), then filter out replaced ones.
+  const replacedNames = new Set<string>();
+  for (const skill of result.skills) {
+    for (const r of skill.replaces ?? []) {
+      replacedNames.add(r);
+    }
+  }
+  const skillsByName = new Map<string, (typeof result.skills)[number]>();
+  for (const skill of result.skills) {
+    skillsByName.set(skill.name, skill);
+  }
+  result.skills = Array.from(skillsByName.values()).filter(
+    (skill) => !replacedNames.has(skill.name)
+  );
+
   return result;
 }
 
