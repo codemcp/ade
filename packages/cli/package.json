@@ -4,9 +4,10 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "ade": "dist/index.js"
+    "ade": "bin/ade.mjs"
   },
   "files": [
+    "bin",
     "dist"
   ],
   "publishConfig": {
@@ -40,6 +41,9 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "version": "0.8.0"
 }

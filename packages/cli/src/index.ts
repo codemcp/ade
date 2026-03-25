@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { version } from "./version.js";
 import { runSetup } from "./commands/setup.js";
 import { runInstall } from "./commands/install.js";
