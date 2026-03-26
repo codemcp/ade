@@ -7,12 +7,18 @@ tools:
   - search
   - agent
   - workflows/*
+  - knowledge/*
   - agentskills/*
 mcp-servers:
   workflows:
     type: stdio
     command: "npx"
     args: ["@codemcp/workflows-server@latest"]
+    tools: ["*"]
+  knowledge:
+    type: stdio
+    command: "npx"
+    args: ["-y", "@codemcp/knowledge-server"]
     tools: ["*"]
   agentskills:
     type: stdio

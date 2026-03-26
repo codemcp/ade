@@ -7,6 +7,7 @@ permission:
   workflows_conduct_review: "allow"
   workflows_list_workflows: "allow"
   workflows_get_tool_info: "allow"
+  "knowledge*": "allow"
   "agentskills*": "allow"
   read:
     "*": "allow"

@@ -1,16 +1,10 @@
 version: 1
-generated_at: 2026-03-20T08:32:04.912Z
+generated_at: 2026-03-26T07:29:04.442Z
 choices:
   process: codemcp-workflows
   practices:
     - adr-nygard
     - conventional-commits
-  autonomy: sensible-defaults
-harnesses:
-  - universal
-  - opencode
-  - copilot
-  - kiro
 logical_config:
   mcp_servers:
     - ref: workflows
@@ -23,6 +17,12 @@ logical_config:
         - conduct_review
         - list_workflows
         - get_tool_info
+    - ref: knowledge
+      command: npx
+      args:
+        - -y
+        - "@codemcp/knowledge-server"
+      env: {}
     - ref: agentskills
       command: npx
       args:
@@ -45,7 +45,10 @@ logical_config:
 
       Do not use your own task management tools.
   cli_actions: []
-  knowledge_sources: []
+  knowledge_sources:
+    - name: conventional-commits-spec
+      origin: https://github.com/conventional-commits/conventionalcommits.org.git
+      description: The Conventional Commits specification
   skills:
     - name: adr-nygard
       description: Architecture Decision Records following Nygard's lightweight template
@@ -143,5 +146,3 @@ logical_config:
         - `BREAKING CHANGE:` footer or `!` after type/scope for breaking changes
   git_hooks: []
   setup_notes: []
-  permission_policy:
-    profile: sensible-defaults

@@ -13,13 +13,26 @@
         "get_tool_info"
       ]
     },
+    "knowledge": {
+      "command": "npx",
+      "args": ["-y", "@codemcp/knowledge-server"],
+      "autoApprove": ["*"]
+    },
     "agentskills": {
       "command": "npx",
       "args": ["-y", "@codemcp/skills-server"],
       "autoApprove": ["*"]
     }
   },
-  "tools": ["read", "write", "shell", "spec", "@workflows/*", "@agentskills/*"],
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "spec",
+    "@workflows/*",
+    "@knowledge/*",
+    "@agentskills/*"
+  ],
   "allowedTools": [
     "read",
     "write",
@@ -29,6 +42,7 @@
     "@workflows/conduct_review",
     "@workflows/list_workflows",
     "@workflows/get_tool_info",
+    "@knowledge/*",
     "@agentskills/*"
   ],
   "useLegacyMcpJson": true
