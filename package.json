@@ -25,6 +25,10 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "packages/cli/bin",
+    "packages/cli/dist"
+  ],
   "scripts": {
     "build": "turbo run build",
     "clean": "turbo run clean:build",
