@@ -3,11 +3,3 @@ choices:
   practices:
     - adr-nygard
     - conventional-commits
-  autonomy: sensible-defaults
-excluded_docsets:
-  - conventional-commits-spec
-harnesses:
-  - universal
-  - opencode
-  - copilot
-  - kiro

@@ -1,0 +1,29 @@
+{
+  "conversationId": "ade-separate-harness-config-85eqmf",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-12",
+  "phaseTasks": [
+    {
+      "phaseId": "explore",
+      "phaseName": "Explore",
+      "taskId": "ade-12.1"
+    },
+    {
+      "phaseId": "plan",
+      "phaseName": "Plan",
+      "taskId": "ade-12.2"
+    },
+    {
+      "phaseId": "code",
+      "phaseName": "Code",
+      "taskId": "ade-12.3"
+    },
+    {
+      "phaseId": "commit",
+      "phaseName": "Commit",
+      "taskId": "ade-12.4"
+    }
+  ],
+  "createdAt": "2026-03-26T06:03:17.733Z",
+  "updatedAt": "2026-03-26T06:03:17.733Z"
+}
