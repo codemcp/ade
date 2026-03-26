@@ -147,12 +147,28 @@ when a facet selection or catalog version is updated.
 ## CLI Commands
 
 ```
-ade setup          Interactive TUI: walk through facets, write
-                   config.yaml + config.lock.yaml + agent files,
-                   install skills, prompt to initialize knowledge sources.
+ade setup          Interactive TUI: walk through dev-choice facets only
+                   (process, architecture, practices, backpressure).
+                   Writes config.yaml + config.lock.yaml.
+                   Stages inline skill files to .ade/skills/.
+                   At the end, offers to run `ade configure` immediately.
                    Re-running setup on an existing project pre-selects
                    previous choices as defaults. Warns if a previous
                    selection references an option no longer in the catalog.
+
+ade configure      Ephemeral harness configuration — writes no config files.
+                   Prompts for: autonomy profile, target harnesses.
+                   Merges the chosen autonomy policy on top of the locked
+                   logical config (in memory), installs to selected harnesses,
+                   installs all skills (no prompt), and prompts to initialize
+                   knowledge sources.
+                   Run after `ade setup`, after a fresh clone, or any time
+                   you want to change autonomy or switch harnesses.
+
+ade install        Reads config.lock.yaml and regenerates agent files for the
+                   selected harnesses (idempotent). Does not re-resolve from
+                   config.yaml. Use `ade setup` to change dev choices;
+                   use `ade configure` to change harness/autonomy config.
 ```
 
 ## Catalog
@@ -212,7 +228,7 @@ processes these like any other provision: `docsetWriter` maps each to a
 LogicalConfig, which triggers:
 
 1. Automatic addition of the `@codemcp/knowledge-server` MCP server entry
-2. A confirmation prompt in `ade setup` — default is to defer initialization
+2. A confirmation prompt in `ade configure` — default is to defer initialization
 
 ## Non-Goals (initial release)
 
@@ -244,6 +260,12 @@ LogicalConfig, which triggers:
    Documentation sources are always implied by an upstream selection. They are
    declared as `{ writer: "docset", config: {...} }` recipe entries —
    consistent with how skills are declared. This eliminates the separate
-   `Option.docsets[]` field, the `excluded_docsets` opt-out mechanism, and the
-   per-item confirmation multiselect. Users can still defer or skip
-   initialization via the single confirm prompt in `ade setup`.
+   `Option.docsets[]` field and the `excluded_docsets` opt-out mechanism.
+   Initialization is prompted in `ade configure`.
+
+7. **Dev choices and harness config are separated.** `config.yaml` and the
+   lock file contain only team-level development choices (process, architecture,
+   practices, backpressure). Autonomy profile and harness selection are
+   ephemeral — applied via `ade configure` and not persisted. This lets
+   individual developers change their autonomy settings without touching
+   shared config files.

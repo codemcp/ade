@@ -84,5 +84,7 @@ export async function runInstall(
     );
   }
 
-  clack.outro("Install complete!");
+  clack.outro(
+    "Install complete! Run `ade configure` to set your autonomy profile and harness preferences."
+  );
 }

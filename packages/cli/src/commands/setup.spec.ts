@@ -9,11 +9,10 @@ vi.mock("@clack/prompts", () => ({
   note: vi.fn(),
   select: vi.fn(),
   multiselect: vi.fn(),
-  confirm: vi.fn(),
+  confirm: vi.fn().mockResolvedValue(false), // default: decline "configure now"
   isCancel: vi.fn().mockReturnValue(false),
   cancel: vi.fn(),
-  log: { warn: vi.fn(), info: vi.fn() },
-  spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
+  log: { warn: vi.fn(), info: vi.fn() }
 }));
 
 vi.mock("@codemcp/ade-core", async (importOriginal) => {
@@ -44,15 +43,12 @@ vi.mock("@codemcp/ade-harnesses", () => ({
       install: vi.fn().mockResolvedValue(undefined)
     }
   ],
-  getHarnessWriter: vi.fn().mockReturnValue({
-    id: "claude-code",
-    label: "Claude Code",
-    description: "test",
-    install: vi.fn().mockResolvedValue(undefined)
-  }),
-  getHarnessIds: vi.fn().mockReturnValue(["claude-code"]),
-  installSkills: vi.fn().mockResolvedValue(undefined),
   writeInlineSkills: vi.fn().mockResolvedValue([])
+}));
+
+// Mock configure so setup tests don't run the full configure flow
+vi.mock("./configure.js", () => ({
+  runConfigure: vi.fn().mockResolvedValue(undefined)
 }));
 
 import * as clack from "@clack/prompts";
@@ -62,6 +58,7 @@ import {
   writeLockFile,
   resolve
 } from "@codemcp/ade-core";
+import { runConfigure } from "./configure.js";
 import { runSetup } from "./setup.js";
 
 // ── Test catalog fixture ─────────────────────────────────────────────────────
@@ -116,6 +113,8 @@ const testCatalog: Catalog = {
 describe("runSetup", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: user declines "configure now?" prompt
+    vi.mocked(clack.confirm).mockResolvedValue(false);
   });
 
   it("prompts for each catalog facet and writes user config", async () => {
@@ -123,20 +122,23 @@ describe("runSetup", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("workflow-a")
       .mockResolvedValueOnce("vitest");
-    // Harness multiselect
-    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
     await runSetup("/tmp/test-project", testCatalog);
 
-    // select() called once per facet
+    // select() called once per (non-harness) facet
     expect(clack.select).toHaveBeenCalledTimes(2);
 
-    // writeUserConfig called with collected choices
+    // writeUserConfig called with collected choices — no harnesses key
     expect(writeUserConfig).toHaveBeenCalledWith(
       "/tmp/test-project",
       expect.objectContaining({
         choices: { process: "workflow-a", testing: "vitest" }
       })
+    );
+    // harnesses must NOT be saved in setup anymore
+    expect(writeUserConfig).toHaveBeenCalledWith(
+      "/tmp/test-project",
+      expect.not.objectContaining({ harnesses: expect.anything() })
     );
   });
 
@@ -154,18 +156,15 @@ describe("runSetup", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("workflow-a")
       .mockResolvedValueOnce("vitest");
-    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
     await runSetup("/tmp/test-project", testCatalog);
 
-    // resolve() called with the user config, catalog, and a registry
     expect(resolve).toHaveBeenCalledOnce();
     const resolveArgs = vi.mocked(resolve).mock.calls[0];
     expect(resolveArgs[0]).toMatchObject({
       choices: { process: "workflow-a", testing: "vitest" }
     });
 
-    // writeLockFile called with the resolved logical config
     expect(writeLockFile).toHaveBeenCalledWith(
       "/tmp/test-project",
       expect.objectContaining({
@@ -173,14 +172,17 @@ describe("runSetup", () => {
         logical_config: mockLogical
       })
     );
+    // harnesses must NOT be in the lock file from setup
+    expect(writeLockFile).toHaveBeenCalledWith(
+      "/tmp/test-project",
+      expect.not.objectContaining({ harnesses: expect.anything() })
+    );
   });
 
   it("excludes skipped facets from choices", async () => {
-    // User selects workflow-a for process, skips testing (returns null sentinel)
     vi.mocked(clack.select)
       .mockResolvedValueOnce("workflow-a")
       .mockResolvedValueOnce("__skip__");
-    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
     await runSetup("/tmp/test-project", testCatalog);
 
@@ -193,7 +195,6 @@ describe("runSetup", () => {
   });
 
   it("aborts without writing files when user cancels", async () => {
-    // First select returns a cancel symbol
     const cancelSymbol = Symbol("cancel");
     vi.mocked(clack.select).mockResolvedValueOnce(cancelSymbol);
     vi.mocked(clack.isCancel).mockReturnValue(true);
@@ -209,7 +210,6 @@ describe("runSetup", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("workflow-a")
       .mockResolvedValueOnce("vitest");
-    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
     await runSetup("/tmp/test-project", testCatalog);
 
@@ -231,7 +231,6 @@ describe("runSetup", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("workflow-a")
       .mockResolvedValueOnce("vitest");
-    vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
     await runSetup("/tmp/test-project", testCatalog);
 
@@ -239,6 +238,88 @@ describe("runSetup", () => {
       "Add lint script to package.json"
     );
     expect(clack.log.info).toHaveBeenCalledWith("Run npm install");
+  });
+
+  it("excludes autonomy facet from setup wizard", async () => {
+    const catalogWithAutonomy: Catalog = {
+      facets: [
+        {
+          id: "process",
+          label: "Process",
+          description: "How your agent works",
+          required: true,
+          options: [
+            {
+              id: "workflow-a",
+              label: "Workflow A",
+              description: "First workflow option",
+              recipe: []
+            }
+          ]
+        },
+        {
+          id: "autonomy",
+          label: "Autonomy",
+          description: "How much initiative the agent has",
+          required: false,
+          options: [
+            {
+              id: "sensible-defaults",
+              label: "Sensible defaults",
+              description: "Balanced",
+              recipe: []
+            }
+          ]
+        }
+      ]
+    };
+
+    // User selects workflow-a for process; autonomy prompt should not appear
+    vi.mocked(clack.select).mockResolvedValueOnce("workflow-a");
+
+    await runSetup("/tmp/test-project", catalogWithAutonomy);
+
+    // select() called only once (for process) — autonomy is excluded
+    expect(clack.select).toHaveBeenCalledTimes(1);
+
+    // autonomy must not appear in saved choices
+    expect(writeUserConfig).toHaveBeenCalledWith(
+      "/tmp/test-project",
+      expect.objectContaining({
+        choices: expect.not.objectContaining({ autonomy: expect.anything() })
+      })
+    );
+  });
+
+  it("prompts to configure agent after setup and delegates to runConfigure when accepted", async () => {
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("workflow-a")
+      .mockResolvedValueOnce("vitest");
+    vi.mocked(clack.confirm).mockResolvedValueOnce(true);
+
+    await runSetup("/tmp/test-project", testCatalog);
+
+    expect(clack.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining("configure") })
+    );
+    expect(runConfigure).toHaveBeenCalledWith(
+      "/tmp/test-project",
+      expect.any(Array)
+    );
+  });
+
+  it("informs user about ade configure when they decline the prompt", async () => {
+    vi.mocked(clack.select)
+      .mockResolvedValueOnce("workflow-a")
+      .mockResolvedValueOnce("vitest");
+    vi.mocked(clack.confirm).mockResolvedValueOnce(false);
+
+    await runSetup("/tmp/test-project", testCatalog);
+
+    expect(runConfigure).not.toHaveBeenCalled();
+    expect(clack.log.info).toHaveBeenCalledWith(
+      expect.stringContaining("ade configure")
+    );
   });
 
   describe("re-run with existing config", () => {
@@ -250,15 +331,12 @@ describe("runSetup", () => {
       vi.mocked(clack.select)
         .mockResolvedValueOnce("workflow-b")
         .mockResolvedValueOnce("jest");
-      vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", testCatalog);
 
-      // First select (process) should receive initialValue "workflow-b"
       expect(clack.select).toHaveBeenCalledWith(
         expect.objectContaining({ initialValue: "workflow-b" })
       );
-      // Second select (testing) should receive initialValue "jest"
       expect(clack.select).toHaveBeenCalledWith(
         expect.objectContaining({ initialValue: "jest" })
       );
@@ -295,9 +373,7 @@ describe("runSetup", () => {
         choices: { practices: ["tdd", "adr"] }
       });
 
-      vi.mocked(clack.multiselect)
-        .mockResolvedValueOnce(["tdd", "adr"])
-        .mockResolvedValueOnce(["claude-code"]);
+      vi.mocked(clack.multiselect).mockResolvedValueOnce(["tdd", "adr"]);
 
       await runSetup("/tmp/test-project", multiCatalog);
 
@@ -314,7 +390,6 @@ describe("runSetup", () => {
       vi.mocked(clack.select)
         .mockResolvedValueOnce("workflow-a")
         .mockResolvedValueOnce("vitest");
-      vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", testCatalog);
 
@@ -331,11 +406,9 @@ describe("runSetup", () => {
       vi.mocked(clack.select)
         .mockResolvedValueOnce("workflow-a")
         .mockResolvedValueOnce("vitest");
-      vi.mocked(clack.multiselect).mockResolvedValueOnce(["claude-code"]);
 
       await runSetup("/tmp/test-project", testCatalog);
 
-      // First select (process) should NOT have initialValue set
       const firstCall = vi.mocked(clack.select).mock.calls[0][0];
       expect(firstCall).not.toHaveProperty("initialValue");
     });
