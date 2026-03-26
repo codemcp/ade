@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { mkdtemp, rm, readFile, writeFile, mkdir } from "node:fs/promises";
+import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -9,11 +9,16 @@ vi.mock("@clack/prompts", () => ({
   note: vi.fn(),
   select: vi.fn(),
   multiselect: vi.fn(),
-  confirm: vi.fn(),
+  confirm: vi.fn().mockResolvedValue(false),
   isCancel: vi.fn().mockReturnValue(false),
   cancel: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn() },
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
+}));
+
+// Mock configure so setup calls don't run the full configure flow
+vi.mock("./configure.js", () => ({
+  runConfigure: vi.fn().mockResolvedValue(undefined)
 }));
 
 // Mock the knowledge package to avoid real network I/O
@@ -47,6 +52,7 @@ describe("knowledge integration", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.mocked(clack.confirm).mockResolvedValue(false);
     dir = await mkdtemp(join(tmpdir(), "ade-knowledge-"));
   });
 
@@ -66,8 +72,7 @@ describe("knowledge integration", () => {
 
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
-        .mockResolvedValueOnce([]) // backpressure: none
-        .mockResolvedValueOnce(["claude-code"]); // harnesses
+        .mockResolvedValueOnce([]); // backpressure: none
 
       await runSetup(dir, catalog);
 
@@ -82,37 +87,20 @@ describe("knowledge integration", () => {
           "tanstack-table-docs"
         ])
       );
-
-      // MCP server entry for knowledge should be in .mcp.json
-      const mcpJson = JSON.parse(
-        await readFile(join(dir, ".mcp.json"), "utf-8")
-      );
-      expect(mcpJson.mcpServers["knowledge"]).toMatchObject({
-        command: "npx",
-        args: ["-y", "@codemcp/knowledge-server"]
-      });
-
-      // Knowledge init is deferred — user should see a hint
-      expect(clack.log.info).toHaveBeenCalledWith(
-        expect.stringContaining("npx @codemcp/knowledge init")
-      );
     }
   );
 
-  it("does not show knowledge hint when no docsets are implied", async () => {
+  it("does not record knowledge sources in lock file when no docsets are implied", async () => {
     const catalog = getDefaultCatalog();
 
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture: skip
-    vi.mocked(clack.multiselect)
-      .mockResolvedValueOnce(["tdd-london"]) // practices: tdd-london has no docsets
-      .mockResolvedValueOnce(["claude-code"]); // harnesses
+    vi.mocked(clack.multiselect).mockResolvedValueOnce(["tdd-london"]); // practices: tdd-london has no docsets
 
     await runSetup(dir, catalog);
 
-    expect(clack.log.info).not.toHaveBeenCalledWith(
-      expect.stringContaining("npx @codemcp/knowledge init")
-    );
+    const lock = await readLockFile(dir);
+    expect(lock!.logical_config.knowledge_sources).toHaveLength(0);
   });
 });

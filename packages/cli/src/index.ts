@@ -1,6 +1,7 @@
 import { version } from "./version.js";
 import { runSetup } from "./commands/setup.js";
 import { runInstall } from "./commands/install.js";
+import { runConfigure } from "./commands/configure.js";
 import { getDefaultCatalog, mergeExtensions } from "@codemcp/ade-core";
 import { getHarnessIds, buildHarnessWriters } from "@codemcp/ade-harnesses";
 import { loadExtensions } from "./extensions.js";
@@ -30,6 +31,11 @@ if (command === "setup") {
   }
 
   await runInstall(projectRoot, harnessIds, harnessWriters);
+} else if (command === "configure") {
+  const projectRoot = args[1] ?? process.cwd();
+  const extensions = await loadExtensions(projectRoot);
+  const harnessWriters = buildHarnessWriters(extensions);
+  await runConfigure(projectRoot, harnessWriters);
 } else if (command === "--version" || command === "-v") {
   console.log(version);
 } else {
@@ -51,6 +57,9 @@ if (command === "setup") {
   );
   console.log(
     "  install [dir]    Apply lock file to generate agent files (idempotent)"
+  );
+  console.log(
+    "  configure [dir]  Set autonomy profile and harness preferences (ephemeral, not saved)"
   );
   console.log();
   console.log("Options:");

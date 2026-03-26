@@ -48,7 +48,8 @@ cli/src/
   skills-installer.ts       # calls @codemcp/skills API to install skills
   knowledge-installer.ts    # calls @codemcp/knowledge API to install docsets
   commands/
-    setup.ts                # interactive TUI setup
+    setup.ts                # interactive TUI: dev choices only
+    configure.ts            # interactive TUI: harness config (ephemeral)
     install.ts              # resolve + generate (idempotent)
 ```
 
@@ -83,49 +84,64 @@ cli/src/
 
 ## Data Flow
 
-### 1. Setup: TUI → config.yaml + config.lock.yaml + agent files
+### 1. Setup: TUI → config.yaml + config.lock.yaml (dev choices only)
+
+`ade setup` covers **team-level development choices** only. Harness configuration
+(autonomy, agent selection, skills install) is handled separately by `ade configure`.
 
 ```
 read existing config.yaml (if any) for default selections
-  → walk facets interactively:
+  → walk dev-choice facets interactively (process, architecture, practices, backpressure):
       → pre-select previous choice as default (if still valid)
       → warn if previous choice references a stale option
       → collect new user choices
+      → autonomy facet is excluded — it is harness-level config
   → resolve choices + catalog → LogicalConfig
-  → write config.yaml (user choices)
-  → write config.lock.yaml (resolved LogicalConfig snapshot)
-  → run agent writer (generate AGENTS.md, settings.json, etc.)
-  → install skills via @codemcp/skills API
+  → write config.yaml (user choices, no harnesses key)
+  → write config.lock.yaml (resolved LogicalConfig snapshot, no harnesses key)
+  → stage inline skill files to .ade/skills/ (skip locally modified ones)
+  → prompt: "Would you like to configure your coding agent now?"
+      → if yes: delegate to ade configure
+```
+
+### 2. Configure: ephemeral harness config → agent files
+
+`ade configure` covers **developer/environment-level** settings. Nothing is
+written to `config.yaml` or `config.lock.yaml` — the configuration is ephemeral.
+
+```
+read config.lock.yaml (requires ade setup to have run first)
+  → prompt for autonomy profile (rigid / sensible-defaults / max-autonomy / skip)
+  → prompt for harness selection (which agents receive config)
+  → merge autonomy as permission_policy on top of locked logical config (in memory)
+  → run agent writers for selected harnesses
+  → stage any new inline skill files to .ade/skills/ (skip locally modified ones)
+  → install all skills via @codemcp/skills API (no prompt — always runs)
   → prompt to initialize knowledge sources via @codemcp/knowledge API
 ```
 
-Resolution expands each selected option's recipe provisions into
-LogicalConfig fragments, maps `docset` provisions to `knowledge_sources`,
-adds the `@codemcp/knowledge-server` MCP entry if knowledge sources are
-present, merges the custom section, and deduplicates MCP servers by ref.
-
-For **multi-select facets**, each selected option's recipe is resolved
-independently and their LogicalConfig fragments are merged.
-
-### 2. Install: config.lock.yaml → agent files (idempotent)
+### 3. Install: config.lock.yaml → agent files (idempotent)
 
 ```
 read config.lock.yaml
-  → select agent writer (default: claude-code)
+  → select harnesses (--harness flag, or lock file harnesses, or "universal")
   → apply logical_config from lock file (no re-resolution)
-  → run agent writer
+  → run agent writers for selected harnesses
   → install skills
   → install knowledge
 ```
 
 `ade install` does **not** re-resolve from `config.yaml`. It treats the
 lock file as the source of truth, like `npm ci` treats `package-lock.json`.
-To change selections, re-run `ade setup`.
+To change dev-choice selections, re-run `ade setup`. To change autonomy or
+harness config, run `ade configure`.
 
-The target agent is a **generation-time parameter** (`--agent` flag),
-not stored in `config.yaml`. There is no auto-detection. This keeps the
-config agent-agnostic — the same choices can produce output for any
-supported agent.
+Resolution note: setup expands each selected option's recipe provisions into
+LogicalConfig fragments, maps `docset` provisions to `knowledge_sources`,
+adds the `@codemcp/knowledge-server` MCP entry if knowledge sources are
+present, merges the custom section, and deduplicates MCP servers by ref.
+For **multi-select facets**, each selected option's recipe is resolved
+independently and their LogicalConfig fragments are merged.
 
 ### 3. Package API calls from CLI installers
 
@@ -225,9 +241,11 @@ interface KnowledgeSource {
 ### Config Files
 
 ```typescript
-// config.yaml — mostly CLI-managed, agent-agnostic
+// config.yaml — team-level dev choices, committed to version control
 interface UserConfig {
   choices: Record<string, string | string[]>; // single-select: string, multi-select: string[]
+  // Note: autonomy and harnesses are NOT stored here — they are ephemeral
+  // and managed via `ade configure`.
   custom?: {
     // user-managed section
     mcp_servers?: McpServerEntry[];
@@ -239,8 +257,9 @@ interface UserConfig {
 interface LockFile {
   version: 1;
   generated_at: string; // ISO timestamp
-  choices: Record<string, string>; // snapshot of selections
+  choices: Record<string, string>; // snapshot of dev-choice selections
   logical_config: LogicalConfig;
+  // Note: no harnesses key — harness selection is ephemeral
 }
 ```
 

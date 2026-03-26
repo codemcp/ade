@@ -17,11 +17,12 @@ import {
 import {
   type HarnessWriter,
   allHarnessWriters,
-  getHarnessWriter,
-  installSkills,
   writeInlineSkills
 } from "@codemcp/ade-harnesses";
-import { installKnowledge } from "../knowledge-installer.js";
+import { runConfigure } from "./configure.js";
+
+// Facets that are agent/harness concerns — excluded from setup, handled by `ade configure`.
+const HARNESS_FACETS = new Set(["autonomy"]);
 
 export async function runSetup(
   projectRoot: string,
@@ -78,7 +79,10 @@ export async function runSetup(
 
   const choices: Record<string, string | string[]> = {};
 
-  const sortedFacets = sortFacets(catalog);
+  // Only show dev-choice facets — harness/autonomy facets are handled by `ade configure`.
+  const sortedFacets = sortFacets(catalog).filter(
+    (f) => !HARNESS_FACETS.has(f.id)
+  );
 
   for (const facet of sortedFacets) {
     const visibleOptions = getVisibleOptions(facet, choices, catalog);
@@ -107,41 +111,8 @@ export async function runSetup(
     }
   }
 
-  // Harness selection — multi-select from all available harnesses
-  const existingHarnesses = existingConfig?.harnesses;
-  const harnessOptions = harnessWriters.map((w) => ({
-    value: w.id,
-    label: w.label,
-    hint: w.description
-  }));
-
-  const validExistingHarnesses = existingHarnesses?.filter((h) =>
-    harnessWriters.some((w) => w.id === h)
-  );
-
-  const selectedHarnesses = await clack.multiselect({
-    message:
-      "Which coding agents should receive config?\n" +
-      "ADE generates config files for each agent you select.\n",
-    options: harnessOptions,
-    initialValues:
-      validExistingHarnesses && validExistingHarnesses.length > 0
-        ? validExistingHarnesses
-        : ["universal"],
-    required: false
-  });
-
-  if (typeof selectedHarnesses === "symbol") {
-    clack.cancel("Setup cancelled.");
-    return;
-  }
-
-  const harnesses = selectedHarnesses as string[];
-
-  const userConfig: UserConfig = {
-    choices,
-    ...(harnesses.length > 0 && { harnesses })
-  };
+  // Resolve and persist dev-choice config only
+  const userConfig: UserConfig = { choices };
   const registry = createDefaultRegistry();
   const logicalConfig = await resolve(userConfig, catalog, registry);
 
@@ -151,21 +122,12 @@ export async function runSetup(
     version: 1,
     generated_at: new Date().toISOString(),
     choices: userConfig.choices,
-    ...(harnesses.length > 0 && { harnesses }),
     logical_config: logicalConfig
   };
   await writeLockFile(projectRoot, lockFile);
 
-  // Install to all selected harnesses
-  for (const harnessId of harnesses) {
-    const writer =
-      harnessWriters.find((w) => w.id === harnessId) ??
-      getHarnessWriter(harnessId);
-    if (writer) {
-      await writer.install(logicalConfig, projectRoot);
-    }
-  }
-
+  // Stage inline skill files to .ade/skills/ — this is project-level (not agent-specific).
+  // installSkills (agent server install) is handled by `ade configure`.
   const modifiedSkills = await writeInlineSkills(logicalConfig, projectRoot);
   if (modifiedSkills.length > 0) {
     clack.log.warn(
@@ -175,62 +137,30 @@ export async function runSetup(
     );
   }
 
-  if (logicalConfig.skills.length > 0) {
-    const skillNames = logicalConfig.skills
-      .map((s) => `  • ${s.name}`)
-      .join("\n");
-    const confirmInstall = await clack.confirm({
-      message:
-        `Install ${logicalConfig.skills.length} skill(s) now?\n` +
-        skillNames +
-        `\nYou can also install them later with:\n  npx @codemcp/skills experimental_install`,
-      initialValue: true
-    });
-
-    if (typeof confirmInstall === "symbol") {
-      clack.cancel("Setup cancelled.");
-      return;
-    }
-
-    if (confirmInstall) {
-      await installSkills(logicalConfig.skills, projectRoot);
-    } else {
-      clack.log.info(
-        "Skills not installed. Run manually when ready:\n  npx @codemcp/skills experimental_install"
-      );
-    }
-  }
-
-  if (logicalConfig.knowledge_sources.length > 0) {
-    const initCommands = logicalConfig.knowledge_sources
-      .map((s) => `  npx @codemcp/knowledge init ${s.name}`)
-      .join("\n");
-    const confirmInit = await clack.confirm({
-      message: `Initialize ${logicalConfig.knowledge_sources.length} knowledge source(s) now?`,
-      initialValue: false
-    });
-
-    if (typeof confirmInit === "symbol") {
-      clack.cancel("Setup cancelled.");
-      return;
-    }
-
-    if (confirmInit) {
-      await installKnowledge(logicalConfig.knowledge_sources, projectRoot, {
-        force: true
-      });
-    } else {
-      clack.log.info(
-        `Knowledge sources configured. Initialize them when ready:\n${initCommands}`
-      );
-    }
-  }
-
   for (const note of logicalConfig.setup_notes) {
     clack.log.info(note);
   }
 
   clack.outro("Setup complete!");
+
+  // Offer to run agent configuration immediately
+  const configureNow = await clack.confirm({
+    message:
+      "Would you like to configure your coding agent now?\n" +
+      "This sets your autonomy profile, target harnesses, and installs skills.",
+    initialValue: true
+  });
+
+  if (typeof configureNow === "symbol" || !configureNow) {
+    if (typeof configureNow !== "symbol") {
+      clack.log.info(
+        "Run `ade configure` any time to set up your coding agent."
+      );
+    }
+    return;
+  }
+
+  await runConfigure(projectRoot, harnessWriters);
 }
 
 function getValidInitialValue(

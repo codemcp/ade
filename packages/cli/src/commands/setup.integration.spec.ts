@@ -10,11 +10,16 @@ vi.mock("@clack/prompts", () => ({
   note: vi.fn(),
   select: vi.fn(),
   multiselect: vi.fn(),
-  confirm: vi.fn(),
+  confirm: vi.fn().mockResolvedValue(false), // default: decline "configure now?"
   isCancel: vi.fn().mockReturnValue(false),
   cancel: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn() },
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
+}));
+
+// Mock configure so setup integration tests don't run the full configure flow
+vi.mock("./configure.js", () => ({
+  runConfigure: vi.fn().mockResolvedValue(undefined)
 }));
 
 import * as clack from "@clack/prompts";
@@ -27,6 +32,7 @@ describe("setup integration (real temp dir)", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.mocked(clack.confirm).mockResolvedValue(false);
     dir = await mkdtemp(join(tmpdir(), "ade-setup-"));
   });
 
@@ -40,9 +46,7 @@ describe("setup integration (real temp dir)", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
       .mockResolvedValueOnce("__skip__"); // architecture
-    vi.mocked(clack.multiselect)
-      .mockResolvedValueOnce([]) // practices: none
-      .mockResolvedValueOnce(["claude-code"]); // harnesses
+    vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
 
     await runSetup(dir, catalog);
 
@@ -50,6 +54,8 @@ describe("setup integration (real temp dir)", () => {
     const config = await readUserConfig(dir);
     expect(config).not.toBeNull();
     expect(config!.choices).toEqual({ process: "codemcp-workflows" });
+    // harnesses must NOT be in config.yaml — setup no longer selects them
+    expect(config).not.toHaveProperty("harnesses");
 
     // ── config.lock.yaml ─────────────────────────────────────────────────
     const lock = await readLockFile(dir);
@@ -57,38 +63,23 @@ describe("setup integration (real temp dir)", () => {
     expect(lock!.version).toBe(1);
     expect(lock!.choices).toEqual({ process: "codemcp-workflows" });
     expect(lock!.generated_at).toBeTruthy();
+    // harnesses must NOT be in the lock file
+    expect(lock).not.toHaveProperty("harnesses");
 
     // LogicalConfig was produced by the real resolver with real writers
     const lc = lock!.logical_config;
     expect(lc.mcp_servers).toHaveLength(1);
     expect(lc.mcp_servers[0].ref).toBe("workflows");
     expect(lc.instructions.length).toBeGreaterThan(0);
-
-    // ── Agent output: .mcp.json ─────────────────────────────────────────
-    const { readFile } = await import("node:fs/promises");
-    const mcpJson = JSON.parse(await readFile(join(dir, ".mcp.json"), "utf-8"));
-    expect(mcpJson.mcpServers["workflows"]).toMatchObject({
-      command: "npx",
-      args: ["@codemcp/workflows-server@latest"]
-    });
-
-    // ── Agent output: .claude/agents/ade.md ────────────────────────────
-    const agentMd = await readFile(
-      join(dir, ".claude", "agents", "ade.md"),
-      "utf-8"
-    );
-    expect(agentMd).toContain("Call whats_next()");
   });
 
-  it("writes config.yaml, lock, and AGENTS.md for native-agents-md", async () => {
+  it("writes config.yaml and lock for native-agents-md", async () => {
     const catalog = getDefaultCatalog();
 
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
       .mockResolvedValueOnce("__skip__"); // architecture
-    vi.mocked(clack.multiselect)
-      .mockResolvedValueOnce([]) // practices: none
-      .mockResolvedValueOnce(["claude-code"]); // harnesses
+    vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
 
     await runSetup(dir, catalog);
 
@@ -98,14 +89,6 @@ describe("setup integration (real temp dir)", () => {
     const lock = await readLockFile(dir);
     expect(lock!.choices).toEqual({ process: "native-agents-md" });
     expect(lock!.logical_config.instructions.length).toBeGreaterThan(0);
-
-    // Agent output: .claude/agents/ade.md is written with instruction text
-    const { readFile } = await import("node:fs/promises");
-    const agentMd = await readFile(
-      join(dir, ".claude", "agents", "ade.md"),
-      "utf-8"
-    );
-    expect(agentMd).toContain("AGENTS.md");
   });
 
   it("does not write any files when user cancels", async () => {
@@ -130,18 +113,14 @@ describe("setup integration (real temp dir)", () => {
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
       .mockResolvedValueOnce("__skip__"); // architecture
-    vi.mocked(clack.multiselect)
-      .mockResolvedValueOnce([]) // practices: none
-      .mockResolvedValueOnce(["claude-code"]); // harnesses
+    vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
 
     await runSetup(dir, catalog);
 
-    // Read the raw file and re-parse to ensure valid YAML
     const { readFile } = await import("node:fs/promises");
     const rawConfig = await readFile(join(dir, "config.yaml"), "utf-8");
     const rawLock = await readFile(join(dir, "config.lock.yaml"), "utf-8");
 
-    // Both files should be non-empty valid YAML (not "undefined" or empty)
     expect(rawConfig.length).toBeGreaterThan(0);
     expect(rawLock.length).toBeGreaterThan(0);
     expect(rawConfig).toContain("codemcp-workflows");

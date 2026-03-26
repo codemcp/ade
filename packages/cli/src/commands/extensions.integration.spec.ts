@@ -10,11 +10,16 @@ vi.mock("@clack/prompts", () => ({
   note: vi.fn(),
   select: vi.fn(),
   multiselect: vi.fn(),
-  confirm: vi.fn().mockResolvedValue(false), // decline skill install prompt
+  confirm: vi.fn().mockResolvedValue(false), // decline "configure now?"
   isCancel: vi.fn().mockReturnValue(false),
   cancel: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), success: vi.fn() },
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
+}));
+
+// Mock configure so setup calls don't run the full configure flow
+vi.mock("./configure.js", () => ({
+  runConfigure: vi.fn().mockResolvedValue(undefined)
 }));
 
 // Mock the knowledge package to avoid real network I/O
@@ -102,14 +107,12 @@ describe("extension e2e — option contributes skills and knowledge to setup out
 
       const catalog = mergeExtensions(getDefaultCatalog(), extensions);
 
-      // Facet order from sortFacets: process → architecture → practices → backpressure → autonomy
+      // Facet order from sortFacets: process → architecture → practices → backpressure (autonomy excluded)
       vi.mocked(clack.select)
         .mockResolvedValueOnce("native-agents-md") // process
         .mockResolvedValueOnce("sap-abap"); // architecture — the extended option
-      vi.mocked(clack.multiselect)
-        .mockResolvedValueOnce([]) // practices: none
-        // backpressure: sap-abap has no matching options so skipped
-        .mockResolvedValueOnce([]); // harnesses
+      vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
+      // backpressure: sap-abap has no matching options so skipped
 
       await runSetup(dir, catalog);
 

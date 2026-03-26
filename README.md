@@ -205,9 +205,15 @@ reference knowledge.
 
 ### Coding agent agnostic setup tooling
 
-ADE includes a CLI (`ade setup`) that generates the correct configuration for
-whichever coding agent you use. All configuration is placed into your repo so
-you can check it in.
+ADE includes a CLI with two commands that cover distinct concerns:
+
+- **`ade setup`** — define your team's development choices (process, architecture,
+  practices, backpressure). Writes `config.yaml` and `config.lock.yaml` into your
+  repo so the whole team works from the same foundation.
+
+- **`ade configure`** — configure your coding agent (autonomy profile, target
+  harness, skills). This is developer/environment-level and intentionally
+  ephemeral — not stored in shared config files.
 
 We use STDIO-based MCP servers to expose process guidance, conventions, and docs
 to coding agents. By using the Model Context Protocol — optimized for

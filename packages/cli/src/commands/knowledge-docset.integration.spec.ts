@@ -12,10 +12,10 @@ import { join } from "node:path";
  *   Docsets are now declared via `{ writer: "docset", config: {...} }` recipe
  *   entries (the `docset` provision writer), consistent with how skills work.
  *
- * Issue 2 — Missing .knowledge/config.yaml (now fixed):
- *   `installKnowledge` was never called from `setup` or `install`, so
- *   `createDocset` was never invoked and `.knowledge/config.yaml` was
- *   never written. Both commands now call `installKnowledge`.
+ * Issue 2 — Knowledge init location (updated):
+ *   Knowledge source initialisation (.knowledge/config.yaml) is handled by
+ *   `ade configure` (ephemeral, developer-level) and `ade install`.
+ *   `ade setup` only resolves and writes the lock file; it does not init knowledge.
  */
 
 // Mock the TUI
@@ -32,9 +32,13 @@ vi.mock("@clack/prompts", () => ({
   spinner: vi.fn().mockReturnValue({ start: vi.fn(), stop: vi.fn() })
 }));
 
+// Mock configure so setup calls don't run the full configure flow
+vi.mock("./configure.js", () => ({
+  runConfigure: vi.fn().mockResolvedValue(undefined)
+}));
+
 // Mock the knowledge package to avoid real network I/O while still letting us
 // assert that createDocset is called with the correct arguments.
-// The mock writes a real .knowledge/config.yaml so file-existence assertions work.
 import { writeFile, mkdir } from "node:fs/promises";
 vi.mock("@codemcp/knowledge/packages/cli/dist/exports.js", () => ({
   createDocset: vi.fn(
@@ -45,7 +49,6 @@ vi.mock("@codemcp/knowledge/packages/cli/dist/exports.js", () => ({
       const dir = join(options?.cwd ?? process.cwd(), ".knowledge");
       await mkdir(dir, { recursive: true });
       const configPath = join(dir, "config.yaml");
-      // Append a minimal docset entry so the file is created/updated
       await writeFile(
         configPath,
         `version: "1.0"\ndocsets:\n  - id: ${params.id}\n`,
@@ -77,11 +80,11 @@ describe("knowledge docset regression tests", () => {
   });
 
   // -------------------------------------------------------------------------
-  // Issue 2 fix: setup writes .knowledge/config.yaml
+  // setup writes lock with knowledge_sources but does NOT init .knowledge/
   // -------------------------------------------------------------------------
 
   it(
-    "setup writes .knowledge/config.yaml when knowledge_sources are configured",
+    "setup records knowledge_sources in lock file but does not init .knowledge/",
     { timeout: 30_000 },
     async () => {
       const catalog = getDefaultCatalog();
@@ -91,33 +94,22 @@ describe("knowledge docset regression tests", () => {
         .mockResolvedValueOnce("tanstack"); // architecture — has 4 docsets
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
-        .mockResolvedValueOnce([]) // backpressure: none
-        .mockResolvedValueOnce(["claude-code"]); // harnesses
-      vi.mocked(clack.confirm)
-        .mockResolvedValueOnce(false) // skills: skip
-        .mockResolvedValueOnce(true); // knowledge: initialize now
+        .mockResolvedValueOnce([]); // backpressure: none
 
       await runSetup(dir, catalog);
 
-      // Sanity: knowledge_sources in lock file
+      // knowledge_sources must be in the lock file
       const lock = await readLockFile(dir);
       expect(lock!.logical_config.knowledge_sources).toHaveLength(4);
 
-      // createDocset must have been called once per source
-      expect(createDocset).toHaveBeenCalledTimes(4);
-      expect(createDocset).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "tanstack-router-docs" }),
-        expect.objectContaining({ cwd: dir })
-      );
-
-      // .knowledge/config.yaml must exist
-      const configYaml = await readFile(
-        join(dir, ".knowledge", "config.yaml"),
-        "utf-8"
-      );
-      expect(configYaml).toBeTruthy();
+      // createDocset must NOT have been called — knowledge init is in configure/install
+      expect(createDocset).not.toHaveBeenCalled();
     }
   );
+
+  // -------------------------------------------------------------------------
+  // install writes .knowledge/config.yaml
+  // -------------------------------------------------------------------------
 
   it(
     "install writes .knowledge/config.yaml when knowledge_sources exist in lock file",
@@ -131,12 +123,7 @@ describe("knowledge docset regression tests", () => {
         .mockResolvedValueOnce("tanstack"); // architecture
       vi.mocked(clack.multiselect)
         .mockResolvedValueOnce([]) // practices: none
-        .mockResolvedValueOnce([]) // backpressure: none
-        .mockResolvedValueOnce(["claude-code"]); // harnesses
-      // skills: skip, knowledge: skip (install command will handle it)
-      vi.mocked(clack.confirm)
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(false);
+        .mockResolvedValueOnce([]); // backpressure: none
 
       await runSetup(dir, catalog);
       vi.clearAllMocks();
@@ -148,7 +135,7 @@ describe("knowledge docset regression tests", () => {
       // Now run install — should also write .knowledge/config.yaml
       await runInstall(dir, ["claude-code"]);
 
-      // All 4 tanstack docsets are configured via the docset writer (no per-item selection)
+      // All 4 tanstack docsets are configured via the docset writer
       expect(createDocset).toHaveBeenCalledTimes(4);
       expect(createDocset).toHaveBeenCalledWith(
         expect.objectContaining({ id: "tanstack-router-docs" }),
@@ -168,11 +155,8 @@ describe("knowledge docset regression tests", () => {
   // -------------------------------------------------------------------------
 
   it("ProvisionWriter type no longer includes 'knowledge'", async () => {
-    // Import the type-level check: if 'knowledge' were still in ProvisionWriter,
-    // this runtime check would catch the registry accepting it silently.
     const { createDefaultRegistry } = await import("@codemcp/ade-core");
     const registry = createDefaultRegistry();
-    // The knowledge writer must not be registered
     const { getProvisionWriter } = await import("@codemcp/ade-core");
     expect(getProvisionWriter(registry, "knowledge")).toBeUndefined();
   });
