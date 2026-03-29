@@ -53,7 +53,10 @@ describe("setup integration (real temp dir)", () => {
     // ── config.yaml ──────────────────────────────────────────────────────
     const config = await readUserConfig(dir);
     expect(config).not.toBeNull();
-    expect(config!.choices).toEqual({ process: "codemcp-workflows", architecture: "other" });
+    expect(config!.choices).toEqual({
+      process: "codemcp-workflows",
+      architecture: "other"
+    });
     // harnesses must NOT be in config.yaml — setup no longer selects them
     expect(config).not.toHaveProperty("harnesses");
 
@@ -61,7 +64,10 @@ describe("setup integration (real temp dir)", () => {
     const lock = await readLockFile(dir);
     expect(lock).not.toBeNull();
     expect(lock!.version).toBe(1);
-    expect(lock!.choices).toEqual({ process: "codemcp-workflows", architecture: "other" });
+    expect(lock!.choices).toEqual({
+      process: "codemcp-workflows",
+      architecture: "other"
+    });
     expect(lock!.generated_at).toBeTruthy();
     // harnesses must NOT be in the lock file
     expect(lock).not.toHaveProperty("harnesses");
@@ -84,10 +90,16 @@ describe("setup integration (real temp dir)", () => {
     await runSetup(dir, catalog);
 
     const config = await readUserConfig(dir);
-    expect(config!.choices).toEqual({ process: "native-agents-md", architecture: "other" });
+    expect(config!.choices).toEqual({
+      process: "native-agents-md",
+      architecture: "other"
+    });
 
     const lock = await readLockFile(dir);
-    expect(lock!.choices).toEqual({ process: "native-agents-md", architecture: "other" });
+    expect(lock!.choices).toEqual({
+      process: "native-agents-md",
+      architecture: "other"
+    });
     expect(lock!.logical_config.instructions.length).toBeGreaterThan(0);
   });
 
