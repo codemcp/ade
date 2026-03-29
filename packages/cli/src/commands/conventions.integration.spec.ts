@@ -134,7 +134,7 @@ describe("architecture and practices facets integration", () => {
     // Facet order: process (select), architecture (select), practices (multiselect)
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
-      .mockResolvedValueOnce("__skip__"); // architecture: skip
+      .mockResolvedValueOnce("other"); // architecture: other
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce(["conventional-commits", "tdd-london"]) // practices
       .mockResolvedValueOnce(["claude-code"]); // harnesses
@@ -182,7 +182,7 @@ describe("architecture and practices facets integration", () => {
     // Facet order: process (select), architecture (select), practices (multiselect)
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
-      .mockResolvedValueOnce("__skip__"); // architecture: skip
+      .mockResolvedValueOnce("other"); // architecture: other
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce(["adr-nygard"])
       .mockResolvedValueOnce(["claude-code"]); // harnesses
@@ -199,13 +199,13 @@ describe("architecture and practices facets integration", () => {
     expect(adr).toContain("## Consequences");
   });
 
-  it("skips both architecture and practices when none selected", async () => {
+  it("writes no .ade directory when architecture is other and no practices selected", async () => {
     const catalog = getDefaultCatalog();
 
     // Facet order: process (select), architecture (select), practices (multiselect)
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
-      .mockResolvedValueOnce("__skip__"); // architecture: skip
+      .mockResolvedValueOnce("other"); // architecture: other
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce([]) // practices: none
       .mockResolvedValueOnce(["claude-code"]); // harnesses
@@ -215,9 +215,9 @@ describe("architecture and practices facets integration", () => {
     // No .ade directory should exist
     await expect(access(join(dir, ".ade"))).rejects.toThrow();
 
-    // config.yaml should not have architecture or practices keys
+    // config.yaml should have architecture: "other" but no practices key
     const config = await readUserConfig(dir);
-    expect(config!.choices).not.toHaveProperty("architecture");
+    expect(config!.choices).toHaveProperty("architecture", "other");
     expect(config!.choices).not.toHaveProperty("practices");
   });
 
@@ -227,7 +227,7 @@ describe("architecture and practices facets integration", () => {
     // Facet order: process (select), architecture (select), practices (multiselect)
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
-      .mockResolvedValueOnce("__skip__"); // architecture: skip
+      .mockResolvedValueOnce("other"); // architecture: other
     vi.mocked(clack.multiselect)
       .mockResolvedValueOnce(["tdd-london"])
       .mockResolvedValueOnce(["claude-code"]); // harnesses
