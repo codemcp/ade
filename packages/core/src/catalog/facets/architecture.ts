@@ -464,6 +464,12 @@ export const architectureFacet: Facet = {
           }
         }
       ]
+    },
+    {
+      id: "other",
+      label: "Other",
+      description: "Custom or unlisted architecture — no conventions will be applied",
+      recipe: []
     }
   ]
 };

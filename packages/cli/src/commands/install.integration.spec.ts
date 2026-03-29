@@ -46,7 +46,7 @@ describe("install integration (real temp dir)", () => {
     // Step 1: Run setup to create config.yaml + config.lock.yaml
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
-      .mockResolvedValueOnce("__skip__"); // architecture
+      .mockResolvedValueOnce("other"); // architecture
     vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
     await runSetup(dir, catalog);
 
@@ -73,7 +73,7 @@ describe("install integration (real temp dir)", () => {
     // Setup first
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
-      .mockResolvedValueOnce("__skip__"); // architecture
+      .mockResolvedValueOnce("other"); // architecture
     vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
     await runSetup(dir, catalog);
 
@@ -102,7 +102,7 @@ describe("install integration (real temp dir)", () => {
     // Setup with native-agents-md
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
-      .mockResolvedValueOnce("__skip__"); // architecture
+      .mockResolvedValueOnce("other"); // architecture
     vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
     await runSetup(dir, catalog);
 

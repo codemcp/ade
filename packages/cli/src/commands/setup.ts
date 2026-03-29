@@ -194,7 +194,7 @@ function promptSelect(
     hint: o.description
   }));
 
-  if (!facet.required) {
+  if (!facet.required && !facet.options.some((o) => o.id === "other")) {
     options.push({ value: "__skip__", label: "Skip", hint: "" });
   }
 

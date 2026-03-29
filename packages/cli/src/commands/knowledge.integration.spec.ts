@@ -95,7 +95,7 @@ describe("knowledge integration", () => {
 
     vi.mocked(clack.select)
       .mockResolvedValueOnce("native-agents-md") // process
-      .mockResolvedValueOnce("__skip__"); // architecture: skip
+      .mockResolvedValueOnce("other"); // architecture: other
     vi.mocked(clack.multiselect).mockResolvedValueOnce(["tdd-london"]); // practices: tdd-london has no docsets
 
     await runSetup(dir, catalog);
