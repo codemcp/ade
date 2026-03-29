@@ -3,6 +3,16 @@ import { dirname, join } from "node:path";
 import * as clack from "@clack/prompts";
 import type { GitHook, LogicalConfig, McpServerEntry } from "@codemcp/ade-core";
 
+/** Returns true if the given path exists (file or directory). */
+export async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // JSON helpers
 // ---------------------------------------------------------------------------

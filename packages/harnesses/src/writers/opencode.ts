@@ -9,7 +9,8 @@ import {
   writeAgentMd,
   writeGitHooks,
   writeMcpServers,
-  formatYamlKey
+  formatYamlKey,
+  pathExists
 } from "../util.js";
 import { getAutonomyProfile } from "../permission-policy.js";
 
@@ -178,6 +179,13 @@ export const opencodeWriter: HarnessWriter = {
   id: "opencode",
   label: "OpenCode",
   description: "Terminal AI agent — opencode.json + .opencode/agents/",
+  verified: true,
+  async detect(projectRoot: string) {
+    return (
+      (await pathExists(join(projectRoot, "opencode.json"))) ||
+      (await pathExists(join(projectRoot, ".opencode")))
+    );
+  },
   async install(config: LogicalConfig, projectRoot: string) {
     await writeMcpServers(config.mcp_servers, {
       path: join(projectRoot, "opencode.json"),

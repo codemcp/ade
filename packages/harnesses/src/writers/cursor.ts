@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { AutonomyProfile, LogicalConfig } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
-import { writeMcpServers, writeGitHooks } from "../util.js";
+import { writeMcpServers, writeGitHooks, pathExists } from "../util.js";
 import {
   getAutonomyProfile,
   hasPermissionPolicy
@@ -12,6 +12,10 @@ export const cursorWriter: HarnessWriter = {
   id: "cursor",
   label: "Cursor",
   description: "AI code editor — .cursor/mcp.json + .cursor/rules/",
+  verified: false,
+  async detect(projectRoot: string) {
+    return pathExists(join(projectRoot, ".cursor"));
+  },
   async install(config: LogicalConfig, projectRoot: string) {
     await writeMcpServers(config.mcp_servers, {
       path: join(projectRoot, ".cursor", "mcp.json")

@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { writeFile } from "node:fs/promises";
 import type { AutonomyProfile, LogicalConfig } from "@codemcp/ade-core";
 import type { HarnessWriter } from "../types.js";
-import { writeMcpServers, writeGitHooks } from "../util.js";
+import { writeMcpServers, writeGitHooks, pathExists } from "../util.js";
 import { getAutonomyProfile } from "../permission-policy.js";
 
 function renderAutonomyGuidance(config: LogicalConfig): string | undefined {
@@ -70,6 +70,10 @@ export const universalWriter: HarnessWriter = {
   label: "Universal (AGENTS.md + .mcp.json)",
   description:
     "Cross-tool standard — AGENTS.md + .mcp.json (portable instructions and MCP registration, not enforceable permissions)",
+  verified: true,
+  async detect(projectRoot: string) {
+    return pathExists(join(projectRoot, "AGENTS.md"));
+  },
   async install(config: LogicalConfig, projectRoot: string) {
     const autonomyGuidance = renderAutonomyGuidance(config);
     const instructionSections = [...config.instructions];

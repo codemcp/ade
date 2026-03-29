@@ -7,7 +7,8 @@ import {
   alwaysAllowEntry,
   writeRulesFile,
   writeGitHooks,
-  writeJson
+  writeJson,
+  pathExists
 } from "../util.js";
 import {
   getAutonomyProfile,
@@ -18,6 +19,14 @@ export const rooCodeWriter: HarnessWriter = {
   id: "roo-code",
   label: "Roo Code",
   description: "AI coding agent — .roo/mcp.json + .roomodes + .roorules",
+  verified: false,
+  async detect(projectRoot: string) {
+    return (
+      (await pathExists(join(projectRoot, ".roo"))) ||
+      (await pathExists(join(projectRoot, ".roomodes"))) ||
+      (await pathExists(join(projectRoot, ".roorules")))
+    );
+  },
   async install(config: LogicalConfig, projectRoot: string) {
     await writeMcpServers(config.mcp_servers, {
       path: join(projectRoot, ".roo", "mcp.json"),

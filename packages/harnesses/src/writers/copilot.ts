@@ -10,7 +10,8 @@ import {
   stdioEntry,
   writeAgentMd,
   writeGitHooks,
-  formatYamlKey
+  formatYamlKey,
+  pathExists
 } from "../util.js";
 import { getAutonomyProfile } from "../permission-policy.js";
 
@@ -18,6 +19,13 @@ export const copilotWriter: HarnessWriter = {
   id: "copilot",
   label: "GitHub Copilot",
   description: "VS Code + CLI — .vscode/mcp.json + .github/agents/ade.agent.md",
+  verified: true,
+  async detect(projectRoot: string) {
+    return (
+      (await pathExists(join(projectRoot, ".github", "agents"))) ||
+      (await pathExists(join(projectRoot, ".vscode", "mcp.json")))
+    );
+  },
   async install(config: LogicalConfig, projectRoot: string) {
     await writeMcpServers(config.mcp_servers, {
       path: join(projectRoot, ".vscode", "mcp.json"),

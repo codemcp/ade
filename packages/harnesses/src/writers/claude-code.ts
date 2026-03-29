@@ -6,7 +6,8 @@ import {
   writeJson,
   writeMcpServers,
   writeAgentMd,
-  writeGitHooks
+  writeGitHooks,
+  pathExists
 } from "../util.js";
 import { getAutonomyProfile } from "../permission-policy.js";
 
@@ -15,6 +16,10 @@ export const claudeCodeWriter: HarnessWriter = {
   label: "Claude Code",
   description:
     "Anthropic's CLI agent — .claude/agents/ade.md + .mcp.json + .claude/settings.json",
+  verified: false,
+  async detect(projectRoot: string) {
+    return pathExists(join(projectRoot, ".claude"));
+  },
   async install(config: LogicalConfig, projectRoot: string) {
     await writeAgentMd(config, {
       path: join(projectRoot, ".claude", "agents", "ade.md"),
