@@ -27,18 +27,18 @@ describe("harness registry", () => {
     expect(getHarnessWriter("nonexistent")).toBeUndefined();
   });
 
-  it("returns all harness ids", () => {
+  it("returns all harness ids, verified ones first", () => {
     const ids = getHarnessIds();
     expect(ids).toEqual([
       "universal",
+      "copilot",
+      "kiro",
+      "opencode",
       "claude-code",
       "cursor",
-      "copilot",
       "windsurf",
       "cline",
-      "roo-code",
-      "kiro",
-      "opencode"
+      "roo-code"
     ]);
   });
 

@@ -5,6 +5,7 @@ import {
   allHarnessWriters,
   getHarnessWriter,
   getHarnessIds,
+  detectHarnesses,
   installSkills,
   writeInlineSkills
 } from "@codemcp/ade-harnesses";
@@ -25,8 +26,13 @@ export async function runInstall(
   // Determine which harnesses to install for:
   // 1. --harness flag (comma-separated)
   // 2. harnesses saved in the lock file
-  // 3. default: universal
-  const ids = harnessIds ?? lockFile.harnesses ?? ["universal"];
+  // 3. auto-detected from project artifacts (falls back to universal if none found)
+  const ids =
+    harnessIds ??
+    lockFile.harnesses ??
+    (await detectHarnesses(projectRoot, harnessWriters).then((detected) =>
+      detected.length > 0 ? detected : ["universal"]
+    ));
 
   const validIds = [...getHarnessIds(), ...harnessWriters.map((w) => w.id)];
   const uniqueValidIds = [...new Set(validIds)];

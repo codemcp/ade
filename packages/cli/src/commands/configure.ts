@@ -10,6 +10,7 @@ import {
   type HarnessWriter,
   allHarnessWriters,
   getHarnessWriter,
+  detectHarnesses,
   installSkills,
   writeInlineSkills
 } from "@codemcp/ade-harnesses";
@@ -74,21 +75,22 @@ export async function runConfigure(
   const harnessOptions = harnessWriters.map((w) => ({
     value: w.id,
     label: w.label,
-    hint: w.description
+    hint: w.verified
+      ? w.description
+      : `${w.description} · unverified — config generation may be inaccurate`
   }));
 
-  const existingHarnesses = lockFile.harnesses ?? ["universal"];
-  const validInitialHarnesses = existingHarnesses.filter((h) =>
-    harnessWriters.some((w) => w.id === h)
-  );
+  const savedHarnesses = lockFile.harnesses;
+  const initialHarnesses = savedHarnesses
+    ? savedHarnesses.filter((h) => harnessWriters.some((w) => w.id === h))
+    : await detectHarnesses(projectRoot, harnessWriters);
 
   const selectedHarnesses = await clack.multiselect({
     message:
       "Which coding agents should receive this configuration?\n" +
       "ADE generates config files for each agent you select.\n",
     options: harnessOptions,
-    initialValues:
-      validInitialHarnesses.length > 0 ? validInitialHarnesses : ["universal"],
+    initialValues: initialHarnesses,
     required: false
   });
 

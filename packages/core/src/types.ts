@@ -203,7 +203,12 @@ const FacetSchema = z.custom<Facet>(
 );
 
 const HarnessWriterSchema = z.custom<
-  AgentWriterDef & { label: string; description: string }
+  AgentWriterDef & {
+    label: string;
+    description: string;
+    verified: boolean;
+    detect: (projectRoot: string) => Promise<boolean>;
+  }
 >(
   (val) =>
     typeof val === "object" &&
@@ -211,8 +216,13 @@ const HarnessWriterSchema = z.custom<
     typeof (val as Record<string, unknown>).id === "string" &&
     typeof (val as Record<string, unknown>).label === "string" &&
     typeof (val as Record<string, unknown>).description === "string" &&
+    typeof (val as Record<string, unknown>).verified === "boolean" &&
+    typeof (val as Record<string, unknown>).detect === "function" &&
     typeof (val as Record<string, unknown>).install === "function",
-  { message: "HarnessWriter must have id, label, description and install()" }
+  {
+    message:
+      "HarnessWriter must have id, label, description, verified, detect() and install()"
+  }
 );
 
 const ProvisionWriterDefSchema = z.custom<ProvisionWriterDef>(

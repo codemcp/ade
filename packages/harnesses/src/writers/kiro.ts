@@ -9,7 +9,8 @@ import {
   standardEntry,
   writeGitHooks,
   writeJson,
-  writeMcpServers
+  writeMcpServers,
+  pathExists
 } from "../util.js";
 import { getAutonomyProfile } from "../permission-policy.js";
 
@@ -17,6 +18,10 @@ export const kiroWriter: HarnessWriter = {
   id: "kiro",
   label: "Kiro",
   description: "AWS AI IDE — .kiro/agents/ade.json + .kiro/settings/mcp.json",
+  verified: true,
+  async detect(projectRoot: string) {
+    return pathExists(join(projectRoot, ".kiro"));
+  },
   async install(config: LogicalConfig, projectRoot: string) {
     await writeMcpServers(config.mcp_servers, {
       path: join(projectRoot, ".kiro", "settings", "mcp.json"),

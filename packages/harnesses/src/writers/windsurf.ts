@@ -5,7 +5,8 @@ import {
   writeMcpServers,
   alwaysAllowEntry,
   writeRulesFile,
-  writeGitHooks
+  writeGitHooks,
+  pathExists
 } from "../util.js";
 import {
   getAutonomyProfile,
@@ -16,6 +17,13 @@ export const windsurfWriter: HarnessWriter = {
   id: "windsurf",
   label: "Windsurf",
   description: "Codeium's AI IDE — .windsurf/mcp.json + .windsurfrules",
+  verified: false,
+  async detect(projectRoot: string) {
+    return (
+      (await pathExists(join(projectRoot, ".windsurf"))) ||
+      (await pathExists(join(projectRoot, ".windsurfrules")))
+    );
+  },
   async install(config: LogicalConfig, projectRoot: string) {
     await writeMcpServers(config.mcp_servers, {
       path: join(projectRoot, ".windsurf", "mcp.json"),
