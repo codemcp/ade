@@ -133,7 +133,7 @@ describe("knowledge docset regression tests", () => {
       await rm(join(dir, ".knowledge"), { recursive: true, force: true });
 
       // Now run install — should also write .knowledge/config.yaml
-      await runInstall(dir, ["claude-code"]);
+      await runInstall(dir);
 
       // All 4 tanstack docsets are configured via the docset writer
       expect(createDocset).toHaveBeenCalledTimes(4);

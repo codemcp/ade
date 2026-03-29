@@ -52,6 +52,8 @@ describe("AdeExtensionsSchema", () => {
           id: "my-harness",
           label: "My Harness",
           description: "Custom harness",
+          verified: false,
+          detect: async () => false,
           install: async () => {}
         }
       ]

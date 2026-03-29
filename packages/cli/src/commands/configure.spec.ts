@@ -40,6 +40,7 @@ vi.mock("@codemcp/ade-harnesses", () => ({
     }
     return undefined;
   }),
+  detectHarnesses: vi.fn().mockResolvedValue([]),
   installSkills: mockInstallSkills,
   writeInlineSkills: mockWriteInlineSkills
 }));
@@ -69,7 +70,6 @@ const baseLockFile: LockFile = {
   version: 1,
   generated_at: "2024-01-01T00:00:00.000Z",
   choices: { process: "codemcp-workflows" },
-  harnesses: ["universal"],
   logical_config: {
     mcp_servers: [],
     instructions: ["do stuff"],
@@ -181,11 +181,10 @@ describe("runConfigure", () => {
     expect(mockInstall).not.toHaveBeenCalled();
   });
 
-  it("uses lock file harnesses as initial selection for harness prompt", async () => {
-    vi.mocked(readLockFile).mockResolvedValueOnce({
-      ...baseLockFile,
-      harnesses: ["cursor"]
-    });
+  it("uses auto-detected harnesses as initial selection for harness prompt", async () => {
+    const { detectHarnesses } = await import("@codemcp/ade-harnesses");
+    vi.mocked(detectHarnesses).mockResolvedValueOnce(["cursor"]);
+    vi.mocked(readLockFile).mockResolvedValueOnce(baseLockFile);
     vi.mocked(clack.select).mockResolvedValueOnce("sensible-defaults");
     vi.mocked(clack.multiselect).mockResolvedValueOnce(["cursor"]);
 

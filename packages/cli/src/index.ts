@@ -3,7 +3,7 @@ import { runSetup } from "./commands/setup.js";
 import { runInstall } from "./commands/install.js";
 import { runConfigure } from "./commands/configure.js";
 import { getDefaultCatalog, mergeExtensions } from "@codemcp/ade-core";
-import { getHarnessIds, buildHarnessWriters } from "@codemcp/ade-harnesses";
+import { buildHarnessWriters } from "@codemcp/ade-harnesses";
 import { loadExtensions } from "./extensions.js";
 
 const args = process.argv.slice(2);
@@ -17,20 +17,7 @@ if (command === "setup") {
   await runSetup(projectRoot, catalog, harnessWriters);
 } else if (command === "install") {
   const projectRoot = args[1] ?? process.cwd();
-  const extensions = await loadExtensions(projectRoot);
-  const harnessWriters = buildHarnessWriters(extensions);
-
-  let harnessIds: string[] | undefined;
-
-  // Support --harness flag (comma-separated)
-  if (args.includes("--harness")) {
-    const val = args[args.indexOf("--harness") + 1];
-    if (val) {
-      harnessIds = val.split(",").map((s) => s.trim());
-    }
-  }
-
-  await runInstall(projectRoot, harnessIds, harnessWriters);
+  await runInstall(projectRoot);
 } else if (command === "configure") {
   const projectRoot = args[1] ?? process.cwd();
   const extensions = await loadExtensions(projectRoot);
@@ -39,7 +26,6 @@ if (command === "setup") {
 } else if (command === "--version" || command === "-v") {
   console.log(version);
 } else {
-  const allIds = getHarnessIds();
   console.log(`ade v${version} — Agentic Development Environment`);
   console.log();
   console.log(
@@ -63,9 +49,6 @@ if (command === "setup") {
   );
   console.log();
   console.log("Options:");
-  console.log(
-    `  --harness <ids>  Comma-separated harnesses (${allIds.join(", ")})`
-  );
   console.log("  -v, --version    Show version");
   process.exitCode = command ? 1 : 0;
 }

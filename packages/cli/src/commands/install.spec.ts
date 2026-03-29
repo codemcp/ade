@@ -6,6 +6,8 @@ import type { LogicalConfig } from "@codemcp/ade-core";
 vi.mock("@clack/prompts", () => ({
   intro: vi.fn(),
   outro: vi.fn(),
+  confirm: vi.fn().mockResolvedValue(true),
+  cancel: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 }));
 
@@ -27,50 +29,13 @@ vi.mock("@codemcp/ade-core", async (importOriginal) => {
   };
 });
 
-const mockInstall = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
-
 vi.mock("@codemcp/ade-harnesses", () => ({
-  allHarnessWriters: [
-    {
-      id: "universal",
-      label: "Universal",
-      description: "Universal",
-      install: mockInstall
-    },
-    {
-      id: "claude-code",
-      label: "Claude Code",
-      description: "Claude Code",
-      install: mockInstall
-    },
-    {
-      id: "cursor",
-      label: "Cursor",
-      description: "Cursor",
-      install: mockInstall
-    }
-  ],
-  getHarnessWriter: vi.fn().mockImplementation((id: string) => {
-    if (id === "universal" || id === "claude-code" || id === "cursor") {
-      return { id, install: mockInstall };
-    }
-    return undefined;
-  }),
-  getHarnessIds: vi
-    .fn()
-    .mockReturnValue([
-      "universal",
-      "claude-code",
-      "cursor",
-      "copilot",
-      "windsurf",
-      "cline",
-      "roo-code",
-      "kiro",
-      "opencode"
-    ]),
   installSkills: vi.fn().mockResolvedValue(undefined),
   writeInlineSkills: vi.fn().mockResolvedValue([])
+}));
+
+vi.mock("../knowledge-installer.js", () => ({
+  installKnowledge: vi.fn().mockResolvedValue(undefined)
 }));
 
 import * as clack from "@clack/prompts";
@@ -79,77 +44,25 @@ import { runInstall } from "./install.js";
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
+const baseLockFile = {
+  version: 1 as const,
+  generated_at: "2024-01-01T00:00:00.000Z",
+  choices: { process: "codemcp-workflows" },
+  logical_config: mockLogical
+};
+
 describe("runInstall", () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks();
-    // Re-set the default implementation after clearAllMocks
-    const { getHarnessWriter } = await import("@codemcp/ade-harnesses");
-    vi.mocked(getHarnessWriter).mockImplementation((id: string) => {
-      if (id === "universal" || id === "claude-code" || id === "cursor") {
-        return {
-          id,
-          label: id,
-          description: "test",
-          install: mockInstall
-        };
-      }
-      return undefined;
-    });
+    vi.mocked(clack.confirm).mockResolvedValue(true);
   });
 
-  it("reads config.lock.yaml and applies logical config", async () => {
-    vi.mocked(readLockFile).mockResolvedValueOnce({
-      version: 1,
-      generated_at: "2024-01-01T00:00:00.000Z",
-      choices: { process: "codemcp-workflows" },
-      logical_config: mockLogical
-    });
+  it("reads config.lock.yaml", async () => {
+    vi.mocked(readLockFile).mockResolvedValueOnce(baseLockFile);
 
     await runInstall("/tmp/project");
 
     expect(readLockFile).toHaveBeenCalledWith("/tmp/project");
-  });
-
-  it("defaults to universal harness when none specified", async () => {
-    vi.mocked(readLockFile).mockResolvedValueOnce({
-      version: 1,
-      generated_at: "2024-01-01T00:00:00.000Z",
-      choices: { process: "codemcp-workflows" },
-      logical_config: mockLogical
-    });
-
-    await runInstall("/tmp/project");
-
-    expect(mockInstall).toHaveBeenCalledWith(mockLogical, "/tmp/project");
-  });
-
-  it("uses harnesses from lock file when present", async () => {
-    vi.mocked(readLockFile).mockResolvedValueOnce({
-      version: 1,
-      generated_at: "2024-01-01T00:00:00.000Z",
-      choices: { process: "codemcp-workflows" },
-      harnesses: ["claude-code", "cursor"],
-      logical_config: mockLogical
-    });
-
-    await runInstall("/tmp/project");
-
-    expect(mockInstall).toHaveBeenCalledTimes(2);
-  });
-
-  it("uses explicit harness ids when provided", async () => {
-    vi.mocked(readLockFile).mockResolvedValueOnce({
-      version: 1,
-      generated_at: "2024-01-01T00:00:00.000Z",
-      choices: { process: "codemcp-workflows" },
-      harnesses: ["claude-code"],
-      logical_config: mockLogical
-    });
-
-    await runInstall("/tmp/project", ["cursor"]);
-
-    // Explicit takes priority over lock file
-    expect(mockInstall).toHaveBeenCalledTimes(1);
   });
 
   it("throws when config.lock.yaml is missing", async () => {
@@ -160,26 +73,8 @@ describe("runInstall", () => {
     );
   });
 
-  it("throws when harness id is unknown", async () => {
-    vi.mocked(readLockFile).mockResolvedValueOnce({
-      version: 1,
-      generated_at: "2024-01-01T00:00:00.000Z",
-      choices: { process: "codemcp-workflows" },
-      logical_config: mockLogical
-    });
-
-    await expect(runInstall("/tmp/project", ["unknown-agent"])).rejects.toThrow(
-      /unknown harness/i
-    );
-  });
-
   it("shows intro and outro messages", async () => {
-    vi.mocked(readLockFile).mockResolvedValueOnce({
-      version: 1,
-      generated_at: "2024-01-01T00:00:00.000Z",
-      choices: { process: "codemcp-workflows" },
-      logical_config: mockLogical
-    });
+    vi.mocked(readLockFile).mockResolvedValueOnce(baseLockFile);
 
     await runInstall("/tmp/project");
 
