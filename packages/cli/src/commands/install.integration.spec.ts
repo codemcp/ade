@@ -40,37 +40,21 @@ describe("install integration (real temp dir)", () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it("applies lock file to regenerate agent files without re-resolving", async () => {
+  it("completes without error after setup", async () => {
     const catalog = getDefaultCatalog();
 
-    // Step 1: Run setup to create config.yaml + config.lock.yaml
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
       .mockResolvedValueOnce("other"); // architecture
     vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
     await runSetup(dir, catalog);
 
-    // Step 2: Run install — writes agent files from lock file
-    await runInstall(dir, ["claude-code"]);
-
-    // Agent files should be written by install
-    const agentMd = await readFile(
-      join(dir, ".claude", "agents", "ade.md"),
-      "utf-8"
-    );
-    expect(agentMd).toContain("Call whats_next()");
-
-    const mcpJson = JSON.parse(await readFile(join(dir, ".mcp.json"), "utf-8"));
-    expect(mcpJson.mcpServers["workflows"]).toMatchObject({
-      command: "npx",
-      args: ["@codemcp/workflows-server@latest"]
-    });
+    await runInstall(dir);
   });
 
   it("does not modify the lock file", async () => {
     const catalog = getDefaultCatalog();
 
-    // Setup first
     vi.mocked(clack.select)
       .mockResolvedValueOnce("codemcp-workflows") // process
       .mockResolvedValueOnce("other"); // architecture
@@ -82,37 +66,15 @@ describe("install integration (real temp dir)", () => {
       "utf-8"
     );
 
-    // Re-install
-    await runInstall(dir, ["claude-code"]);
+    await runInstall(dir);
 
     const lockRawAfter = await readFile(join(dir, "config.lock.yaml"), "utf-8");
-    // Lock file should be byte-identical (install doesn't rewrite it)
     expect(lockRawAfter).toBe(lockRawBefore);
   });
 
   it("fails when no config.lock.yaml exists", async () => {
-    await expect(runInstall(dir, ["claude-code"])).rejects.toThrow(
+    await expect(runInstall(dir)).rejects.toThrow(
       /config\.lock\.yaml not found/i
     );
-  });
-
-  it("works with native-agents-md option", async () => {
-    const catalog = getDefaultCatalog();
-
-    // Setup with native-agents-md
-    vi.mocked(clack.select)
-      .mockResolvedValueOnce("native-agents-md") // process
-      .mockResolvedValueOnce("other"); // architecture
-    vi.mocked(clack.multiselect).mockResolvedValueOnce([]); // practices: none
-    await runSetup(dir, catalog);
-
-    // Run install
-    await runInstall(dir, ["claude-code"]);
-
-    const agentMd = await readFile(
-      join(dir, ".claude", "agents", "ade.md"),
-      "utf-8"
-    );
-    expect(agentMd).toContain("AGENTS.md");
   });
 });

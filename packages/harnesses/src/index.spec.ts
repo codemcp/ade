@@ -64,6 +64,8 @@ describe("buildHarnessWriters", () => {
       id: "sap-copilot",
       label: "SAP Copilot",
       description: "SAP internal Copilot harness",
+      verified: false,
+      detect: async () => false,
       install: async () => {}
     };
 
@@ -83,6 +85,8 @@ describe("buildHarnessWriters", () => {
           id: "ephemeral",
           label: "Ephemeral",
           description: "Should not persist",
+          verified: false,
+          detect: async () => false,
           install: async () => {}
         }
       ]

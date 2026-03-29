@@ -1,21 +1,9 @@
 import * as clack from "@clack/prompts";
 import { readLockFile } from "@codemcp/ade-core";
-import {
-  type HarnessWriter,
-  allHarnessWriters,
-  getHarnessWriter,
-  getHarnessIds,
-  detectHarnesses,
-  installSkills,
-  writeInlineSkills
-} from "@codemcp/ade-harnesses";
+import { installSkills, writeInlineSkills } from "@codemcp/ade-harnesses";
 import { installKnowledge } from "../knowledge-installer.js";
 
-export async function runInstall(
-  projectRoot: string,
-  harnessIds?: string[],
-  harnessWriters: HarnessWriter[] = allHarnessWriters
-): Promise<void> {
+export async function runInstall(projectRoot: string): Promise<void> {
   clack.intro("ade install");
 
   const lockFile = await readLockFile(projectRoot);
@@ -23,36 +11,7 @@ export async function runInstall(
     throw new Error("config.lock.yaml not found. Run `ade setup` first.");
   }
 
-  // Determine which harnesses to install for:
-  // 1. --harness flag (comma-separated)
-  // 2. harnesses saved in the lock file
-  // 3. auto-detected from project artifacts (falls back to universal if none found)
-  const ids =
-    harnessIds ??
-    lockFile.harnesses ??
-    (await detectHarnesses(projectRoot, harnessWriters).then((detected) =>
-      detected.length > 0 ? detected : ["universal"]
-    ));
-
-  const validIds = [...getHarnessIds(), ...harnessWriters.map((w) => w.id)];
-  const uniqueValidIds = [...new Set(validIds)];
-  for (const id of ids) {
-    if (!uniqueValidIds.includes(id)) {
-      throw new Error(
-        `Unknown harness "${id}". Available: ${uniqueValidIds.join(", ")}`
-      );
-    }
-  }
-
   const logicalConfig = lockFile.logical_config;
-
-  for (const id of ids) {
-    const writer =
-      harnessWriters.find((w) => w.id === id) ?? getHarnessWriter(id);
-    if (writer) {
-      await writer.install(logicalConfig, projectRoot);
-    }
-  }
 
   const modifiedSkills = await writeInlineSkills(logicalConfig, projectRoot);
   if (modifiedSkills.length > 0) {

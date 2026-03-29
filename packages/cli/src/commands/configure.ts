@@ -80,10 +80,7 @@ export async function runConfigure(
       : `${w.description} · unverified — config generation may be inaccurate`
   }));
 
-  const savedHarnesses = lockFile.harnesses;
-  const initialHarnesses = savedHarnesses
-    ? savedHarnesses.filter((h) => harnessWriters.some((w) => w.id === h))
-    : await detectHarnesses(projectRoot, harnessWriters);
+  const initialHarnesses = await detectHarnesses(projectRoot, harnessWriters);
 
   const selectedHarnesses = await clack.multiselect({
     message:
