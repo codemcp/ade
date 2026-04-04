@@ -224,24 +224,50 @@ export async function writeInlineSkills(
     const frontmatter = [
       "---",
       `name: ${skill.name}`,
-      `description: ${skill.description}`,
+      `description: ${formatYamlValue(skill.description)}`,
       "---"
     ].join("\n");
 
     const expected = `${frontmatter}\n\n${skill.body}\n`;
 
+    // Write SKILL.md — track as modified only when content changes or file is new
+    let skillMdChanged = false;
     try {
       const existing = await readFile(skillPath, "utf-8");
-      if (existing !== expected) {
-        modified.push(skill.name);
-        continue;
-      }
+      skillMdChanged = existing !== expected;
     } catch {
-      // File doesn't exist yet — fall through to write
+      // File doesn't exist yet — treat as changed
+      skillMdChanged = true;
     }
 
-    await mkdir(skillDir, { recursive: true });
-    await writeFile(skillPath, expected, "utf-8");
+    if (skillMdChanged) {
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(skillPath, expected, "utf-8");
+      modified.push(skill.name);
+    }
+
+    // Write asset files (e.g. references/foo.md, scripts/setup.sh)
+    if (skill.assets) {
+      for (const [relativePath, content] of Object.entries(skill.assets)) {
+        const assetPath = join(skillDir, relativePath);
+        let assetChanged = false;
+        try {
+          const existing = await readFile(assetPath, "utf-8");
+          assetChanged = existing !== content;
+        } catch {
+          // File doesn't exist yet — treat as changed
+          assetChanged = true;
+        }
+
+        if (assetChanged) {
+          await mkdir(dirname(assetPath), { recursive: true });
+          await writeFile(assetPath, content, "utf-8");
+          if (!modified.includes(skill.name)) {
+            modified.push(skill.name);
+          }
+        }
+      }
+    }
   }
 
   return modified;
@@ -256,4 +282,22 @@ export function formatYamlKey(value: string): string {
   return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value)
     ? value
     : JSON.stringify(value);
+}
+
+/**
+ * Format a YAML scalar value, adding double-quote wrapping when the value
+ * contains characters that a YAML parser would otherwise misinterpret:
+ *
+ * - `: ` (colon-space) — parsed as a mapping entry separator
+ * - `#` — parsed as a comment start
+ * - Leading `@`, `{`, `}`, `[`, `]`, `|`, `>`, `'`, `"`, `&`, `*`, `!`, `%`
+ *   — YAML indicator characters
+ *
+ * Double-quotes inside the value are escaped as `\"`.
+ */
+export function formatYamlValue(value: string): string {
+  const needsQuoting =
+    /: /.test(value) || /#/.test(value) || /^[@{}[\]|>'"`&*!%]/.test(value);
+  if (!needsQuoting) return value;
+  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
