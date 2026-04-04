@@ -1,0 +1,29 @@
+{
+  "conversationId": "ade-multi-file-skills-4wcymb",
+  "projectPath": "/Users/oliverjaegle/projects/privat/codemcp/ade",
+  "epicId": "ade-14",
+  "phaseTasks": [
+    {
+      "phaseId": "explore",
+      "phaseName": "Explore",
+      "taskId": "ade-14.1"
+    },
+    {
+      "phaseId": "plan",
+      "phaseName": "Plan",
+      "taskId": "ade-14.2"
+    },
+    {
+      "phaseId": "code",
+      "phaseName": "Code",
+      "taskId": "ade-14.3"
+    },
+    {
+      "phaseId": "commit",
+      "phaseName": "Commit",
+      "taskId": "ade-14.4"
+    }
+  ],
+  "createdAt": "2026-04-04T10:21:24.134Z",
+  "updatedAt": "2026-04-04T10:21:24.134Z"
+}

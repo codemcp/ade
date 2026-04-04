@@ -47,6 +47,17 @@ export interface InlineSkill {
   description: string;
   body: string;
   /**
+   * Additional asset files to write alongside SKILL.md.
+   *
+   * Keys are relative paths such as `"references/folder-structure.md"` or
+   * `"scripts/setup.sh"`. The path itself signals the file type and location:
+   * it maps 1:1 to the output structure under `.ade/skills/<name>/`.
+   *
+   * Values are the raw file contents (strings). Authors reference these files
+   * naturally from the Markdown body, e.g. `[see details](references/folder-structure.md)`.
+   */
+  assets?: Record<string, string>;
+  /**
    * Names of other skills that this skill supersedes.
    * Any skill whose `name` appears here will be removed from the final
    * resolved skills list. Used by extension-contributed skills to suppress

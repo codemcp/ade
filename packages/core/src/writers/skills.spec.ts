@@ -109,6 +109,62 @@ describe("skillsWriter", () => {
     });
   });
 
+  it("passes through single assets entry on inline skill", async () => {
+    const result = await skillsWriter.write(
+      {
+        skills: [
+          {
+            name: "arch-skill",
+            description: "Architecture skill",
+            body: "See [details](references/details.md).",
+            assets: {
+              "references/details.md": "## Details\n\nMore info."
+            }
+          }
+        ]
+      },
+      emptyContext
+    );
+
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills![0]).toEqual({
+      name: "arch-skill",
+      description: "Architecture skill",
+      body: "See [details](references/details.md).",
+      assets: {
+        "references/details.md": "## Details\n\nMore info."
+      }
+    });
+  });
+
+  it("passes through multiple assets with different path prefixes", async () => {
+    const assets = {
+      "references/folder-structure.md":
+        "## Folder Structure\n\nDetailed content.",
+      "references/file-naming.md": "## File Naming\n\nConventions.",
+      "scripts/setup.sh": "#!/bin/bash\necho setup"
+    };
+
+    const result = await skillsWriter.write(
+      {
+        skills: [
+          {
+            name: "multi-asset-skill",
+            description: "Skill with many assets",
+            body: "Main body.",
+            assets
+          }
+        ]
+      },
+      emptyContext
+    );
+
+    expect(result.skills).toHaveLength(1);
+    expect(
+      (result.skills![0] as { assets: Record<string, string> }).assets
+    ).toEqual(assets);
+  });
+
   it("passes through replaces field on external skills", async () => {
     const result = await skillsWriter.write(
       {
